@@ -1,3 +1,11 @@
+/**
+ * Plural formatter. Select ouput based on whether value of key is singular/plural
+ * @class
+ * @extends SelectFormatter
+ * @private
+ * @constructor
+ * @param values {Array|Object} The data to be processed and inserted. 
+ */
 PluralFormatter = function(values) {
     PluralFormatter.superclass.constructor.call(this, values);
     this.regex = "{\\s*([a-zA-Z0-9_]+)\\s*,\\s*plural\\s*,\\s*";
@@ -9,6 +17,15 @@ PluralFormatter.createInstance = function(values) {
     return new PluralFormatter(values);
 }
 
+/**
+ * Select output depending on params.value from options
+ * For internal use
+ * @method
+ * @private
+ * @param options {Object} Object containing results for singular/plural
+ * @param params {Object} Object containing value
+ * @return {String} selected result
+ */
 PluralFormatter.prototype.select = function(options, params) {
     var result = options.other;
     if(params.value == 0 && options.zero) {

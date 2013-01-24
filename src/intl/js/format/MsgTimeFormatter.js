@@ -1,3 +1,11 @@
+/**
+ * Time formatter
+ * @class
+ * @extends DateFormatter
+ * @private
+ * @constructor
+ * @param values {Array|Object} The data to be processed and inserted. 
+ */
 TimeFormatter = function(values) {
     TimeFormatter.superclass.constructor.call(this, values);
     this.styles = {

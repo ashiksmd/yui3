@@ -1,461 +1,504 @@
 /**
  * Timezone performs operations on a given timezone string represented in Olson tz database 
  * This module uses parts of zimbra AjxTimezone to handle time-zones
- * @module yTimezone
- * @requires tzoneData, tzoneLinks, yDateFormatData
+ * @module datatype-date-timezone
+ * @requires datatype-date-format
  */
 
-var MODULE_NAME = "datatype-date-timezone";
-    
-AjxTimezone = function() {
-    this.localeData = Y.Intl.get(MODULE_NAME);
+/**
+ * Class to handle timezones
+ * @class __zTimezone
+ * @namespace Date
+ * @private
+ * @constructor
+ */
+Y.Date.__zTimezone = function() {
+    this.localeData = Y.Intl.get("datatype-date-timezone");
 };
 
-//
-// Static methods
-//
+AjxTimezone = Y.Date.__zTimezone;
 
-AjxTimezone.getTransition = function(onset, year) {
-    var trans = [ year || new Date().getFullYear(), onset.mon, 1 ];
-    if (onset.mday) {
-        trans[2] = onset.mday;
-    }
-    else if (onset.wkday) {
-        var date = new Date(year, onset.mon - 1, 1, onset.hour, onset.min, onset.sec);
-
-        // last wkday of month
-        var wkday, adjust;
-        if (onset.week == -1) {
-            // NOTE: This creates a date of the *last* day of specified month by
-            //       setting the month to *next* month and setting day of month
-            //       to zero (i.e. the day *before* the first day).
-            var last = new Date(new Date(date.getTime()).setMonth(onset.mon, 0));
-            var count = last.getDate();
-            wkday = last.getDay() + 1;
-            adjust = wkday >= onset.wkday ? wkday - onset.wkday : 7 - onset.wkday - wkday;
-            trans[2] = count - adjust;
+Y.mix(AjxTimezone, {
+    /**
+     * Get DST trasition date
+     * @method getTransition
+     * @static
+     * @param onset {Object} DST transition information
+     * @param year {Number} Year in which transition date is calculated
+     * @return {Array} Transition as [year, month, day]
+     */
+    getTransition: function(onset, year) {
+        var trans = [ year || new Date().getFullYear(), onset.mon, 1 ];
+        if (onset.mday) {
+            trans[2] = onset.mday;
         }
+        else if (onset.wkday) {
+            var date = new Date(year, onset.mon - 1, 1, onset.hour, onset.min, onset.sec);
 
-        // Nth wkday of month
-        else {
-            wkday = date.getDay() + 1;
-            adjust = onset.wkday == wkday ? 1 :0;
-            trans[2] = onset.wkday + 7 * (onset.week - adjust) - wkday + 1;
-        }
-    }
-    return trans;
-};
-
-AjxTimezone.addWkDayTransition = function(onset) {
-    var trans = onset.trans;
-    var mon = trans[1];
-    var monDay = trans[2];
-    var week = Math.floor((monDay - 1) / 7);
-    var date = new Date(trans[0], trans[1] - 1, trans[2], 12, 0, 0);
-
-    // NOTE: This creates a date of the *last* day of specified month by
-    //       setting the month to *next* month and setting day of month
-    //       to zero (i.e. the day *before* the first day).
-    var count = new Date(new Date(date.getTime()).setMonth(mon - 1, 0)).getDate();
-    var last = count - monDay < 7;
-
-    // set onset values
-    onset.mon =  mon;
-    onset.week = last ? -1 : week + 1;
-    onset.wkday = date.getDay() + 1;
-    onset.hour = trans[3];
-    onset.min = trans[4];
-    onset.sec = trans[5];
-    return onset;
-};
-
-AjxTimezone.createTransitionDate = function(onset) {
-    var date = new Date(TimezoneData.TRANSITION_YEAR, onset.mon - 1, 1, 12, 0, 0);
-    if (onset.mday) {
-        date.setDate(onset.mday);
-    }
-    else if (onset.week == -1) {
-        date.setMonth(date.getMonth() + 1, 0);
-        for (var i = 0; i < 7; i++) {
-            if (date.getDay() + 1 == onset.wkday) {
-                break;
+            // last wkday of month
+            var wkday, adjust;
+            if (onset.week == -1) {
+                // NOTE: This creates a date of the *last* day of specified month by
+                //       setting the month to *next* month and setting day of month
+                //       to zero (i.e. the day *before* the first day).
+                var last = new Date(new Date(date.getTime()).setMonth(onset.mon, 0));
+                var count = last.getDate();
+                wkday = last.getDay() + 1;
+                adjust = wkday >= onset.wkday ? wkday - onset.wkday : 7 - onset.wkday - wkday;
+                trans[2] = count - adjust;
             }
-            date.setDate(date.getDate() - 1);
-        }
-    }
-    else {
-        for (i = 0; i < 7; i++) {
-            if (date.getDay() + 1 == onset.wkday) {
-                break;
+
+            // Nth wkday of month
+            else {
+                wkday = date.getDay() + 1;
+                adjust = onset.wkday == wkday ? 1 :0;
+                trans[2] = onset.wkday + 7 * (onset.week - adjust) - wkday + 1;
             }
-            date.setDate(date.getDate() + 1);
         }
-        date.setDate(date.getDate() + 7 * (onset.week - 1));
-    }
-    var trans = [ date.getFullYear(), date.getMonth() + 1, date.getDate() ];
-    return trans;
-};
+        return trans;
+    },
 
-AjxTimezone.prototype.getShortName = function(tzId) {
-    var shortName = this.localeData[tzId + "_Z_short"] || ["GMT",AjxTimezone._SHORT_NAMES[tzId]].join("");
-    return shortName;
-};
-AjxTimezone.prototype.getMediumName = function(tzId) {
-    var mediumName = this.localeData[tzId + "_Z_abbreviated"] || ['(',this.getShortName(tzId),') ',tzId].join("");
-    return mediumName;
-};
-AjxTimezone.prototype.getLongName = AjxTimezone.prototype.getMediumName;
+    /**
+     * Add dst transition rules with dst information
+     * @method addRule
+     * @static
+     * @param rule {Object} Object containing timezone information
+     */
+    addRule: function(rule) {
+        var tzId = rule.tzId, array;
 
-AjxTimezone.addRule = function(rule) {
-    var tzId = rule.tzId;
+        AjxTimezone._SHORT_NAMES[tzId] = AjxTimezone._generateShortName(rule.standard.offset);
+        AjxTimezone._CLIENT2RULE[tzId] = rule;
 
-    AjxTimezone._SHORT_NAMES[tzId] = AjxTimezone._generateShortName(rule.standard.offset);
-    AjxTimezone._CLIENT2RULE[tzId] = rule;
+        array = rule.daylight ? AjxTimezone.DAYLIGHT_RULES : AjxTimezone.STANDARD_RULES;
+        array.push(rule);
+    },
 
-    var array = rule.daylight ? AjxTimezone.DAYLIGHT_RULES : AjxTimezone.STANDARD_RULES;
-    array.push(rule);
-};
+    /**
+     * Get dst transition rule
+     * @method getRule
+     * @static
+     * @param tzId {Object} Timezone Id
+     * @param tz {Object} Rule object to match against
+     * @return {Object} The rule
+     */
+    getRule: function(tzId, tz) {
+        var rule = AjxTimezone._CLIENT2RULE[tzId];
+        if (!rule && tz) {
+            var names = [ "standard", "daylight" ];
+            var rules = tz.daylight ? AjxTimezone.DAYLIGHT_RULES : AjxTimezone.STANDARD_RULES;
+            for (var i = 0; i < rules.length; i++) {
+                rule = rules[i];
 
-AjxTimezone.getRule = function(tzId, tz) {
-    var rule = AjxTimezone._CLIENT2RULE[tzId];
-    if (!rule && tz) {
-        var names = [ "standard", "daylight" ];
-        var rules = tz.daylight ? AjxTimezone.DAYLIGHT_RULES : AjxTimezone.STANDARD_RULES;
-        for (var i = 0; i < rules.length; i++) {
-            rule = rules[i];
-
-            var found = true;
-            for (var j = 0; j < names.length; j++) {
-                var name = names[j];
-                var onset = rule[name];
-                if (!onset) continue;
+                var found = true;
+                for (var j = 0; j < names.length; j++) {
+                    var name = names[j];
+                    var onset = rule[name];
+                    if (!onset) continue;
 			
-                var breakOuter = false;
+                    var breakOuter = false;
 
-                for (var p in tz[name]) {
-                    if (tz[name][p] != onset[p]) {
-                        found = false;
-                        breakOuter = true;
+                    for (var p in tz[name]) {
+                        if (tz[name][p] != onset[p]) {
+                            found = false;
+                            breakOuter = true;
+                            break;
+                        }
+                    }
+                
+                    if(breakOuter){
                         break;
                     }
                 }
-                
-                if(breakOuter){
-                    break;
+                if (found) {
+                    return rule;
                 }
             }
-            if (found) {
-                return rule;
+            return null;
+        }
+
+        return rule;
+    },
+
+    /**
+     * Get offset in minutes from GMT
+     * @method getOffset
+     * @static
+     * @param tzId {String} Timezone ID
+     * @param date {Date} Date on which the offset is to be found (offset may differ by date due to DST)
+     * @return {Number} Offset in minutes from GMT
+     */
+    getOffset: function(tzId, date) {
+        var rule = AjxTimezone.getRule(tzId);
+        if (rule && rule.daylight) {
+            var year = date.getFullYear();
+
+            var standard = rule.standard, daylight  = rule.daylight;
+            var stdTrans = AjxTimezone.getTransition(standard, year);
+            var dstTrans = AjxTimezone.getTransition(daylight, year);
+
+            var month    = date.getMonth()+1, day = date.getDate();
+            var stdMonth = stdTrans[1], stdDay = stdTrans[2];
+            var dstMonth = dstTrans[1], dstDay = dstTrans[2];
+
+            // northern hemisphere
+            var isDST = false;
+            if (dstMonth < stdMonth) {
+                isDST = month > dstMonth && month < stdMonth;
+                isDST = isDST || (month == dstMonth && day >= dstDay);
+                isDST = isDST || (month == stdMonth && day <  stdDay);
+            }
+
+            // sorthern hemisphere
+            else {
+                isDST = month < dstMonth || month > stdMonth;
+                isDST = isDST || (month == dstMonth && day <  dstDay);
+                isDST = isDST || (month == stdMonth && day >= stdDay);
+            }
+
+            return isDST ? daylight.offset : standard.offset;
+        }
+        return rule ? rule.standard.offset : -(new Date().getTimezoneOffset());
+    },
+
+    /**
+     * Compare rules to sort by offset
+     * @method _BY_OFFSET
+     * @static
+     * @private
+     * @param arule {Object} Rule to compare
+     * @param brule {Object} Rule to compare
+     * @return {Number} Difference in offsets between the rules.
+               If offsets are equal, returns 1 if timezone id of arule comes first alphabetically, -1 otherwise
+     */
+    _BY_OFFSET: function(arule, brule) {
+        // sort by offset and then by name
+        var delta = arule.standard.offset - brule.standard.offset;
+        if (delta == 0) {
+            var aname = arule.tzId;
+            var bname = brule.tzId;
+            if (aname < bname) delta = -1;
+            else if (aname > bname) delta = 1;
+        }
+        return delta;
+    },
+
+    _SHORT_NAMES: {},
+    _CLIENT2RULE: {},
+    /** 
+     * The data is specified using the server identifiers for historical
+     * reasons. Perhaps in the future we'll use the client (i.e. Java)
+     * identifiers on the server as well.
+     */
+    STANDARD_RULES: [],
+    DAYLIGHT_RULES: [],
+
+    /**
+     * Generate short name for a timezone like +0530 for IST
+     * @method _generateShortName
+     * @static
+     * @private
+     * @param offset {Number} Offset in minutes from GMT
+     * @param [period=false] {Boolean} If true, a dot is inserted between hours and minutes
+     * @return {String} Short name for timezone
+     */
+    _generateShortName: function(offset, period) {
+        if (offset == 0) return "";
+        var sign = offset < 0 ? "-" : "+";
+        var stdOffset = Math.abs(offset);
+        var hours = Math.floor(stdOffset / 60);
+        var minutes = stdOffset % 60;
+        hours = hours < 10 ? '0' + hours : hours;
+        minutes = minutes < 10 ? '0' + minutes : minutes;
+        return [sign,hours,period?".":"",minutes].join("");
+    },
+
+    /**
+     * Initialized timezone rules. Only for internal use.
+     * @method _initTimezoneRules
+     * @static
+     * @private
+     */
+    _initTimezoneRules: function() {
+        var rule, i, j, array;
+
+        for (i = 0; i < TimezoneData.TIMEZONE_RULES.length; i++) {
+            rule = TimezoneData.TIMEZONE_RULES[i];
+            array = rule.daylight ? AjxTimezone.DAYLIGHT_RULES : AjxTimezone.STANDARD_RULES;
+            array.push(rule);
+        }
+
+        TimezoneData.TIMEZONE_RULES.sort(AjxTimezone._BY_OFFSET);
+        for (j = 0; j < TimezoneData.TIMEZONE_RULES.length; j++) {
+            rule = TimezoneData.TIMEZONE_RULES[j];
+            AjxTimezone.addRule(rule);
+        }
+    },
+
+    /**
+     * Get timezone ids matching raw offset
+     * @method getCurrentTimezoneIds
+     * @static
+     * @param rawOffset {Number} Offset in seconds from GMT
+     * @return {Array} timezone ids having the specified offset
+     */
+    getCurrentTimezoneIds: function(rawOffset) {
+        rawOffset = rawOffset/60;	//Need offset in minutes
+
+        var result = [],
+            today = new Date();
+
+        for(tzId in AjxTimezone._CLIENT2RULE) {
+            if(rawOffset == 0 || AjxTimezone.getOffset(tzId, today) == rawOffset) {
+                result.push(tzId);
             }
         }
-        return null;
-    }
 
-    return rule;
-};
-
-AjxTimezone.getOffset = function(tzId, date) {
-    var rule = AjxTimezone.getRule(tzId);
-    if (rule && rule.daylight) {
-        var year = date.getFullYear();
-
-        var standard = rule.standard, daylight  = rule.daylight;
-        var stdTrans = AjxTimezone.getTransition(standard, year);
-        var dstTrans = AjxTimezone.getTransition(daylight, year);
-
-        var month    = date.getMonth()+1, day = date.getDate();
-        var stdMonth = stdTrans[1], stdDay = stdTrans[2];
-        var dstMonth = dstTrans[1], dstDay = dstTrans[2];
-
-        // northern hemisphere
-        var isDST = false;
-        if (dstMonth < stdMonth) {
-            isDST = month > dstMonth && month < stdMonth;
-            isDST = isDST || (month == dstMonth && day >= dstDay);
-            isDST = isDST || (month == stdMonth && day <  stdDay);
+        for(link in TimezoneLinks) {
+            if(Y.Array.indexOf(result,TimezoneLinks[link]) != -1) {
+                result.push(link);
+            }
         }
+        return result;
+    },
 
-        // sorthern hemisphere
-        else {
-            isDST = month < dstMonth || month > stdMonth;
-            isDST = isDST || (month == dstMonth && day <  dstDay);
-            isDST = isDST || (month == stdMonth && day >= stdDay);
+    /**
+     * Get the first timezone matching rawOffset
+     * @method getTimezoneIdForOffset
+     * @static
+     * @param rawOffset {Number} offset in seconds from GMT
+     * @return {String} tzId of timezone that matches the offset. Returns empty string if no matches found
+     */
+    getTimezoneIdForOffset: function(rawOffset) {
+        rawOffset = rawOffset/60;	//Need offset in minutes
+
+        if(rawOffset % 60 == 0) {
+            var etcGMTId = "Etc/GMT";
+            if(rawOffset != 0) {
+                etcGMTId += (rawOffset > 0? "-": "+") + rawOffset/60;
+            }
+
+            if(AjxTimezone._CLIENT2RULE[etcGMTId] != null) {
+                return etcGMTId;
+            } 
         }
-
-        return isDST ? daylight.offset : standard.offset;
-    }
-    return rule ? rule.standard.offset : -(new Date().getTimezoneOffset());
-};
-
-AjxTimezone._BY_OFFSET = function(arule, brule) {
-    // sort by offset and then by name
-    var delta = arule.standard.offset - brule.standard.offset;
-    if (delta == 0) {
-        var aname = arule.tzId;
-        var bname = brule.tzId;
-        if (aname < bname) delta = -1;
-        else if (aname > bname) delta = 1;
-    }
-    return delta;
-};
-
-// Constants
-
-AjxTimezone._SHORT_NAMES = {};
-AjxTimezone._CLIENT2RULE = {};
-
-/** 
- * The data is specified using the server identifiers for historical
- * reasons. Perhaps in the future we'll use the client (i.e. Java)
- * identifiers on the server as well.
- */
-AjxTimezone.STANDARD_RULES = [];
-AjxTimezone.DAYLIGHT_RULES = [];
-(function() {
-    for (var i = 0; i < TimezoneData.TIMEZONE_RULES.length; i++) {
-        var rule = TimezoneData.TIMEZONE_RULES[i];
-        var array = rule.daylight ? AjxTimezone.DAYLIGHT_RULES : AjxTimezone.STANDARD_RULES;
-        array.push(rule);
-    }
-})();
-
-AjxTimezone._generateShortName = function(offset, period) {
-    if (offset == 0) return "";
-    var sign = offset < 0 ? "-" : "+";
-    var stdOffset = Math.abs(offset);
-    var hours = Math.floor(stdOffset / 60);
-    var minutes = stdOffset % 60;
-    hours = hours < 10 ? '0' + hours : hours;
-    minutes = minutes < 10 ? '0' + minutes : minutes;
-    return [sign,hours,period?".":"",minutes].join("");
-};
-
-(function() {
-    TimezoneData.TIMEZONE_RULES.sort(AjxTimezone._BY_OFFSET);
-    for (var j = 0; j < TimezoneData.TIMEZONE_RULES.length; j++) {
-        var rule = TimezoneData.TIMEZONE_RULES[j];
-        AjxTimezone.addRule(rule);
-    }
-})();
-
-Array.prototype.indexOf = function(obj) {
-    for(var i=0; i<this.length; i++) {
-        if(this[i] == obj) {
-            return i;
-        }
-    }
-    return -1;
-}
-
-AjxTimezone.getCurrentTimezoneIds = function(rawOffset) {
-    rawOffset = rawOffset/60;	//Need offset in minutes
-    var result = [];
-    var today = new Date();
-    for(tzId in AjxTimezone._CLIENT2RULE) {
-        if(rawOffset == 0 || AjxTimezone.getOffset(tzId, today) == rawOffset) {
-            result.push(tzId);
-        }
-    }
-
-    for(link in TimezoneLinks) {
-        if(result.indexOf(TimezoneLinks[link]) != -1) {
-            result.push(link);
-        }
-    }
-    return result;
-}
-
-AjxTimezone.getTimezoneIdForOffset = function(rawOffset) {
-    rawOffset = rawOffset/60;	//Need offset in minutes
-
-    if(rawOffset % 60 == 0) {
-        var etcGMTId = "Etc/GMT";
-        if(rawOffset != 0) {
-            etcGMTId += (rawOffset > 0? "-": "+") + rawOffset/60;
-        }
-
-        if(AjxTimezone._CLIENT2RULE[etcGMTId] != null) {
-            return etcGMTId;
-        } 
-    }
 	
-    var today = new Date();
-    for(tzId in AjxTimezone._CLIENT2RULE) {
-        if(AjxTimezone.getOffset(tzId, today) == rawOffset) {
-            return tzId;
-        }
-    }
-
-    return "";
-}
-
-AjxTimezone.isDST = function(tzId, date) {
-    var rule = AjxTimezone.getRule(tzId);
-    if (rule && rule.daylight) {
-        var year = date.getFullYear();
-
-        var standard = rule.standard, daylight  = rule.daylight;
-        var stdTrans = AjxTimezone.getTransition(standard, year);
-        var dstTrans = AjxTimezone.getTransition(daylight, year);
-
-        var month    = date.getMonth()+1, day = date.getDate();
-        var stdMonth = stdTrans[1], stdDay = stdTrans[2];
-        var dstMonth = dstTrans[1], dstDay = dstTrans[2];
-
-        // northern hemisphere
-        var isDSTActive = false;
-        if (dstMonth < stdMonth) {
-            isDSTActive = month > dstMonth && month < stdMonth;
-            isDSTActive = isDSTActive || (month == dstMonth && day >= dstDay);
-            isDSTActive = isDSTActive || (month == stdMonth && day <  stdDay);
+        var today = new Date();
+        for(tzId in AjxTimezone._CLIENT2RULE) {
+            if(AjxTimezone.getOffset(tzId, today) == rawOffset) {
+                return tzId;
+            }
         }
 
-        // sorthern hemisphere
-        else {
-            isDSTActive = month < dstMonth || month > stdMonth;
-            isDSTActive = isDSTActive || (month == dstMonth && day <  dstDay);
-            isDSTActive = isDSTActive || (month == stdMonth && day >= stdDay);
+        return "";
+    },
+
+    /**
+     * Check whether DST is active at specified date
+     * @method isDST
+     * @static
+     * @param tzId {String} Timezone ID
+     * @param date {Date}
+     * @return {Number} 1 if DST is active, 0 if not, and -1 if specified timezone does not observe DST
+     */
+    isDST: function(tzId, date) {
+        var rule = AjxTimezone.getRule(tzId);
+        if (rule && rule.daylight) {
+            var year = date.getFullYear();
+
+            var standard = rule.standard, daylight  = rule.daylight;
+            var stdTrans = AjxTimezone.getTransition(standard, year);
+            var dstTrans = AjxTimezone.getTransition(daylight, year);
+
+            var month    = date.getMonth()+1, day = date.getDate();
+            var stdMonth = stdTrans[1], stdDay = stdTrans[2];
+            var dstMonth = dstTrans[1], dstDay = dstTrans[2];
+
+            // northern hemisphere
+            var isDSTActive = false;
+            if (dstMonth < stdMonth) {
+                isDSTActive = month > dstMonth && month < stdMonth;
+                isDSTActive = isDSTActive || (month == dstMonth && day >= dstDay);
+                isDSTActive = isDSTActive || (month == stdMonth && day <  stdDay);
+            }
+
+            // sorthern hemisphere
+            else {
+                isDSTActive = month < dstMonth || month > stdMonth;
+                isDSTActive = isDSTActive || (month == dstMonth && day <  dstDay);
+                isDSTActive = isDSTActive || (month == stdMonth && day >= stdDay);
+            }
+
+            return isDSTActive? 1:0;
         }
+        return -1;
+    },
 
-        return isDSTActive? 1:0;
+    /**
+     * Check whether tzId is a valid timezone
+     * @method isValidTimezoneId
+     * @static
+     * @param tzId {String} Timezone ID
+     * @return {Boolean} true if tzId is valid, false otherwise
+     */
+    isValidTimezoneId: function(tzId) {
+        return (AjxTimezone._CLIENT2RULE[tzId] !== undefined || TimezoneLinks[tzId] !== undefined);
     }
-    return -1;
-}
+});
 
-AjxTimezone.isValidTimezoneId = function(tzId) {
-    return (AjxTimezone._CLIENT2RULE[tzId] != null || TimezoneLinks[tzId] != null);
-}
+Y.mix(AjxTimezone.prototype, {
 
-//
-// Start YUI Code
-//
-    
-//Support methods first
+    /**
+     * Get short name of timezone
+     * @method getShortName
+     * @param tzId {String} Timezone ID
+     * @return {String}
+     */
+    getShortName: function(tzId) {
+        var shortName = this.localeData[tzId + "_Z_short"] || ["GMT",AjxTimezone._SHORT_NAMES[tzId]].join("");
+        return shortName;
+    },
 
-/**
- * Pad number so that it is atleast num characters long
- * @param {String} num String to be padded
- * @param {Number} length (Optional) Minimum number of characters the string should have after padding. If omitted, defaults to 2
- * @return {String} The padded string
- */
-function zeroPad(num, length) {
-    length = length || 2;
-    var str = num + "";
-    for(var i=str.length; i<length; i++) {
-        str = "0" + str;
-    }
-    return str;
-}
+    /**
+     * Get medium length name of timezone
+     * @method getMediumName
+     * @param tzId {String} Timezone ID
+     * @return {String}
+     */
+    getMediumName: function(tzId) {
+        var mediumName = this.localeData[tzId + "_Z_abbreviated"] || ['(',this.getShortName(tzId),') ',tzId].join("");
+        return mediumName;
+    },
 
-/**
- * Get Day of Year(0-365) for the date passed
- * @param {Date} date
- * @return {Number} Day of Year
- */
-function getDOY(date) {
-    var oneJan = new Date(date.getFullYear(),0,1);
-    return Math.ceil((date - oneJan) / 86400000);
-}
-    
-/**
- * Get integer part of floating point argument
- * @param floatNum A real number
- * @return Integer part of floatNum
- */
-function floatToInt(floatNum) {
-    return (floatNum < 0) ? Math.ceil(floatNum) : Math.floor(floatNum);
-}
+    /**
+     * Get long name of timezone
+     * @method getLongName
+     * @param tzId {String} Timezone Id
+     * @return {String}
+     */
+    getLongName: AjxTimezone.prototype.getMediumName
+});
+
+AjxTimezone._initTimezoneRules();
 
 /**
- * Timezone constructor. locale is optional, if not specified, defaults to root locale
+ * Timezone performs operations on a given timezone string represented in Olson tz database 
  * @class Timezone
  * @constructor
  * @param {String} tzId TimeZone ID as in Olson tz database
  */
-Timezone = function(tzId) {
+Y.Date.Timezone = function(tzId) {
     var normalizedId = Timezone.getNormalizedTimezoneId(tzId);
     if(normalizedId == "") {
-        throw new Timezone.UnknownTimeZoneException("Could not find timezone: " + tzId);
+	Y.error("Could not find timezone: " + tzId);
     }
     this.tzId = normalizedId;
         
     this._ajxTimeZoneInstance = new AjxTimezone();
-}
+};
 
-//Exception Handling
-Timezone.UnknownTimeZoneException = function (message) {
-    this.message = message;
-}
-Timezone.UnknownTimeZoneException.prototype.toString = function () {
-    return 'UnknownTimeZoneException: ' + this.message;
-}
+Y.namespace("Date");
+Timezone = Y.Date.Timezone;
 
-//Static methods
+Y.mix(Timezone, {
+    /**
+     * Get Day of Year(0-365) for the date passed
+     * @method _getDOY
+     * @private
+     * @static
+     * @param {Date} date
+     * @return {Number} Day of Year
+     */
+    _getDOY: function (date) {
+        var oneJan = new Date(date.getFullYear(),0,1);
+        return Math.ceil((date - oneJan) / 86400000);
+    },
+    
+    /**
+     * Get integer part of floating point argument
+     * @method floatToInt
+     * @static
+     * @private
+     * @param floatNum {Number} A real number
+     * @return {Number} Integer part of floatNum
+     */
+    _floatToInt: function (floatNum) {
+        return (floatNum < 0) ? Math.ceil(floatNum) : Math.floor(floatNum);
+    },
 
-/**
- * Returns list of timezone Id's that have the same rawOffSet as passed in
- * @param {Number} rawOffset Raw offset (in seconds) from GMT.
- * @return {Array} array of timezone Id's that match rawOffset passed in to the API. 
- */
-Timezone.getCurrentTimezoneIds = function(rawOffset) {
-    return AjxTimezone.getCurrentTimezoneIds(rawOffset);
-}
+    /**
+     * Returns list of timezone Id's that have the same rawOffSet as passed in
+     * @method getCurrentTimezoneIds
+     * @static
+     * @param {Number} rawOffset Raw offset (in seconds) from GMT.
+     * @return {Array} array of timezone Id's that match rawOffset passed in to the API. 
+     */
+    getCurrentTimezoneIds: function(rawOffset) {
+        return AjxTimezone.getCurrentTimezoneIds(rawOffset);
+    },
 
-/**
- * Given a raw offset in seconds, get the tz database ID that reflects the given raw offset, or empty string if there is no such ID. Where available, the function will return an ID 
- * starting with "Etc/GMT"; for offsets where no such ID exists but that are used by actual time zones, the ID of one of those time zones is returned.
- * Note that the offset shown in an "Etc/GMT" ID is opposite to the value of rawOffset
- * @param {Number} rawOffset Offset from GMT in seconds
- * @return {String} timezone id
- */
-Timezone.getTimezoneIdForOffset = function(rawOffset) {
-    return AjxTimezone.getTimezoneIdForOffset(rawOffset);
-}
+    /**
+     * Given a raw offset in seconds, get the tz database ID that reflects the given raw offset, or empty string if there is no such ID.
+       Where available, the function will return an ID 
+     * starting with "Etc/GMT"; for offsets where no such ID exists but that are used by actual time zones, the ID of one of those time zones is returned.
+     * Note that the offset shown in an "Etc/GMT" ID is opposite to the value of rawOffset
+     * @method getTimezoneIdForOffset
+     * @static
+     * @param {Number} rawOffset Offset from GMT in seconds
+     * @return {String} timezone id
+     */
+    getTimezoneIdForOffset: function(rawOffset) {
+        return AjxTimezone.getTimezoneIdForOffset(rawOffset);
+    },
 
-/**
- * Given a wall time reference, convert it to UNIX time - seconds since Epoch
- * @param {Object} walltime Walltime that needs conversion. Missing properties will be treat as 0.
- * @return {Number} UNIX time - time in seconds since Epoch
- */
-Timezone.getUnixTimeFromWallTime = function(walltime) {
-    /*
-	 * Initialize any missing properties.
-	 */
-    if(walltime.year == null) {
-        walltime.year = new Date().getFullYear();	//Default to current year
-    }
-    if(walltime.mon == null) {
-        walltime.mon = 0;				//Default to January
-    }
-    if(walltime.mday == null) {
-        walltime.mday = 1;				//Default to first of month
-    }
-    if(walltime.hour == null) {			//Default to 12 midnight
-        walltime.hour = 0;
-    }
-    if(walltime.min == null) {
-        walltime.min = 0;
-    }
-    if(walltime.sec == null) {
-        walltime.sec = 0;
-    }
-    if(walltime.gmtoff == null) {			//Default to UTC
-        walltime.gmtoff = 0;
-    }
+    /**
+     * Given a wall time reference, convert it to UNIX time - seconds since Epoch
+     * @method getUnixTimeFromWallTime
+     * @static
+     * @param {Object} walltime Walltime that needs conversion. Missing properties will be treat as 0.
+     * @return {Number} UNIX time - time in seconds since Epoch
+     */
+    getUnixTimeFromWallTime: function(walltime) {
+        /*
+         * Initialize any missing properties.
+         */
+        if(walltime.year == null) {
+            walltime.year = new Date().getFullYear();	//Default to current year
+        }
+        if(walltime.mon == null) {
+            walltime.mon = 0;				//Default to January
+        }
+        if(walltime.mday == null) {
+            walltime.mday = 1;				//Default to first of month
+        }
+        if(walltime.hour == null) {			//Default to 12 midnight
+            walltime.hour = 0;
+        }
+        if(walltime.min == null) {
+            walltime.min = 0;
+        }
+        if(walltime.sec == null) {
+            walltime.sec = 0;
+        }
+        if(walltime.gmtoff == null) {			//Default to UTC
+            walltime.gmtoff = 0;
+        }
 
-    var utcTime = Date.UTC(walltime.year, walltime.mon, walltime.mday, walltime.hour, walltime.min, walltime.sec);
-    utcTime -= walltime.gmtoff*1000;
+        var utcTime = Date.UTC(walltime.year, walltime.mon, walltime.mday, walltime.hour, walltime.min, walltime.sec);
+        utcTime -= walltime.gmtoff*1000;
 
-    return floatToInt(utcTime/1000);	//Unix time: count from midnight Jan 1 1970 UTC
-}
+        return floatToInt(utcTime/1000);	//Unix time: count from midnight Jan 1 1970 UTC
+    },
 
 /**
  * Checks if the timestamp passed in is a valid timestamp for this timezone and offset.
+ * @method
+ * @static
  * @param {String} timeStamp Time value in UTC RFC3339 format - yyyy-mm-ddThh:mm:ssZ or yyyy-mm-ddThh:mm:ss+/-HH:MM
  * @param {Number} rawOffset An offset from UTC in seconds. 
  * @return {Boolean} true if valid timestamp, false otherwise
  */
-Timezone.isValidTimestamp = function(timeStamp, rawOffset) {
+isValidTimestamp: function(timeStamp, rawOffset) {
     var regex = /^(\d\d\d\d)-([0-1][0-9])-([0-3][0-9])([T ])([0-2][0-9]):([0-6][0-9]):([0-6][0-9])(Z|[+-][0-1][0-9]:[0-3][0-9])?$/
     var matches = (new RegExp(regex)).exec(timeStamp);
 
@@ -480,7 +523,7 @@ Timezone.isValidTimestamp = function(timeStamp, rawOffset) {
     //Months with 31 days
     var m31 = [1,3,5,7,8,10,12];
     var maxDays = 30;
-    if(m31.indexOf(month) != -1) {
+    if(Y.Array.indexOf(m31,month) != -1) {
         maxDays = 31;
     } else if(month == 2) {
         if(year % 400 == 0) {
@@ -531,24 +574,28 @@ Timezone.isValidTimestamp = function(timeStamp, rawOffset) {
 
     //If reached here, wrong format
     return false;
-}
+},
 
 /**
  * Checks if tzId passed in is a valid Timezone id in tz database.
+ * @method
+ * @static
  * @param {String} tzId timezoneId to be checked for validity
  * @return {Boolean} true if tzId is a valid timezone id in tz database. tzId could be a "zone" id or a "link" id to be a valid tz Id. False otherwise
  */
-Timezone.isValidTimezoneId = function(tzId) {
+isValidTimezoneId: function(tzId) {
     return AjxTimezone.isValidTimezoneId(tzId);
-}
+},
 
 /**
  * Returns the normalized version of the time zone ID, or empty string if tzId is not a valid time zone ID.
  * If tzId is a link Id, the standard name will be returned.
+ * @method
+ * @static
  * @param {String} tzId The timezone ID whose normalized form is requested.
  * @return {String} The normalized version of the timezone Id, or empty string if tzId is not a valid time zone Id.
  */
-Timezone.getNormalizedTimezoneId = function(tzId) {
+getNormalizedTimezoneId: function(tzId) {
     if(!Timezone.isValidTimezoneId(tzId)) {
         return "";
     }
@@ -562,12 +609,14 @@ Timezone.getNormalizedTimezoneId = function(tzId) {
         
     return normalizedId;
 }
-    
+});
 //Private methods
 
 /**
  * Parse RFC3339 date format and return the Date
  * Format: yyyy-mm-ddThh:mm:ssZ
+ * @method
+ * @private
  * @param {String} dString The date string to be parsed
  * @return {Date} The date represented by dString
  */
@@ -602,6 +651,8 @@ Timezone.prototype._parseRFC3339 = function(dString){
 /**
  * Parse SQL date format and return the Date
  * Format: yyyy-mm-dd hh:mm:ss
+ * @method
+ * @private
  * @param {String} dString The date string to be parsed
  * @return {Date} The date represented by dString
  */
@@ -616,28 +667,41 @@ Timezone.prototype._parseSQLFormat = function(dString) {
 
 //Public methods
 
-//For use in Y.DateFormat.
+/**
+ * Return a short name for the timezone
+ * @method
+ * @return {String} Short name
+ */
 Timezone.prototype.getShortName = function() {
     return this._ajxTimeZoneInstance.getShortName(this.tzId);
 }
 
-//For use in Y.DateFormat.
+/**
+ * Return a medium length name for the timezone
+ * @method
+ * @return {String} Medium length name
+ */
 Timezone.prototype.getMediumName = function() {
     return this._ajxTimeZoneInstance.getMediumName(this.tzId);
 }
 
-//For use in Y.DateFormat.
+/**
+ * Return a long name for the timezone
+ * @method
+ * @return {String} Long name
+ */
 Timezone.prototype.getLongName = function() {
     return this._ajxTimeZoneInstance.getLongName(this.tzId);
 }
     
 /**
  * Given a timevalue representation in RFC 3339 or SQL format, convert to UNIX time - seconds since Epoch ie., since 1970-01-01T00:00:00Z
+ * @method
  * @param {String} timeValue TimeValue representation in RFC 3339 or SQL format.
  * @return {Number} UNIX time - time in seconds since Epoch
  */
 Timezone.prototype.convertToIncrementalUTC = function(timeValue) {
-    if(timeValue.indexOf("T") != -1) {
+    if(Y.Array.indexOf(timeValue,"T") != -1) {
         //RFC3339
         return this._parseRFC3339(timeValue).getTime() / 1000;
     } else {
@@ -648,29 +712,34 @@ Timezone.prototype.convertToIncrementalUTC = function(timeValue) {
 
 /**
  * Given UNIX time - seconds since Epoch ie., 1970-01-01T00:00:00Z, convert the timevalue to RFC3339 format - "yyyy-mm-ddThh:mm:ssZ"
+ * @method
  * @param {Number} timeValue time value in seconds since Epoch.
  * @return {String} RFC3339 format timevalue - "yyyy-mm-ddThh:mm:ssZ"
  */
 Timezone.prototype.convertUTCToRFC3339Format = function(timeValue) {
-    var uTime = new Date(timeValue * 1000);
-    var offset = AjxTimezone.getOffset(this.tzId, uTime);
+    var uTime = new Date(timeValue * 1000),
+        offset = AjxTimezone.getOffset(this.tzId, uTime),
+        offsetString = "Z",
+        rfc3339, offsetSign;
 
-    var offsetString = "Z";
     if(offset != 0) {
         var offsetSign = (offset > 0 ? "+": "-");
-        offsetString = offsetSign + zeroPad(Math.abs(floatToInt(offset/60))) + ":" + zeroPad(offset % 60);
+        offsetString = offsetSign + Y.Number._zeroPad(Math.abs(floatToInt(offset/60)), 2) + ":" + Y.Number._zeroPad(offset % 60, 2);
     }
 
     uTime.setTime(timeValue*1000 + offset*60*1000);
 
-    var rfc3339 = zeroPad(uTime.getUTCFullYear(), 4) + "-" + zeroPad((uTime.getUTCMonth() + 1)) + "-" + zeroPad(uTime.getUTCDate()) 
-    + "T" + zeroPad(uTime.getUTCHours()) + ":" + zeroPad(uTime.getUTCMinutes()) + ":" + zeroPad(uTime.getUTCSeconds()) + offsetString;
+    rfc3339 = Y.Number._zeroPad(uTime.getUTCFullYear(), 4) + "-" 
+                  + Y.Number._zeroPad((uTime.getUTCMonth() + 1), 2) + "-" + Y.Number._zeroPad(uTime.getUTCDate(), 2)
+                  + "T" + Y.Number._zeroPad(uTime.getUTCHours(), 2) + ":" + Y.Number._zeroPad(uTime.getUTCMinutes(), 2)
+                  + ":" + Y.Number._zeroPad(uTime.getUTCSeconds(), 2) + offsetString;
 
     return rfc3339;
 }
 
 /**
  * Given UNIX Time - seconds since Epoch ie., 1970-01-01T00:00:00Z, convert the timevalue to SQL Format - "yyyy-mm-dd hh:mm:ss"
+ * @method
  * @param {Number} timeValue time value in seconds since Epoch.
  * @return {String} SQL Format timevalue - "yyyy-mm-dd hh:mm:ss"
  */
@@ -679,14 +748,16 @@ Timezone.prototype.convertUTCToSQLFormat = function(timeValue) {
     var offset = AjxTimezone.getOffset(this.tzId, uTime);
     uTime.setTime(timeValue*1000 + offset*60*1000);
 
-    var sqlDate = zeroPad(uTime.getUTCFullYear(), 4) + "-" + zeroPad((uTime.getUTCMonth() + 1)) + "-" + zeroPad(uTime.getUTCDate()) 
-    + " " + zeroPad(uTime.getUTCHours()) + ":" + zeroPad(uTime.getUTCMinutes()) + ":" + zeroPad(uTime.getUTCSeconds());
+    var sqlDate = Y.Number._zeroPad(uTime.getUTCFullYear(), 4) + "-" + Y.Number._zeroPad((uTime.getUTCMonth() + 1), 2)
+                  + "-" + Y.Number._zeroPad(uTime.getUTCDate(), 2) + " " + Y.Number._zeroPad(uTime.getUTCHours(), 2)
+                  + ":" + Y.Number._zeroPad(uTime.getUTCMinutes(), 2) + ":" + Y.Number._zeroPad(uTime.getUTCSeconds(), 2);
 
     return sqlDate;
 }
 
 /**
  * Gets the offset of this timezone in seconds from UTC
+ * @method
  * @return {Number} offset of this timezone in seconds from UTC
  */
 Timezone.prototype.getRawOffset = function() {
@@ -695,6 +766,7 @@ Timezone.prototype.getRawOffset = function() {
 
 /**
  * Given a unix time, convert it to wall time for this timezone.
+ * @method
  * @param {Number} timeValue value in seconds from Epoch.
  * @return {Object} an object with the properties: sec, min, hour, mday, mon, year, wday, yday, isdst, gmtoff, zone. All of these are integers except for zone, which is a string. isdst is 1 if DST is active, and 0 if DST is inactive.
  */
@@ -719,5 +791,3 @@ Timezone.prototype.getWallTimeFromUnixTime = function(timeValue) {
 
     return walltime;
 }
-
-Y.Date.Timezone = Timezone;

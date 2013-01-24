@@ -3,22 +3,22 @@
  * Relative time formats supported are defined by how many units they may include.
  * Relative time is only used for past events. The Relative time formats use appropriate singular/plural/paucal/etc. forms for all languages.
  * In order to keep relative time formats independent of time zones, relative day names such as today, yesterday, or tomorrow are not used.
- * @module format-relative
  */
 
-var MODULE_NAME = "datatype-date-advanced-format";
 /**
- * @class YRelativeTimeFormat
+ * Class to handle relative time formatting
+ * @class __YRelativeTimeFormat
+ * @namespace Date
+ * @private
  * @constructor
- * @param {Number} style (Optional) Selector for the desired relative time format. If no argument is provided, default to ONE_UNIT_LONG. If argument is provided but is not a valid selector, an Error exception is thrown.
+ * @param [style='ONE_UNIT_LONG'] {Number|String} Selector for the desired relative time format. Should be key/value from Y.Date.RELATIVE_TIME_FORMATS
  */
-YRelativeTimeFormat = function(style) {
-    if(style && Y.Lang.isString(style)) {
-        style = Y.Date.RELATIVE_TIME_FORMATS[style];
-    }
+Y.Date.__YRelativeTimeFormat = function(style) {
     if(style == null) {
         style = Y.Date.RELATIVE_TIME_FORMATS.ONE_UNIT_LONG;
-    }
+    } else if(Y.Lang.isString(style)) {
+        style = Y.Date.RELATIVE_TIME_FORMATS[style];
+    } 
         
     this.patterns = Y.Intl.get(MODULE_NAME);
     this.style = style;
@@ -41,14 +41,29 @@ YRelativeTimeFormat = function(style) {
             this.abbr = false;
             break;
         default:
-            throw new Format.IllegalArgumentsException("Unknown style: Use a style from Y.Date.RELATIVE_TIME_FORMATS");
+            Y.error("Unknown style: Use a style from Y.Date.RELATIVE_TIME_FORMATS");
     }
 }
-	
-//Static data
+
+YRelativeTimeFormat = Y.Date.__YRelativeTimeFormat;
 
 Y.mix(Y.Date, {
+    /**
+     * Returns the current date. Used to calculate relative time. Change this parameter if you require comparison with different time.
+     * @property
+     * @type Number|function
+     * @static
+     */
     currentDate: function() { return new Date(); },
+
+    /**
+     * Format Style values to use during format/parse
+     * @property RELATIVE_TIME_FORMATS
+     * @type Object
+     * @static
+     * @final
+     * @for Date
+     */
     RELATIVE_TIME_FORMATS: {
         ONE_OR_TWO_UNITS_ABBREVIATED: 0,
         ONE_OR_TWO_UNITS_LONG: 1,
@@ -57,24 +72,22 @@ Y.mix(Y.Date, {
     }
 });
 	
-//Public methods
-	
 /**
  * Formats a time value.
- * One or two parameters are needed. If only one parameter is specified, this function formats the parameter relative to current time.
- * If two parameters are specified, this function formats the first parameter relative to the second parameter.
+ * @method format
+ * @for Date.__YRelativeTimeFormat
  * @param {Number} timeValue The time value (seconds since Epoch) to be formatted.
- * @param {Number} relativeTo (Optional) The time value (seconds since Epoch) in relation to which timeValue should be formatted. It must be greater than or equal to timeValue, otherwise exception will be thrown.
+ * @param {Number} [relativeTo=Current Time] The time value (seconds since Epoch) in relation to which timeValue should be formatted. It must be greater than or equal to timeValue
  * @return {String} The formatted string
  */
 YRelativeTimeFormat.prototype.format = function(timeValue, relativeTo) {
     if(relativeTo == null) { 
         relativeTo = (new Date()).getTime()/1000; 
         if(timeValue > relativeTo) {
-            throw new Format.IllegalArgumentsException("timeValue must be in the past");
+            Y.error("timeValue must be in the past");
         }
     } else if(timeValue > relativeTo) {
-        throw new Format.IllegalArgumentsException("relativeTo must be greater than or equal to timeValue");
+        Y.error("relativeTo must be greater than or equal to timeValue");
     }
 
     var date = new Date((relativeTo - timeValue)*1000);
@@ -165,7 +178,7 @@ YRelativeTimeFormat.prototype.format = function(timeValue, relativeTo) {
         pattern = pattern.replace("{" + i + "}", "");
     }
     //Remove unnecessary whitespaces
-    pattern = pattern.replace(/\s+/g, " ").replace(/^\s+/, "").replace(/\s+$/, "");
+    pattern = Y.Lang.trim(pattern.replace(/\s+/g, " "));
         
     return pattern;
 }

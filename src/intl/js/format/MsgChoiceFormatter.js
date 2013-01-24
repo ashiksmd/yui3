@@ -1,3 +1,11 @@
+/**
+ * Choice formatter. Select ouput based on numerical values
+ * @class
+ * @extends SelectFormatter
+ * @private
+ * @constructor
+ * @param values {Array|Object} The data to be processed and inserted. 
+ */
 ChoiceFormatter = function(values) {
     ChoiceFormatter.superclass.constructor.call(this, values);
     this.regex = "{\\s*([a-zA-Z0-9_]+)\\s*,\\s*choice\\s*,\\s*(.+)}";
@@ -9,6 +17,14 @@ ChoiceFormatter.createInstance = function(values) {
     return new ChoiceFormatter(values);
 }
 
+/**
+ * Parse choices in pattern and get options array.
+ * For internal use only.
+ * @method
+ * @private
+ * @param choicesStr {String} Choice string from pattern
+ * @return {Array} Array of objects containing value(choice), result, and relation
+ */
 ChoiceFormatter.prototype.parseOptions = function(choicesStr) {
     var options = [];
     var choicesArray = choicesStr.split("|");
@@ -33,6 +49,15 @@ ChoiceFormatter.prototype.parseOptions = function(choicesStr) {
     return options;
 }
 
+/**
+ * Get parameters from regex match
+ * For internal use only.
+ * @method
+ * @private
+ * @param params {Object} Object to receive value. Function will store the values key, value, choices in this variable
+ * @param matches {Array} Result of regex match over pattern string.
+ * @return {Boolean} True if value found, False otherwise
+ */
 ChoiceFormatter.prototype.getParams = function(params, matches) {
     if(SelectFormatter.prototype.getParams.call(this, params, matches)) {
         if(matches[2]) {
@@ -44,6 +69,14 @@ ChoiceFormatter.prototype.getParams = function(params, matches) {
     return false;
 }
 
+/**
+ * Select output depending on params.value from options in params.choices
+ * For internal use
+ * @method
+ * @private
+ * @param params {Object} Object containing value and choices
+ * @return {String} selected result
+ */
 ChoiceFormatter.prototype.select = function(params) {
     for ( var i=0; i<params.choices.length; i++) {
         var choice = params.choices[i];
@@ -56,6 +89,13 @@ ChoiceFormatter.prototype.select = function(params) {
     return "";
 }
 
+/**
+ * Format all instances in str that can be handled by ChoiceFormatter 
+ * @method
+ * @private
+ * @param str {String} Input string/pattern
+ * @return {String} Formatted result
+ */
 ChoiceFormatter.prototype.format = function(str) {
     var regex = new RegExp(this.regex, "gm");
     var matches = null;

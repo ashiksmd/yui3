@@ -1,8 +1,9 @@
-TimezoneData = {};
+var TimezoneData, TimezoneLinks, Timezone, AjxTimezone;
 
-TimezoneData.TRANSITION_YEAR = 2011;
-
-TimezoneData.TIMEZONE_RULES = [
+Y.mix(Y.Date.Timezone, {
+    __tzoneData: {
+         TRANSITION_YEAR: 2011,
+         TIMEZONE_RULES: [
 {
     tzId: "Asia/Riyadh88", 
     standard: {
@@ -2988,4 +2989,7 @@ TimezoneData.TIMEZONE_RULES = [
         offset: -240
     }
 }
-];
+]
+}});
+
+TimezoneData = Y.Date.Timezone.__tzoneData;

@@ -1,12 +1,12 @@
 //For MessageFormat
 
-UnsupportedOperationException = function(message) {
-    this.message = message;
-    this.toString = function() {
-        return "UnsupportedOperationException: " + this.message;
-    }
-}
-
+/**
+ * Formatter base class
+ * @class
+ * @private
+ * @constructor
+ * @param values {Array|Object} The data to be processed and inserted. 
+ */
 Formatter = function(values) {
     this.values = values;
 };
@@ -15,11 +15,18 @@ Formatter = function(values) {
 
 Formatter.createInstance = function(values) {
     //return new Formatter(values);
-    throw new UnsupportedOperationException('Not implemented');	//Must override in descendants
+    Y.error('Not implemented');	//Must override in descendants
 };
 
 //Public methods
 
+/**
+ * Get value of key
+ * @method
+ * @private
+ * @param key {String|Number} Key/index of value in the object/array 'values'
+ * @return Value from the data in 'values'
+ */
 Formatter.prototype.getValue = function(key) {
     if(Y.Lang.isArray(this.values)) {
         key = parseInt(key); 
@@ -27,6 +34,15 @@ Formatter.prototype.getValue = function(key) {
     return this.values[key];
 };
 
+/**
+ * Get value of params.key
+ * The value found will be set to params.value
+ * For internal use.
+ * @method
+ * @private
+ * @param params {Object} Object containing key as in { key: "KEY" }
+ * @return {Boolean} True if value found, False otherwise
+ */
 Formatter.prototype.getParams = function(params) {
     if(!params || !params.key) {
         return false;
@@ -43,19 +59,19 @@ Formatter.prototype.getParams = function(params) {
 };
 
 Formatter.prototype.format = function(str, config) {
-    throw new UnsupportedOperationException('Not implemented');	//Must override in descendants
+    Y.error('Not implemented');	//Must override in descendants
 };
 
 //For date and time formatters
 Y.mix(Formatter, {
+    /**
+     * Get current timezone. Used for time format
+     * @method
+     * @private
+     * @return {Y.Date.Timezone}
+     */
     getCurrentTimeZone: function() {
         var systemTZoneOffset = (new Date()).getTimezoneOffset()*-60;
         return Y.Date.Timezone.getTimezoneIdForOffset(systemTZoneOffset); 
     }
 })
-
-if(String.prototype.trim == null) {
-    String.prototype.trim = function() {
-        return this.replace(/^\s+/, '').replace(/\s+$/, '');
-    };
-}

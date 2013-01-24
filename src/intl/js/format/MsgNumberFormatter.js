@@ -1,3 +1,11 @@
+/**
+ * Number formatter
+ * @class
+ * @extends Formatter
+ * @private
+ * @constructor
+ * @param values {Array|Object} The data to be processed and inserted. 
+ */
 NumberFormatter = function(values) {
     NumberFormatter.superclass.constructor.call(this, values);
     this.styles = {
@@ -14,6 +22,15 @@ NumberFormatter.createInstance = function(values) {
     return new NumberFormatter(values);
 }
 
+/**
+ * Get parameters from regex match
+ * For internal use only.
+ * @method
+ * @private
+ * @param params {Object} Object to receive value. Function will store the values key, value, style in this variable
+ * @param matches {Array} Result of regex match over pattern string.
+ * @return {Boolean} True if value found, False otherwise
+ */
 NumberFormatter.prototype.getParams = function(params, matches) {
     if(matches) {
         if(matches[1]) {
@@ -40,6 +57,13 @@ NumberFormatter.prototype.getParams = function(params, matches) {
     return false;
 }
 
+/**
+ * Format all instances in str that can be handled by NumberFormatter 
+ * @method
+ * @private
+ * @param str {String} Input string/pattern
+ * @return {String} Formatted result
+ */
 NumberFormatter.prototype.format = function(str) {
     var regex = new RegExp(this.regex, "gm");
     var matches = null;

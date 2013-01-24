@@ -26,578 +26,617 @@ _yuitest_coverage["build/datatype-number-advanced-format/datatype-number-advance
     path: "build/datatype-number-advanced-format/datatype-number-advanced-format.js",
     code: []
 };
-_yuitest_coverage["build/datatype-number-advanced-format/datatype-number-advanced-format.js"].code=["YUI.add('datatype-number-advanced-format', function (Y, NAME) {","","/*"," * Copyright 2012 Yahoo! Inc. All Rights Reserved. Based on code owned by VMWare, Inc. "," */","","//","// Format class","//","","/**"," * Base class for all formats. To format an object, instantiate the"," * format of your choice and call the <code>format</code> method which"," * returns the formatted string."," */","Format = function(pattern, formats) {","    if (arguments.length == 0) {","        return;","    }","    this._pattern = pattern;","    this._segments = []; ","    this.Formats = formats; ","}","","// Data","","Format.prototype._pattern = null;","Format.prototype._segments = null;","","//Exceptions","","Y.mix(Format, {","    Exception: function(name, message) {","        this.name = name;","        this.message = message;","        this.toString = function() {","            return this.name + \": \" + this.message;","        }","    },","    ParsingException: function(message) {","        Format.ParsingException.superclass.constructor.call(this, \"ParsingException\", message);","    },","    IllegalArgumentsException: function(message) {","        Format.IllegalArgumentsException.superclass.constructor.call(this, \"IllegalArgumentsException\", message);","    },","    FormatException: function(message) {","        Format.FormatException.superclass.constructor.call(this, \"FormatException\", message);","    }","});","","Y.extend(Format.ParsingException, Format.Exception);","Y.extend(Format.IllegalArgumentsException, Format.Exception);","Y.extend(Format.FormatException, Format.Exception);","","// Public methods","","Format.prototype.format = function(object) { ","    var s = [];","        ","    for (var i = 0; i < this._segments.length; i++) {","        s.push(this._segments[i].format(object));","    }","    return s.join(\"\");","};","","// Protected static methods","","function zeroPad (s, length, zeroChar, rightSide) {","    s = typeof s == \"string\" ? s : String(s);","","    if (s.length >= length) return s;","","    zeroChar = zeroChar || '0';","	","    var a = [];","    for (var i = s.length; i < length; i++) {","        a.push(zeroChar);","    }","    a[rightSide ? \"unshift\" : \"push\"](s);","","    return a.join(\"\");","}","    ","/** "," * Parses the given string according to this format's pattern and returns"," * an object."," * <p>"," * <strong>Note:</strong>"," * The default implementation of this method assumes that the sub-class"," * has implemented the <code>_createParseObject</code> method."," */","Format.prototype.parse = function(s, pp) {","    var object = this._createParseObject();","    var index = pp || 0;","    for (var i = 0; i < this._segments.length; i++) {","        var segment = this._segments[i];","        index = segment.parse(object, s, index);","    }","        ","    if (index < s.length) {","        throw new Format.ParsingException(\"Input too long\");","    }","    return object;","};","    ","/**"," * Creates the object that is initialized by parsing"," * <p>"," * <strong>Note:</strong>"," * This must be implemented by sub-classes."," */","Format.prototype._createParseObject = function(s) {","    throw new Format.ParsingException(\"Not implemented\");","};","","//","// Segment class","//","","Format.Segment = function(format, s) {","    if (arguments.length == 0) return;","    this._parent = format;","    this._s = s;","};","    ","// Public methods","","Format.Segment.prototype.format = function(o) { ","    return this._s; ","};","","/**"," * Parses the string at the given index, initializes the parse object"," * (as appropriate), and returns the new index within the string for"," * the next parsing step."," * <p>"," * <strong>Note:</strong>"," * This method must be implemented by sub-classes."," *"," * @param o     [object] The parse object to be initialized."," * @param s     [string] The input string to be parsed."," * @param index [number] The index within the string to start parsing."," */","Format.Segment.prototype.parse = function(o, s, index) {","    throw new Format.ParsingException(\"Not implemented\");","};","","Format.Segment.prototype.getFormat = function() {","    return this._parent;","};","","Format.Segment._parseLiteral = function(literal, s, index) {","    if (s.length - index < literal.length) {","        throw new Format.ParsingException(\"Input too short\");","    }","    for (var i = 0; i < literal.length; i++) {","        if (literal.charAt(i) != s.charAt(index + i)) {","            throw new Format.ParsingException(\"Input doesn't match\");","        }","    }","    return index + literal.length;","};","    ","/**"," * Parses an integer at the offset of the given string and calls a"," * method on the specified object."," *"," * @param o         [object]   The target object."," * @param f         [function|string] The method to call on the target object."," *                             If this parameter is a string, then it is used"," *                             as the name of the property to set on the"," *                             target object."," * @param adjust    [number]   The numeric adjustment to make on the"," *                             value before calling the object method."," * @param s         [string]   The string to parse."," * @param index     [number]   The index within the string to start parsing."," * @param fixedlen  [number]   If specified, specifies the required number"," *                             of digits to be parsed."," * @param radix     [number]   Optional. Specifies the radix of the parse"," *                             string. Defaults to 10 if not specified."," */","Format.Segment._parseInt = function(o, f, adjust, s, index, fixedlen, radix) {","    var len = fixedlen || s.length - index;","    var head = index;","    for (var i = 0; i < len; i++) {","        if (!s.charAt(index++).match(/\\d/)) {","            index--;","            break;","        }","    }","    var tail = index;","    if (head == tail) {","        throw new Format.ParsingException(\"Number not present\");","    }","    if (fixedlen && tail - head != fixedlen) {","        throw new Format.ParsingException(\"Number too short\");","    }","    var value = parseInt(s.substring(head, tail), radix || 10);","    if (f) {","        var target = o || window;","        if (typeof f == \"function\") {","            f.call(target, value + adjust);","        }","        else {","            target[f] = value + adjust;","        }","    }","    return tail;","};","","//","// Text segment class","//","","Format.TextSegment = function(format, s) {","    if (arguments.length == 0) return;","    Format.TextSegment.superclass.constructor.call(this, format, s);","};","","Y.extend(Format.TextSegment, Format.Segment);","","Format.TextSegment.prototype.toString = function() { ","    return \"text: \\\"\"+this._s+'\"'; ","};","    ","Format.TextSegment.prototype.parse = function(o, s, index) {","    return Format.Segment._parseLiteral(this._s, s, index);","};","","if(String.prototype.trim == null) {","    String.prototype.trim = function() {","        return this.replace(/^\\s+/, '').replace(/\\s+$/, '');","    };","}","/**"," * NumberFormat helps you to format and parse numbers for any locale."," * Your code can be completely independent of the locale conventions for decimal points, thousands-separators,"," * or even the particular decimal digits used, or whether the number format is even decimal."," * "," * This module uses parts of zimbra NumberFormat"," * "," * @module format-numbers"," * @requires format-base"," */","","/**"," * @param pattern       The number pattern."," * @param formats       locale data"," * @param skipNegFormat Specifies whether to skip the generation of this"," *                      format's negative value formatter."," *                      <p>"," *                      <strong>Note:</strong> "," *                      This parameter is only used by the implementation "," *                      and should not be passed by application code "," *                      instantiating a custom number format."," */","","var MODULE_NAME = \"datatype-number-advanced-format\";","","NumberFormat = function(pattern, formats, skipNegFormat) {","    if (arguments.length == 0) {","        return;","    }","","    NumberFormat.superclass.constructor.call(this, pattern, formats);","    if (!pattern) {","        return;","    }","","    if(pattern == \"{plural_style}\") {","        pattern = this.Formats.decimalFormat;","        this._isPluralCurrency = true;","        this._pattern = pattern;","    }","","    //Default currency","    this.currency = this.Formats.defaultCurrency;","    if(this.currency == null || this.currency == \"\") {","        this.currency = \"USD\";","    }","        ","    var patterns = pattern.split(/;/);","    pattern = patterns[0];","	","    this._useGrouping = (pattern.indexOf(\",\") != -1);      //Will be set to true if pattern uses grouping","    this._parseIntegerOnly = (pattern.indexOf(\".\") == -1);  //Will be set to false if pattern contains fractional parts","        ","    //If grouping is used, find primary and secondary grouping","    if(this._useGrouping) {","        var numberPattern = pattern.match(/[0#,]+/);","        var groupingRegex = new RegExp(\"[0#]+\", \"g\");","        var groups = numberPattern[0].match(groupingRegex);","            ","        var i = groups.length - 2;","        this._primaryGrouping = groups[i+1].length;","        this._secondaryGrouping = (i > 0 ? groups[i].length : groups[i+1].length);","    }","        ","    // parse prefix","    i = 0;","        ","    var results = this.__parseStatic(pattern, i);","    i = results.offset;","    var hasPrefix = results.text != \"\";","    if (hasPrefix) {","        this._segments.push(new Format.TextSegment(this, results.text));","    }","	","    // parse number descriptor","    var start = i;","    while (i < pattern.length &&","        NumberFormat._META_CHARS.indexOf(pattern.charAt(i)) != -1) {","        i++;","    }","    var end = i;","","    var numPattern = pattern.substring(start, end);","    var e = numPattern.indexOf(this.Formats.exponentialSymbol);","    var expon = e != -1 ? numPattern.substring(e + 1) : null;","    if (expon) {","        numPattern = numPattern.substring(0, e);","        this._showExponent = true;","    }","	","    var dot = numPattern.indexOf('.');","    var whole = dot != -1 ? numPattern.substring(0, dot) : numPattern;","    if (whole) {","        /*var comma = whole.lastIndexOf(',');","            if (comma != -1) {","                this._groupingOffset = whole.length - comma - 1;","            }*/","        whole = whole.replace(/[^#0]/g,\"\");","        var zero = whole.indexOf('0');","        if (zero != -1) {","            this._minIntDigits = whole.length - zero;","        }","        this._maxIntDigits = whole.length;","    }","	","    var fract = dot != -1 ? numPattern.substring(dot + 1) : null;","    if (fract) {","        zero = fract.lastIndexOf('0');","        if (zero != -1) {","            this._minFracDigits = zero + 1;","        }","        this._maxFracDigits = fract.replace(/[^#0]/g,\"\").length;","    }","	","    this._segments.push(new NumberFormat.NumberSegment(this, numPattern));","	","    // parse suffix","    results = this.__parseStatic(pattern, i);","    i = results.offset;","    if (results.text != \"\") {","        this._segments.push(new Format.TextSegment(this, results.text));","    }","	","    // add negative formatter","    if (skipNegFormat) return;","	","    if (patterns.length > 1) {","        pattern = patterns[1];","        this._negativeFormatter = new NumberFormat(pattern, formats, true);","    }","    else {","        // no negative pattern; insert minus sign before number segment","        var formatter = new NumberFormat(\"\", formats);","        formatter._segments = formatter._segments.concat(this._segments);","","        var index = hasPrefix ? 1 : 0;","        var minus = new Format.TextSegment(formatter, this.Formats.minusSign);","        formatter._segments.splice(index, 0, minus);","		","        this._negativeFormatter = formatter;","    }","}","","Y.extend(NumberFormat, Format);","    ","// Constants","","Y.mix(NumberFormat, {","    _NUMBER: \"number\",","    _INTEGER: \"integer\",","    _CURRENCY: \"currency\",","    _PERCENT: \"percent\",","","    _META_CHARS: \"0#.,E\"","});","","// Data","","NumberFormat.prototype._groupingOffset = Number.MAX_VALUE;","//NumberFormat.prototype._maxIntDigits;","NumberFormat.prototype._minIntDigits = 1;","//NumberFormat.prototype._maxFracDigits;","//NumberFormat.prototype._minFracDigits;","NumberFormat.prototype._isCurrency = false;","NumberFormat.prototype._isPercent = false;","NumberFormat.prototype._isPerMille = false;","NumberFormat.prototype._showExponent = false;","//NumberFormat.prototype._negativeFormatter;","","// Public methods","","NumberFormat.prototype.format = function(number) {","    if (number < 0 && this._negativeFormatter) {","        return this._negativeFormatter.format(number);","    }","        ","    var result = Format.prototype.format.call(this, number);","        ","    if(this._isPluralCurrency) {","        var pattern = \"\";","        if(number == 1) {","            //Singular","            pattern = this.Formats.currencyPatternSingular;","            pattern = pattern.replace(\"{1}\", this.Formats[this.currency + \"_currencySingular\"]);","        } else {","            //Plural","            pattern = this.Formats.currencyPatternPlural;","            pattern = pattern.replace(\"{1}\", this.Formats[this.currency + \"_currencyPlural\"]);","        }","            ","        result = pattern.replace(\"{0}\", result);","    }","        ","    return result;","};","    ","NumberFormat.prototype.parse = function(s, pp) {","    if(s.indexOf(this.Formats.minusSign) != -1 && this._negativeFormatter) {","        return this._negativeFormatter.parse(s, pp);","    }","        ","    if(this._isPluralCurrency) {","        var singular = this.Formats[this.currency + \"_currencySingular\"];","        var plural = this.Formats[this.currency + \"_currencyPlural\"];","            ","        s = s.replace(plural, \"\").replace(singular, \"\").trim();","    }","        ","    var object = null;","    try {","        object = Format.prototype.parse.call(this, s, pp);","        object = object.value;","    } catch(e) {","    }","        ","    return object;","}","","// Private methods","","NumberFormat.prototype.__parseStatic = function(s, i) {","    var data = [];","    while (i < s.length) {","        var c = s.charAt(i++);","        if (NumberFormat._META_CHARS.indexOf(c) != -1) {","            i--;","            break;","        }","        switch (c) {","            case \"'\": {","                var start = i;","                while (i < s.length && s.charAt(i++) != \"'\") {","                // do nothing","                }","                var end = i;","                c = end - start == 0 ? \"'\" : s.substring(start, end);","                break;","            }","            case '%': {","                c = this.Formats.percentSign; ","                this._isPercent = true;","                break;","            }","            case '\\u2030': {","                c = this.Formats.perMilleSign; ","                this._isPerMille = true;","                break;","            }","            case '\\u00a4': {","                if(s.charAt(i) == '\\u00a4') {","                    c = this.Formats[this.currency + \"_currencyISO\"];","                    i++;","                } else {","                    c = this.Formats[this.currency + \"_currencySymbol\"];","                }","                this._isCurrency = true;","                break;","            }","        }","        data.push(c);","    }","    return {","        text: data.join(\"\"), ","        offset: i","    };","};","    ","NumberFormat.prototype._createParseObject = function() {","    return {","        value: null","    };","};","    ","//","// NumberFormat.NumberSegment class","//","","NumberFormat.NumberSegment = function(format, s) {","    if (arguments.length == 0) return;","    NumberFormat.NumberSegment.superclass.constructor.call(this, format, s);","};","Y.extend(NumberFormat.NumberSegment, Format.Segment);","    ","// Public methods","","NumberFormat.NumberSegment.prototype.format = function(number) {","    // special values","    if (isNaN(number)) return this._parent.Formats.nanSymbol;","    if (number === Number.NEGATIVE_INFINITY || number === Number.POSITIVE_INFINITY) {","        return this._parent.Formats.infinitySign;","    }","","    // adjust value","    if (typeof number != \"number\") number = Number(number);","    number = Math.abs(number); // NOTE: minus sign is part of pattern","    if (this._parent._isPercent) number *= 100;","    else if (this._parent._isPerMille) number *= 1000;","    if(this._parent._parseIntegerOnly) number = Math.floor(number);","        ","    // format","    var expon = this._parent.Formats.exponentialSymbol;","    var exponReg = new RegExp(expon + \"+\");","    var s = this._parent._showExponent","    ? number.toExponential(this._parent._maxFracDigits).toUpperCase().replace(exponReg,expon)","    : number.toFixed(this._parent._maxFracDigits || 0);","    s = this._normalize(s);","    return s;","};","","// Protected methods","","NumberFormat.NumberSegment.prototype._normalize = function(s) {","    var exponSymbol = this._parent.Formats.exponentialSymbol;","    var splitReg = new RegExp(\"[\\\\.\" + exponSymbol + \"]\")","    var match = s.split(splitReg);","	","    // normalize whole part","    var whole = match.shift();","    if (whole.length < this._parent._minIntDigits) {","        whole = zeroPad(whole, this._parent._minIntDigits, this._parent.Formats.numberZero);","    }","    if (whole.length > this._parent._primaryGrouping && this._parent._useGrouping) {","        var a = [];","	    ","        var offset = this._parent._primaryGrouping;","        var i = whole.length - offset;","        while (i > 0) {","            a.unshift(whole.substr(i, offset));","            a.unshift(this._parent.Formats.groupingSeparator);","            offset = this._parent._secondaryGrouping;","            i -= offset;","        }","        a.unshift(whole.substring(0, i + offset));","		","        whole = a.join(\"\");","    }","	","    // normalize rest","    var fract = '0';","    var expon;","        ","    if(s.match(/\\./))","        fract = match.shift();","    else if(s.match(/\\e/) || s.match(/\\E/))","        expon = match.shift();","","    fract = fract.replace(/0+$/,\"\");","    if (fract.length < this._parent._minFracDigits) {","        fract = zeroPad(fract, this._parent._minFracDigits, this._parent.Formats.numberZero, true);","    }","	","    a = [ whole ];","    if (fract.length > 0) {","        var decimal = this._parent.Formats.decimalSeparator;","        a.push(decimal, fract);","    }","    if (expon) {","        a.push(exponSymbol, expon.replace(/^\\+/,\"\"));","    }","	","    // return normalize result","    return a.join(\"\");","}","    ","NumberFormat.NumberSegment.prototype.parse = function(object, s, index) {","    var comma = this._parent.Formats.groupingSeparator;","    var dot = this._parent.Formats.decimalSeparator;","    var minusSign = this._parent.Formats.minusSign;","    var expon = this._parent.Formats.exponentialSymbol;","        ","    var numberRegexPattern = \"[\\\\\" + minusSign + \"0-9\" + comma + \"]+\";","    if(!this._parent._parseIntegerOnly) {","        numberRegexPattern += \"(\\\\\" + dot + \"[0-9]+)?\";","    }","    if(this._parent._showExponent) {","        numberRegexPattern += \"(\" + expon +\"\\\\+?[0-9]+)\";","    }","        ","    var numberRegex = new RegExp(numberRegexPattern);","    var matches = s.match(numberRegex);","        ","    if(!matches) {","        throw new Format.ParsingException(\"Number does not match pattern\");","    }","        ","    var negativeNum = s.indexOf(minusSign) != -1;","    var endIndex = index + matches[0].length;","    s = s.slice(index, endIndex);","        ","    var scientific = null;","        ","    //Scientific format does not use grouping","    if(this._parent.showExponent) {","        scientific = s.split(expon);","    } else if(this._parent._useGrouping) {","        //Verify grouping data exists","        if(!this._parent._primaryGrouping) {","            //Should not happen","            throw new Format.ParsingException(\"Invalid pattern\");","        }","            ","        //Verify grouping is correct","        var i = s.length - this._parent._primaryGrouping - 1;","            ","        if(matches[1]) {","            //If there is a decimal part, ignore that. Grouping assumed to apply only to whole number part","            i = i - matches[1].length;","        }","            ","        //Use primary grouping for first group","        if(i > 0) {","            //There should be a comma at i","            if(s.charAt(i) != ',') {","                throw new Format.ParsingException(\"Number does not match pattern\");","            }","                ","            //Remove comma","            s = s.slice(0, i) + s.slice(i+1);","        }","            ","        //If more groups, use primary/secondary grouping as applicable","        var grouping = this._parent._secondaryGrouping || this._parent._primaryGrouping;","        i = i - grouping - 1;","            ","        while(i > 0) {","            //There should be a comma at i","            if(s.charAt(i) != ',') {","                throw new Format.ParsingException(\"Number does not match pattern\");","            }","                ","            //Remove comma","            s = s.slice(0, i) + s.slice(i+1);","            i = i - grouping - 1;","        }","            ","        //Verify there are no more grouping separators","        if(s.indexOf(comma) != -1) {","            throw new Format.ParsingException(\"Number does not match pattern\");","        }","    }","        ","    if(scientific) {","        object.value = parseFloat(scientific[0], 10) * Math.pow(10, parseFloat(scientific[1], 10));","    } else {","        object.value = parseFloat(s, 10);","    }","        ","    //Special types","    if(negativeNum) object.value *= -1;","    if (this._parent._isPercent) object.value /= 100;","    else if (this._parent._isPerMille) object.value /= 1000;","        ","    return endIndex;","};","    ","//","// YUI Code","//","    ","/**"," * NumberFormat"," * @class YNumberFormat"," * @constructor"," * @param {Number} style (Optional) the given style. Defaults to Number style"," */","YNumberFormat = function(style) {","    style = style || Y.Number.STYLES.NUMBER_STYLE;","    ","    if(Y.Lang.isString(style)) {","        style = Y.Number.STYLES[style];","    }","    ","    var pattern = \"\";","    var formats = Y.Intl.get(MODULE_NAME);","    switch(style) {","        case Y.Number.STYLES.CURRENCY_STYLE:","            pattern = formats.currencyFormat;","            break;","        case Y.Number.STYLES.ISO_CURRENCY_STYLE:","            pattern = formats.currencyFormat;","            pattern = pattern.replace(\"\\u00a4\", \"\\u00a4\\u00a4\");","            break;","        case Y.Number.STYLES.NUMBER_STYLE:","            pattern = formats.decimalFormat;","            break;","        case Y.Number.STYLES.PERCENT_STYLE:","            pattern = formats.percentFormat;","            break;","        case Y.Number.STYLES.PLURAL_CURRENCY_STYLE:","            //This is like <value> <currency>. This may be dependent on whether the value is singular or plural. Will be handled during formatting","            pattern = \"{plural_style}\";","            break;","        case Y.Number.STYLES.SCIENTIFIC_STYLE:","            pattern = formats.scientificFormat;","            break;","    }","        ","    this._numberFormatInstance = new NumberFormat(pattern, formats);","}","    ","Y.mix(Y.Number, {","    STYLES: {","        CURRENCY_STYLE: 1,","        ISO_CURRENCY_STYLE: 2,","        NUMBER_STYLE: 4,","        PERCENT_STYLE: 8,","        PLURAL_CURRENCY_STYLE: 16,","        SCIENTIFIC_STYLE: 32","    },","    ","    //Static methods","    ","    ","    /**","     * Create an instance of NumberFormat ","     * @param {Number} style (Optional) the given style","     */    ","    createInstance: function(style) {","        return new YNumberFormat(style);","    },","    ","    /**","     * Returns an array of BCP 47 language tags for the languages supported by this class","     * @return {Array} an array of BCP 47 language tags for the languages supported by this class.","     */","    getAvailableLocales: function() {","        return Y.Intl.getAvailableLangs(MODULE_NAME);","    }","});","","","","    ","//Public methods","    ","/**"," * Format a number to product a String."," * @param {Number} number the number to format"," */","YNumberFormat.prototype.format = function(number) {","    return this._numberFormatInstance.format(number);","}","    ","/**"," * Gets the currency used to display currency amounts. This may be an empty string for some cases. "," * @return {String} a 3-letter ISO code indicating the currency in use, or an empty string."," */","YNumberFormat.prototype.getCurrency = function() {","    return this._numberFormatInstance.currency;","}","    ","/**"," * Returns the maximum number of digits allowed in the fraction portion of a number. "," * @return {Number} the maximum number of digits allowed in the fraction portion of a number."," */","YNumberFormat.prototype.getMaximumFractionDigits = function() {","    return this._numberFormatInstance._maxFracDigits || 0;","}","    ","/**"," * Returns the maximum number of digits allowed in the integer portion of a number. "," * @return {Number} the maximum number of digits allowed in the integer portion of a number."," */","YNumberFormat.prototype.getMaximumIntegerDigits = function() {","    return this._numberFormatInstance._maxIntDigits || 0;","}","    ","/**"," * Returns the minimum number of digits allowed in the fraction portion of a number. "," * @return {Number} the minimum number of digits allowed in the fraction portion of a number."," */","YNumberFormat.prototype.getMinimumFractionDigits = function() {","    return this._numberFormatInstance._minFracDigits || 0;","}","    ","/**"," * Returns the minimum number of digits allowed in the integer portion of a number."," * @return {Number} the minimum number of digits allowed in the integer portion of a number."," */","YNumberFormat.prototype.getMinimumIntegerDigits = function() {","    return this._numberFormatInstance._minIntDigits || 0;","}","    ","/**"," * Returns true if grouping is used in this format."," * For example, in the English locale, with grouping on, the number 1234567 might be formatted as \"1,234,567\"."," * The grouping separator as well as the size of each group is locale dependant."," * @return {Boolean}"," */","YNumberFormat.prototype.isGroupingUsed = function() {","    return this._numberFormatInstance._useGrouping;","}","    ","/**"," * Return true if this format will parse numbers as integers only."," * For example in the English locale, with ParseIntegerOnly true, the string \"1234.\" would be parsed as the integer value 1234"," * and parsing would stop at the \".\" character. Of course, the exact format accepted by the parse operation is locale dependant."," * @return {Boolean}"," */","YNumberFormat.prototype.isParseIntegerOnly = function() {","    return this._numberFormatInstance._parseIntegerOnly;","}","    ","/**"," * Parse the string to get a number"," * @param {String} txt The string to parse"," * @param {Number} pp (Optional) Parse position. The position to start parsing at. Defaults to 0"," */","YNumberFormat.prototype.parse = function(txt, pp) {","    return this._numberFormatInstance.parse(txt, pp);","}","    ","/**"," * Sets the currency used to display currency amounts."," * This takes effect immediately, if this format is a currency format."," * If this format is not a currency format, then the currency is used if and when this object becomes a currency format."," * @param {String} currency a 3-letter ISO code indicating new currency to use. May be the empty string to indicate no currency."," */","YNumberFormat.prototype.setCurrency = function(currency) {","    this._numberFormatInstance.currency = currency;","}","    ","/**"," * Set whether or not grouping will be used in this format. "," * @param {Boolean} value"," */","YNumberFormat.prototype.setGroupingUsed = function(value) {","    this._numberFormatInstance._useGrouping = value;","}","    ","/**"," * Sets the maximum number of digits allowed in the fraction portion of a number."," * maximumFractionDigits must be >= minimumFractionDigits."," * If the new value for maximumFractionDigits is less than the current value of minimumFractionDigits,"," * then minimumFractionDigits will also be set to the new value. "," * @param {Number} newValue the new value to be set."," */","YNumberFormat.prototype.setMaximumFractionDigits = function(newValue) {","    this._numberFormatInstance._maxFracDigits = newValue;","        ","    if(this.getMinimumFractionDigits() > newValue) {","        this.setMinimumFractionDigits(newValue);","    }","}","    ","/**"," * Sets the maximum number of digits allowed in the integer portion of a number."," * maximumIntegerDigits must be >= minimumIntegerDigits."," * If the new value for maximumIntegerDigits is less than the current value of minimumIntegerDigits,"," * then minimumIntegerDigits will also be set to the new value."," * @param {Number} newValue the new value to be set."," */","YNumberFormat.prototype.setMaximumIntegerDigits = function(newValue) {","    this._numberFormatInstance._maxIntDigits = newValue;","        ","    if(this.getMinimumIntegerDigits() > newValue) {","        this.setMinimumIntegerDigits(newValue);","    }","}","    ","/**"," * Sets the minimum number of digits allowed in the fraction portion of a number."," * minimumFractionDigits must be <= maximumFractionDigits."," * If the new value for minimumFractionDigits exceeds the current value of maximumFractionDigits,"," * then maximumIntegerDigits will also be set to the new value"," * @param {Number} newValue the new value to be set."," */","YNumberFormat.prototype.setMinimumFractionDigits = function(newValue) {","    this._numberFormatInstance._minFracDigits = newValue;","        ","    if(this.getMaximumFractionDigits() < newValue) {","        this.setMaximumFractionDigits(newValue);","    }","}","    ","/**"," * Sets the minimum number of digits allowed in the integer portion of a number."," * minimumIntegerDigits must be <= maximumIntegerDigits."," * If the new value for minimumIntegerDigits exceeds the current value of maximumIntegerDigits,"," * then maximumIntegerDigits will also be set to the new value. "," * @param {Number} newValue the new value to be set."," */","YNumberFormat.prototype.setMinimumIntegerDigits = function(newValue) {","    this._numberFormatInstance._minIntDigits = newValue;","        ","    if(this.getMaximumIntegerDigits() < newValue) {","        this.setMaximumIntegerDigits(newValue);","    }","}","    ","/**"," * Sets whether or not numbers should be parsed as integers only. "," * @param {Boolean} newValue set True, this format will parse numbers as integers only."," */","YNumberFormat.prototype.setParseIntegerOnly = function(newValue) {","    this._numberFormatInstance._parseIntegerOnly = newValue;","}","","Y.Number.deprecatedFormat = Y.Number.format;","Y.Number.deprecatedParse = Y.Number.parse;","","/**"," * Takes a Number and formats to string for display to user"," *"," * @for Number"," * @method format"," * @param data {Number} Number"," * @param config {Object} (Optional) Configuration values:"," *   <dl>"," *      <dt>style {Number/String} (Optional)</dt>"," *         <dd>Format/Style to use. See Y.Number.STYLES</dd>"," *      <dt>parseIntegerOnly {Boolean} (Optional)</dt>"," *         <dd>If true, only the whole number part of data will be used</dd>"," *   </dl>"," * @return {String} Formatted string representation of data"," */","Y.Number.format = function(data, config) {","    config = config || {};","    ","    if(config.prefix != null || config.decimalPlaces != null || config.decimalSeparator != null || config.thousandsSeparator != null || config.suffix != null) {","        return Y.Number.deprecatedFormat(data, config);","    }","    ","    try {","        var formatter = new YNumberFormat(config.style);","        if(config.parseIntegerOnly) {","            formatter.setParseIntegerOnly(true);","        }","        return formatter.format(data);","    } catch(e) {","        //Error. Fallback to deprecated format","        console.log(e);","    }","    return Y.Number.deprecatedFormat(data, config);","}","","/**"," * Parses data and returns a number"," * "," * @for Number"," * @method format"," * @param data {String} Data to be parsed"," * @param config (Object} (Optional) Object containg 'style' (Pattern data is represented in. See Y.Number.STYLES) and 'parsePosition' (index position in data to start parsing at) Both parameters are optional. If omitted, style defaults to NUMBER_STYLE, and parsePosition defaults to 0"," * @return {Number} Number represented by data "," */","Y.Number.parse = function(data, config) {","    try {","        var formatter = new YNumberFormat(config.style);","        return formatter.parse(data, config.parsePosition);","    } catch(e) {","        //Fallback on deprecated parse","        console.log(e);","    }","    ","    return Y.Number.parse(data);","}","","//Update Parsers shortcut","Y.namespace(\"Parsers\").number = Y.Number.parse","","","}, '@VERSION@', {","    \"lang\": [","        \"af-NA\",","        \"af\",","        \"af-ZA\",","        \"am-ET\",","        \"am\",","        \"ar-AE\",","        \"ar-BH\",","        \"ar-DZ\",","        \"ar-EG\",","        \"ar-IQ\",","        \"ar-JO\",","        \"ar-KW\",","        \"ar-LB\",","        \"ar-LY\",","        \"ar-MA\",","        \"ar-OM\",","        \"ar-QA\",","        \"ar-SA\",","        \"ar-SD\",","        \"ar-SY\",","        \"ar-TN\",","        \"ar\",","        \"ar-YE\",","        \"as-IN\",","        \"as\",","        \"az-AZ\",","        \"az-Cyrl-AZ\",","        \"az-Cyrl\",","        \"az-Latn-AZ\",","        \"az-Latn\",","        \"az\",","        \"be-BY\",","        \"be\",","        \"bg-BG\",","        \"bg\",","        \"bn-BD\",","        \"bn-IN\",","        \"bn\",","        \"bo-CN\",","        \"bo-IN\",","        \"bo\",","        \"ca-ES\",","        \"ca\",","        \"cs-CZ\",","        \"cs\",","        \"cy-GB\",","        \"cy\",","        \"da-DK\",","        \"da\",","        \"de-AT\",","        \"de-BE\",","        \"de-CH\",","        \"de-DE\",","        \"de-LI\",","        \"de-LU\",","        \"de\",","        \"el-CY\",","        \"el-GR\",","        \"el\",","        \"en-AU\",","        \"en-BE\",","        \"en-BW\",","        \"en-BZ\",","        \"en-CA\",","        \"en-GB\",","        \"en-HK\",","        \"en-IE\",","        \"en-IN\",","        \"en-JM\",","        \"en-JO\",","        \"en-MH\",","        \"en-MT\",","        \"en-MY\",","        \"en-NA\",","        \"en-NZ\",","        \"en-PH\",","        \"en-PK\",","        \"en-RH\",","        \"en-SG\",","        \"en-TT\",","        \"en\",","        \"en-US-POSIX\",","        \"en-US\",","        \"en-VI\",","        \"en-ZA\",","        \"en-ZW\",","        \"eo\",","        \"es-AR\",","        \"es-BO\",","        \"es-CL\",","        \"es-CO\",","        \"es-CR\",","        \"es-DO\",","        \"es-EC\",","        \"es-ES\",","        \"es-GT\",","        \"es-HN\",","        \"es-MX\",","        \"es-NI\",","        \"es-PA\",","        \"es-PE\",","        \"es-PR\",","        \"es-PY\",","        \"es-SV\",","        \"es\",","        \"es-US\",","        \"es-UY\",","        \"es-VE\",","        \"et-EE\",","        \"et\",","        \"eu-ES\",","        \"eu\",","        \"fa-AF\",","        \"fa-IR\",","        \"fa\",","        \"fi-FI\",","        \"fi\",","        \"fil-PH\",","        \"fil\",","        \"fo-FO\",","        \"fo\",","        \"fr-BE\",","        \"fr-CA\",","        \"fr-CH\",","        \"fr-FR\",","        \"fr-LU\",","        \"fr-MC\",","        \"fr-SN\",","        \"fr\",","        \"ga-IE\",","        \"ga\",","        \"gl-ES\",","        \"gl\",","        \"gsw-CH\",","        \"gsw\",","        \"gu-IN\",","        \"gu\",","        \"gv-GB\",","        \"gv\",","        \"ha-GH\",","        \"ha-Latn-GH\",","        \"ha-Latn-NE\",","        \"ha-Latn-NG\",","        \"ha-Latn\",","        \"ha-NE\",","        \"ha-NG\",","        \"ha\",","        \"haw\",","        \"haw-US\",","        \"he-IL\",","        \"he\",","        \"hi-IN\",","        \"hi\",","        \"hr-HR\",","        \"hr\",","        \"hu-HU\",","        \"hu\",","        \"hy-AM-REVISED\",","        \"hy-AM\",","        \"hy\",","        \"id-ID\",","        \"id\",","        \"ii-CN\",","        \"ii\",","        \"in-ID\",","        \"in\",","        \"is-IS\",","        \"is\",","        \"it-CH\",","        \"it-IT\",","        \"it\",","        \"iw-IL\",","        \"iw\",","        \"ja-JP-TRADITIONAL\",","        \"ja-JP\",","        \"ja\",","        \"ka-GE\",","        \"ka\",","        \"kk-Cyrl-KZ\",","        \"kk-Cyrl\",","        \"kk-KZ\",","        \"kk\",","        \"kl-GL\",","        \"kl\",","        \"km-KH\",","        \"km\",","        \"kn-IN\",","        \"kn\",","        \"kok-IN\",","        \"kok\",","        \"ko-KR\",","        \"ko\",","        \"kw-GB\",","        \"kw\",","        \"lt-LT\",","        \"lt\",","        \"lv-LV\",","        \"lv\",","        \"mk-MK\",","        \"mk\",","        \"ml-IN\",","        \"ml\",","        \"mr-IN\",","        \"mr\",","        \"ms-BN\",","        \"ms-MY\",","        \"ms\",","        \"mt-MT\",","        \"mt\",","        \"nb-NO\",","        \"nb\",","        \"ne-IN\",","        \"ne-NP\",","        \"ne\",","        \"nl-BE\",","        \"nl-NL\",","        \"nl\",","        \"nn-NO\",","        \"nn\",","        \"no-NO-NY\",","        \"no-NO\",","        \"no\",","        \"om-ET\",","        \"om-KE\",","        \"om\",","        \"or-IN\",","        \"or\",","        \"pa-Arab-PK\",","        \"pa-Arab\",","        \"pa-Guru-IN\",","        \"pa-Guru\",","        \"pa-IN\",","        \"pa-PK\",","        \"pa\",","        \"pl-PL\",","        \"pl\",","        \"ps-AF\",","        \"ps\",","        \"pt-BR\",","        \"pt-PT\",","        \"pt\",","        \"ro-MD\",","        \"ro-RO\",","        \"ro\",","        \"ru-RU\",","        \"ru\",","        \"ru-UA\",","        \"sh-BA\",","        \"sh-CS\",","        \"sh\",","        \"sh-YU\",","        \"si-LK\",","        \"si\",","        \"sk-SK\",","        \"sk\",","        \"sl-SI\",","        \"sl\",","        \"so-DJ\",","        \"so-ET\",","        \"so-KE\",","        \"so-SO\",","        \"so\",","        \"sq-AL\",","        \"sq\",","        \"sr-BA\",","        \"sr-CS\",","        \"sr-Cyrl-BA\",","        \"sr-Cyrl-CS\",","        \"sr-Cyrl-ME\",","        \"sr-Cyrl-RS\",","        \"sr-Cyrl\",","        \"sr-Cyrl-YU\",","        \"sr-Latn-BA\",","        \"sr-Latn-CS\",","        \"sr-Latn-ME\",","        \"sr-Latn-RS\",","        \"sr-Latn\",","        \"sr-Latn-YU\",","        \"sr-ME\",","        \"sr-RS\",","        \"sr\",","        \"sr-YU\",","        \"sv-FI\",","        \"sv-SE\",","        \"sv\",","        \"sw-KE\",","        \"sw\",","        \"sw-TZ\",","        \"ta-IN\",","        \"ta\",","        \"te-IN\",","        \"te\",","        \"th-TH-TRADITIONAL\",","        \"th-TH\",","        \"th\",","        \"ti-ER\",","        \"ti-ET\",","        \"ti\",","        \"tl-PH\",","        \"tl\",","        \"tr-TR\",","        \"tr\",","        \"uk\",","        \"uk-UA\",","        \"ur-IN\",","        \"ur-PK\",","        \"ur\",","        \"uz-AF\",","        \"uz-Arab-AF\",","        \"uz-Arab\",","        \"uz-Cyrl\",","        \"uz-Cyrl-UZ\",","        \"uz-Latn\",","        \"uz-Latn-UZ\",","        \"uz\",","        \"uz-UZ\",","        \"vi\",","        \"vi-VN\",","        \"zh-CN\",","        \"zh-Hans-CN\",","        \"zh-Hans-HK\",","        \"zh-Hans-MO\",","        \"zh-Hans-SG\",","        \"zh-Hans\",","        \"zh-Hant-HK\",","        \"zh-Hant-MO\",","        \"zh-Hant-TW\",","        \"zh-Hant\",","        \"zh-HK\",","        \"zh-MO\",","        \"zh-SG\",","        \"zh-TW\",","        \"zh\",","        \"zu\",","        \"zu-ZA\"","    ],","    \"requires\": [","        \"datatype-number-format\",","        \"datatype-number-parse\"","    ]","});"];
-_yuitest_coverage["build/datatype-number-advanced-format/datatype-number-advanced-format.js"].lines = {"1":0,"16":0,"17":0,"18":0,"20":0,"21":0,"22":0,"27":0,"28":0,"32":0,"34":0,"35":0,"36":0,"37":0,"41":0,"44":0,"47":0,"51":0,"52":0,"53":0,"57":0,"58":0,"60":0,"61":0,"63":0,"68":0,"69":0,"71":0,"73":0,"75":0,"76":0,"77":0,"79":0,"81":0,"92":0,"93":0,"94":0,"95":0,"96":0,"97":0,"100":0,"101":0,"103":0,"112":0,"113":0,"120":0,"121":0,"122":0,"123":0,"128":0,"129":0,"144":0,"145":0,"148":0,"149":0,"152":0,"153":0,"154":0,"156":0,"157":0,"158":0,"161":0,"182":0,"183":0,"184":0,"185":0,"186":0,"187":0,"188":0,"191":0,"192":0,"193":0,"195":0,"196":0,"198":0,"199":0,"200":0,"201":0,"202":0,"205":0,"208":0,"215":0,"216":0,"217":0,"220":0,"222":0,"223":0,"226":0,"227":0,"230":0,"231":0,"232":0,"258":0,"260":0,"261":0,"262":0,"265":0,"266":0,"267":0,"270":0,"271":0,"272":0,"273":0,"277":0,"278":0,"279":0,"282":0,"283":0,"285":0,"286":0,"289":0,"290":0,"291":0,"292":0,"294":0,"295":0,"296":0,"300":0,"302":0,"303":0,"304":0,"305":0,"306":0,"310":0,"311":0,"313":0,"315":0,"317":0,"318":0,"319":0,"320":0,"321":0,"322":0,"325":0,"326":0,"327":0,"332":0,"333":0,"334":0,"335":0,"337":0,"340":0,"341":0,"342":0,"343":0,"344":0,"346":0,"349":0,"352":0,"353":0,"354":0,"355":0,"359":0,"361":0,"362":0,"363":0,"367":0,"368":0,"370":0,"371":0,"372":0,"374":0,"378":0,"382":0,"393":0,"395":0,"398":0,"399":0,"400":0,"401":0,"406":0,"407":0,"408":0,"411":0,"413":0,"414":0,"415":0,"417":0,"418":0,"421":0,"422":0,"425":0,"428":0,"431":0,"432":0,"433":0,"436":0,"437":0,"438":0,"440":0,"443":0,"444":0,"445":0,"446":0,"450":0,"455":0,"456":0,"457":0,"458":0,"459":0,"460":0,"461":0,"463":0,"465":0,"466":0,"469":0,"470":0,"471":0,"474":0,"475":0,"476":0,"479":0,"480":0,"481":0,"484":0,"485":0,"486":0,"488":0,"490":0,"491":0,"494":0,"496":0,"502":0,"503":0,"512":0,"513":0,"514":0,"516":0,"520":0,"522":0,"523":0,"524":0,"528":0,"529":0,"530":0,"531":0,"532":0,"535":0,"536":0,"537":0,"540":0,"541":0,"546":0,"547":0,"548":0,"549":0,"552":0,"553":0,"554":0,"556":0,"557":0,"559":0,"560":0,"561":0,"562":0,"563":0,"564":0,"565":0,"567":0,"569":0,"573":0,"574":0,"576":0,"577":0,"578":0,"579":0,"581":0,"582":0,"583":0,"586":0,"587":0,"588":0,"589":0,"591":0,"592":0,"596":0,"599":0,"600":0,"601":0,"602":0,"603":0,"605":0,"606":0,"607":0,"609":0,"610":0,"613":0,"614":0,"616":0,"617":0,"620":0,"621":0,"622":0,"624":0,"627":0,"628":0,"629":0,"631":0,"633":0,"637":0,"639":0,"641":0,"645":0,"647":0,"648":0,"652":0,"656":0,"657":0,"659":0,"661":0,"662":0,"666":0,"667":0,"671":0,"672":0,"676":0,"677":0,"679":0,"683":0,"684":0,"685":0,"687":0,"700":0,"701":0,"703":0,"704":0,"707":0,"708":0,"709":0,"711":0,"712":0,"714":0,"715":0,"716":0,"718":0,"719":0,"721":0,"722":0,"725":0,"726":0,"728":0,"729":0,"732":0,"735":0,"753":0,"761":0,"774":0,"775":0,"782":0,"783":0,"790":0,"791":0,"798":0,"799":0,"806":0,"807":0,"814":0,"815":0,"824":0,"825":0,"834":0,"835":0,"843":0,"844":0,"853":0,"854":0,"861":0,"862":0,"872":0,"873":0,"875":0,"876":0,"887":0,"888":0,"890":0,"891":0,"902":0,"903":0,"905":0,"906":0,"917":0,"918":0,"920":0,"921":0,"929":0,"930":0,"933":0,"934":0,"951":0,"952":0,"954":0,"955":0,"958":0,"959":0,"960":0,"961":0,"963":0,"966":0,"968":0,"980":0,"981":0,"982":0,"983":0,"986":0,"989":0,"993":0};
-_yuitest_coverage["build/datatype-number-advanced-format/datatype-number-advanced-format.js"].functions = {"Format:16":0,"toString:36":0,"Exception:33":0,"ParsingException:40":0,"IllegalArgumentsException:43":0,"FormatException:46":0,"format:57":0,"zeroPad:68":0,"parse:92":0,"_createParseObject:112":0,"Segment:120":0,"format:128":0,"parse:144":0,"getFormat:148":0,"_parseLiteral:152":0,"_parseInt:182":0,"TextSegment:215":0,"toString:222":0,"parse:226":0,"trim:231":0,"NumberFormat:260":0,"format:406":0,"parse:431":0,"__parseStatic:455":0,"_createParseObject:502":0,"NumberSegment:512":0,"format:520":0,"_normalize:546":0,"parse:599":0,"YNumberFormat:700":0,"createInstance:752":0,"getAvailableLocales:760":0,"format:774":0,"getCurrency:782":0,"getMaximumFractionDigits:790":0,"getMaximumIntegerDigits:798":0,"getMinimumFractionDigits:806":0,"getMinimumIntegerDigits:814":0,"isGroupingUsed:824":0,"isParseIntegerOnly:834":0,"parse:843":0,"setCurrency:853":0,"setGroupingUsed:861":0,"setMaximumFractionDigits:872":0,"setMaximumIntegerDigits:887":0,"setMinimumFractionDigits:902":0,"setMinimumIntegerDigits:917":0,"setParseIntegerOnly:929":0,"format:951":0,"parse:980":0,"(anonymous 1):1":0};
-_yuitest_coverage["build/datatype-number-advanced-format/datatype-number-advanced-format.js"].coveredLines = 406;
-_yuitest_coverage["build/datatype-number-advanced-format/datatype-number-advanced-format.js"].coveredFunctions = 51;
+_yuitest_coverage["build/datatype-number-advanced-format/datatype-number-advanced-format.js"].code=["YUI.add('datatype-number-advanced-format', function (Y, NAME) {","","/*"," * Copyright 2012 Yahoo! Inc. All Rights Reserved. Based on code owned by VMWare, Inc."," */","","var Format, NumberFormat, YNumberFormat;","","/**"," * Pad string to specified length"," * @method _zeroPad"," * @for Number"," * @static"," * @private"," * @param {String|Number} s The string or number to be padded"," * @param {Number} length The maximum length s should be padded to have"," * @param {String} [zeroChar='0'] The character to be used to pad the string."," * @param {Boolean} [rightSide=false] If true, padding will be done from the right-side of the string"," * @return {String} The padded string"," */","Y.Number._zeroPad  = function(s, length, zeroChar, rightSide) {","    s = typeof s === \"string\" ? s : String(s);","","    if (s.length >= length) { return s; }","","    zeroChar = zeroChar || '0';","	","    var a = [], i;","    for (i = s.length; i < length; i++) {","        a.push(zeroChar);","    }","    a[rightSide ? \"unshift\" : \"push\"](s);","","    return a.join(\"\");","};","","//","// Format class","//","","/**"," * Base class for all formats. To format an object, instantiate the format of your choice and call the format method which"," * returns the formatted string."," * For internal use only."," * @class __BaseFormat"," * @namespace Number"," * @constructor"," * @private"," * @param {String} pattern"," * @param {Object} formats"," */","Y.Number.__BaseFormat = function(pattern, formats) {","    if ( !pattern && !formats ) {","        return;","    }","","    Y.mix(this, {","        /**","         * Pattern to format/parse","         * @property _pattern","         * @type String","         */","        _pattern: pattern,","        /**","         * Segments in the pattern","         * @property _segments","         * @type Number.__BaseFormat.Segment","         */","        _segments: [],","        Formats: formats","    });","};","","Format = Y.Number.__BaseFormat;","","Y.mix(Format.prototype, {","    /**","     * Format object","     * @method format","     * @param object The object to be formatted","     * @return {String} Formatted result","     */","    format: function(object) {","        var s = [], i = 0;","    ","        for (; i < this._segments.length; i++) {","            s.push(this._segments[i].format(object));","        }","        return s.join(\"\");","    },","","    ","    /**","     * Parses the given string according to this format's pattern and returns","     * an object.","     * Note:","     * The default implementation of this method assumes that the sub-class","     * has implemented the _createParseObject method.","     * @method parse","     * @for Number.__BaseFormat","     * @param {String} s The string to be parsed","     * @param {Number} [pp=0] Parse position. String will only be read from here","     */","    parse: function(s, pp) {","        var object = this._createParseObject(),","            index = pp || 0,","            i = 0;","        for (; i < this._segments.length; i++) {","            index = this._segments[i].parse(object, s, index);","        }","        ","        if (index < s.length) {","            Y.error(\"Parse Error: Input too long\");","        }","        return object;","    },","    ","    /**","     * Creates the object that is initialized by parsing. For internal use only.","     * Note:","     * This must be implemented by sub-classes.","     * @method _createParseObject","     * @private","     * //return {Object}","     */","    _createParseObject: function(/*s*/) {","        Y.error(\"Not implemented\");","    }","});","","//","// Segment class","//","","/**"," * Segments in the pattern to be formatted"," * @class __BaseFormat.Segment"," * @for __BaseFormat"," * @namespace Number"," * @private"," * @constructor"," * @param {Format} format The format object that created this segment"," * @param {String} s String representing this segment"," */","Format.Segment = function(format, s) {","    if( !format && !s ) { return; }","    this._parent = format;","    this._s = s;","};","","Y.mix(Format.Segment.prototype, {","    /**","     * Formats the object. Will be overridden in most subclasses.","     * @method format","     * //param o The object to format","     * @return {String} Formatted result","     */","    format: function(/*o*/) {","        return this._s;","    },","","    /**","     * Parses the string at the given index, initializes the parse object","     * (as appropriate), and returns the new index within the string for","     * the next parsing step.","     *","     * Note:","     * This method must be implemented by sub-classes.","     *","     * @method parse","     * //param o     {Object} The parse object to be initialized.","     * //param s     {String} The input string to be parsed.","     * //param index {Number} The index within the string to start parsing.","     * //return The parsed result.","     */","    parse: function(/*o, s, index*/) {","        Y.error(\"Not implemented\");","    },","","    /**","     * Return the parent Format object","     * @method getFormat","     * @return {Number.__BaseFormat}","     */","    getFormat: function() {","        return this._parent;","    }","});","","Y.mix(Format.Segment, {","    /**","     * Parse literal string that matches the pattern","     * @method _parseLiteral","     * @static","     * @private","     * @param {String} literal The pattern that literal should match","     * @param {String} s The literal to be parsed","     * @param {Number} index The position in s where literal is expected to start from","     * @return {Number} Last position read in s. This is used to continue parsing from the end of the literal.","     */","    _parseLiteral: function(literal, s, index) {","        if (s.length - index < literal.length) {","            Y.error(\"Parse Error: Input too short\");","        }","        for (var i = 0; i < literal.length; i++) {","            if (literal.charAt(i) !== s.charAt(index + i)) {","                Y.error(\"Parse Error: Input does not match\");","            }","        }","        return index + literal.length;","    },","    ","    /**","     * Parses an integer at the offset of the given string and calls a","     * method on the specified object.","     *","     * @method _parseInt","     * @private","     *","     * @param o           {Object}   The target object.","     * @param f           {function|String} The method to call on the target object.","     *                               If this parameter is a string, then it is used","     *                               as the name of the property to set on the","     *                               target object.","     * @param adjust      {Number}   The numeric adjustment to make on the","     *                               value before calling the object method.","     * @param s           {String}   The string to parse.","     * @param index       {Number}   The index within the string to start parsing.","     * @param fixedlen    {Number}   If specified, specifies the required number","     *                               of digits to be parsed.","     * @param [radix=10]  {Number}   Specifies the radix of the parse string.","     * @return {Number}   The position where the parsed number was found","     */","    _parseInt: function(o, f, adjust, s, index, fixedlen, radix) {","        var len = fixedlen || s.length - index,","            head = index,","            i = 0,","            tail, value, target;","        for (; i < len; i++) {","            if (!s.charAt(index++).match(/\\d/)) {","                index--;","                break;","            }","        }","        tail = index;","        if (head === tail) {","            Y.error(\"Error parsing number. Number not present\");","        }","        if (fixedlen && tail - head !== fixedlen) {","            Y.error(\"Error parsing number. Number too short\");","        }","        value = parseInt(s.substring(head, tail), radix || 10);","        if (f) {","            target = o || Y.config.win;","            if (typeof f === \"function\") {","                f.call(target, value + adjust);","            }","            else {","                target[f] = value + adjust;","            }","        }","        return tail;","    }","});","","//","// Text segment class","//","","/**"," * Text segment in the pattern."," * @class __BaseFormat.TextSegment"," * @for __BaseFormat"," * @namespace Number"," * @extends Segment"," * @constructor"," * @param {Format} format The parent Format object"," * @param {String} s The pattern representing this segment"," */","Format.TextSegment = function(format, s) {","    if (!format && !s) { return; }","    Format.TextSegment.superclass.constructor.call(this, format, s);","};","","Y.extend(Format.TextSegment, Format.Segment);","","Y.mix(Format.TextSegment.prototype, {","    /**","     * String representation of the class","     * @method toString","     * @private","     * @return {String}","     */","    toString: function() {","        return \"text: \\\"\"+this._s+'\"';","    },","","    /**","     * Parse an object according to the pattern","     * @method parse","     * @param o The parse object. Not used here. This is only used in more complex segment types","     * @param s {String} The string being parsed","     * @param index {Number} The index in s to start parsing from","     * @return {Number} Last position read in s. This is used to continue parsing from the end of the literal.","     */","    parse: function(o, s, index) {","        return Format.Segment._parseLiteral(this._s, s, index);","    }","}, true);","/**"," * NumberFormat helps you to format and parse numbers for any locale."," * Your code can be completely independent of the locale conventions for decimal points, thousands-separators,"," * or even the particular decimal digits used, or whether the number format is even decimal."," *"," * This module uses parts of zimbra NumberFormat"," *"," * @module datatype-number-advanced-format"," * @requires datatype-number-format, datatype-number-parse"," */","","/**"," * Class to handle Number formatting."," * @class __zNumberFormat"," * @extends __BaseFormat"," * @namespace Number"," * @private"," * @constructor"," * @param pattern {String}       The number pattern."," * @param formats {Object}       locale data"," * @param [skipNegFormat] {Boolean} Specifies whether to skip the generation of this format's negative value formatter. Internal use only"," */","Y.Number.__zNumberFormat = function(pattern, formats, skipNegFormat) {","    var patterns, numberPattern, groupingRegex, groups, i, results, hasPrefix, start, end,","        numPattern, e, expon, dot, whole, zero, fract, formatter, index, minus;","    if (arguments.length === 0) { return; }","","    NumberFormat.superclass.constructor.call(this, pattern, formats);","    if (!pattern) { return; }","","    if(pattern === \"{plural_style}\") {","        pattern = this.Formats.decimalFormat;","        this._isPluralCurrency = true;","        this._pattern = pattern;","    }","","    //Default currency","    this.currency = this.Formats.defaultCurrency;","    if(this.currency === undefined || !this.currency) {","        this.currency = \"USD\";","    }","        ","    patterns = pattern.split(/;/);","    pattern = patterns[0];","	","    this._useGrouping = (pattern.indexOf(\",\") !== -1);      //Will be set to true if pattern uses grouping","    this._parseIntegerOnly = (pattern.indexOf(\".\") === -1);  //Will be set to false if pattern contains fractional parts","        ","    //If grouping is used, find primary and secondary grouping","    if(this._useGrouping) {","        numberPattern = pattern.match(/[0#,]+/);","        groupingRegex = new RegExp(\"[0#]+\", \"g\");","        groups = numberPattern[0].match(groupingRegex);","            ","        i = groups.length - 2;","        this._primaryGrouping = groups[i+1].length;","        this._secondaryGrouping = (i > 0 ? groups[i].length : groups[i+1].length);","    }","        ","    // parse prefix","    i = 0;","        ","    results = this.__parseStatic(pattern, i);","    i = results.offset;","    hasPrefix = results.text !== \"\";","    if (hasPrefix) {","        this._segments.push(new Format.TextSegment(this, results.text));","    }","	","    // parse number descriptor","    start = i;","    while (i < pattern.length &&","        NumberFormat._META_CHARS.indexOf(pattern.charAt(i)) !== -1) {","        i++;","    }","    end = i;","","    numPattern = pattern.substring(start, end);","    e = numPattern.indexOf(this.Formats.exponentialSymbol);","    expon = e !== -1 ? numPattern.substring(e + 1) : null;","    if (expon) {","        numPattern = numPattern.substring(0, e);","        this._showExponent = true;","    }","	","    dot = numPattern.indexOf('.');","    whole = dot !== -1 ? numPattern.substring(0, dot) : numPattern;","    if (whole) {","        /*var comma = whole.lastIndexOf(',');","            if (comma != -1) {","                this._groupingOffset = whole.length - comma - 1;","            }*/","        whole = whole.replace(/[^#0]/g,\"\");","        zero = whole.indexOf('0');","        if (zero !== -1) {","            this._minIntDigits = whole.length - zero;","        }","        this._maxIntDigits = whole.length;","    }","	","    fract = dot !== -1 ? numPattern.substring(dot + 1) : null;","    if (fract) {","        zero = fract.lastIndexOf('0');","        if (zero !== -1) {","            this._minFracDigits = zero + 1;","        }","        this._maxFracDigits = fract.replace(/[^#0]/g,\"\").length;","    }","	","    this._segments.push(new NumberFormat.NumberSegment(this, numPattern));","	","    // parse suffix","    results = this.__parseStatic(pattern, i);","    i = results.offset;","    if (results.text !== \"\") {","        this._segments.push(new Format.TextSegment(this, results.text));","    }","	","    // add negative formatter","    if (skipNegFormat) { return; }","	","    if (patterns.length > 1) {","        pattern = patterns[1];","        this._negativeFormatter = new NumberFormat(pattern, formats, true);","    }","    else {","        // no negative pattern; insert minus sign before number segment","        formatter = new NumberFormat(\"\", formats);","        formatter._segments = formatter._segments.concat(this._segments);","","        index = hasPrefix ? 1 : 0;","        minus = new Format.TextSegment(formatter, this.Formats.minusSign);","        formatter._segments.splice(index, 0, minus);","		","        this._negativeFormatter = formatter;","    }","};","","NumberFormat = Y.Number.__zNumberFormat;","Y.extend(NumberFormat, Y.Number.__BaseFormat);","    ","// Constants","","Y.mix(NumberFormat, {","    _NUMBER: \"number\",","    _INTEGER: \"integer\",","    _CURRENCY: \"currency\",","    _PERCENT: \"percent\",","","    _META_CHARS: \"0#.,E\"","});","","Y.mix( NumberFormat.prototype, {","    _groupingOffset: Number.MAX_VALUE,","    _minIntDigits: 1,","    _isCurrency: false,","    _isPercent: false,","    _isPerMille: false,","    _showExponent: false,","","    /**","     * Format a number","     * @method format","     * @param number {Number}","     * @return {String} Formatted result","     */","    format: function(number) {","        if (number < 0 && this._negativeFormatter) {","            return this._negativeFormatter.format(number);","        }","        ","        var result = Format.prototype.format.call(this, number), pattern = \"\";","        ","        if(this._isPluralCurrency) {","            if(number === 1) {","                //Singular","                pattern = this.Formats.currencyPatternSingular;","                pattern = pattern.replace(\"{1}\", this.Formats[this.currency + \"_currencySingular\"]);","            } else {","                //Plural","                pattern = this.Formats.currencyPatternPlural;","                pattern = pattern.replace(\"{1}\", this.Formats[this.currency + \"_currencyPlural\"]);","            }","            ","            result = pattern.replace(\"{0}\", result);","        }","        ","        return result;","    },","","    /**","     * Parse string and return number","     * @method parse","     * @param s {String} The string to parse","     * @param pp {Number} Parse position. Will start parsing from this index in string s.","     * @return {Number} Parse result","     */","    parse: function(s, pp) {","        var singular, plural, object;","        if(s.indexOf(this.Formats.minusSign) !== -1 && this._negativeFormatter) {","            return this._negativeFormatter.parse(s, pp);","        }","        ","        if(this._isPluralCurrency) {","            singular = this.Formats[this.currency + \"_currencySingular\"],","                plural = this.Formats[this.currency + \"_currencyPlural\"];","            ","            s = Y.Lang.trim(s.replace(plural, \"\").replace(singular, \"\"));","        }","        ","        object = null;","        try {","            object = Format.prototype.parse.call(this, s, pp);","            object = object.value;","        } catch(e) {","            Y.error(\"Failed to parse: \" + s, e);","        }","        ","        return object;","    },","","    /**","     * Parse static. Internal use only.","     * @method __parseStatic","     * @private","     * @param {String} s Pattern","     * @param {Number} i Index","     * @return {Object}","     */","    __parseStatic: function(s, i) {","        var data = [], c, start, end;","        while (i < s.length) {","            c = s.charAt(i++);","            if (NumberFormat._META_CHARS.indexOf(c) !== -1) {","                i--;","                break;","            }","            switch (c) {","                case \"'\":","                    start = i;","                    while (i < s.length && s.charAt(i) !== \"'\") {","			i++;","                    }","                    end = i;","                    c = end - start === 0 ? \"'\" : s.substring(start, end);","                    break;","                case '%':","                    c = this.Formats.percentSign;","                    this._isPercent = true;","                    break;","                case '\\u2030':","                    c = this.Formats.perMilleSign;","                    this._isPerMille = true;","                    break;","                case '\\u00a4':","                    if(s.charAt(i) === '\\u00a4') {","                        c = this.Formats[this.currency + \"_currencyISO\"];","                        i++;","                    } else {","                        c = this.Formats[this.currency + \"_currencySymbol\"];","                    }","                    this._isCurrency = true;","                    break;","            }","            data.push(c);","        }","        return {","            text: data.join(\"\"),","            offset: i","        };","    },","","    /**","     * Creates the object that is initialized by parsing. For internal use only.","     * Overrides method from __BaseFormat","     * @method _createParseObject","     * @private","     * @return {Object}","     */","    _createParseObject: function() {","        return {","            value: null","        };","    }","}, true);","    ","//","// NumberFormat.NumberSegment class","//","","/**"," * Number segment class."," * @class __zNumberFormat.NumberSegment"," * @for __zNumberFormat"," * @namespace Number"," * @extends Number.__BaseFormat.Segment"," *"," * @private"," * @constructor"," *"," * @param format {Number.__zNumberFormat} Parent Format object"," * @param s {String} Pattern representing this segment"," */","NumberFormat.NumberSegment = function(format, s) {","    if (format === null && s === null) { return; }","    NumberFormat.NumberSegment.superclass.constructor.call(this, format, s);","};","Y.extend(NumberFormat.NumberSegment, Format.Segment);","","Y.mix(NumberFormat.NumberSegment.prototype, {","    /**","     * Format number segment","     * @method format","     * @param number {Number}","     * @return {String} Formatted result","     */","    format: function(number) {","        var expon, exponReg, s;","        // special values","        if (isNaN(number)) { return this._parent.Formats.nanSymbol; }","        if (number === Number.NEGATIVE_INFINITY || number === Number.POSITIVE_INFINITY) {","            return this._parent.Formats.infinitySign;","        }","","        // adjust value","        if (typeof number !== \"number\") { number = Number(number); }","        number = Math.abs(number); // NOTE: minus sign is part of pattern","        if (this._parent._isPercent) { number *= 100; }","        else if (this._parent._isPerMille) { number *= 1000; }","        if(this._parent._parseIntegerOnly) { number = Math.floor(number); }","        ","        // format","        expon = this._parent.Formats.exponentialSymbol;","        exponReg = new RegExp(expon + \"+\");","        s = this._parent._showExponent","            ? number.toExponential(this._parent._maxFracDigits).toUpperCase().replace(exponReg,expon)","            : number.toFixed(this._parent._maxFracDigits || 0);","        s = this._normalize(s);","        return s;","    },","","    /**","     * Normalize pattern","     * @method _normalize","     * @protected","     * @param {String} s Pattern","     * @return {String} Normalized pattern","     */","    _normalize: function(s) {","        var exponSymbol = this._parent.Formats.exponentialSymbol,","            splitReg = new RegExp(\"[\\\\.\" + exponSymbol + \"]\"),","            match = s.split(splitReg),","            whole = match.shift(),  //Normalize the whole part","            a = [],","            offset = this._parent._primaryGrouping,","            fract = '0',","            decimal = this._parent.Formats.decimalSeparator,","            expon, i;","","	if (whole.length < this._parent._minIntDigits) {","            whole = Y.Number._zeroPad(whole, this._parent._minIntDigits, this._parent.Formats.numberZero);","        }","        if (whole.length > this._parent._primaryGrouping && this._parent._useGrouping) {","            i = whole.length - offset;","            while (i > 0) {","                a.unshift(whole.substr(i, offset));","                a.unshift(this._parent.Formats.groupingSeparator);","                offset = this._parent._secondaryGrouping;","                i -= offset;","            }","            a.unshift(whole.substring(0, i + offset));","		","            whole = a.join(\"\");","        }","	","        if(s.match(/\\./)) {","            fract = match.shift();","        }","        else if(s.match(/\\e/) || s.match(/\\E/)) {","            expon = match.shift();","        }","","        fract = fract.replace(/0+$/,\"\");","        if (fract.length < this._parent._minFracDigits) {","            fract = Y.Number._zeroPad(fract, this._parent._minFracDigits, this._parent.Formats.numberZero, true);","        }","	","        a = [ whole ];","        if (fract.length > 0) {","            a.push(decimal, fract);","        }","        if (expon) {","            a.push(exponSymbol, expon.replace(/^\\+/,\"\"));","        }","	","        // return normalize result","        return a.join(\"\");","    },","","    /**","     * Parse Number Segment","     * @method parse","     * @param object {Object} Result will be stored in object.value","     * @param s {String} Pattern","     * @param index {Number}","     * @return {Number} Index in s where parse ended","     */","    parse: function(object, s, index) {","        var comma = this._parent.Formats.groupingSeparator,","            dot = this._parent.Formats.decimalSeparator,","            minusSign = this._parent.Formats.minusSign,","            expon = this._parent.Formats.exponentialSymbol,","            numberRegexPattern = \"[\\\\\" + minusSign + \"0-9\" + comma + \"]+\",","            numberRegex, matches, negativeNum, endIndex, scientific = null, i,","            //If more groups, use primary/secondary grouping as applicable","            grouping = this._parent._secondaryGrouping || this._parent._primaryGrouping;","","        if(!this._parent._parseIntegerOnly) {","            numberRegexPattern += \"(\\\\\" + dot + \"[0-9]+)?\";","        }","        if(this._parent._showExponent) {","            numberRegexPattern += \"(\" + expon +\"\\\\+?[0-9]+)\";","        }","        ","        numberRegex = new RegExp(numberRegexPattern);","        matches = s.match(numberRegex);","        ","        if(!matches) {","            Y.error(\"Error parsing: Number does not match pattern\");","        }","        ","        negativeNum = s.indexOf(minusSign) !== -1;","        endIndex = index + matches[0].length;","        s = s.slice(index, endIndex);","        ","        //Scientific format does not use grouping","        if(this._parent.showExponent) {","            scientific = s.split(expon);","        } else if(this._parent._useGrouping) {","            //Verify grouping data exists","            if(!this._parent._primaryGrouping) {","                //Should not happen","                Y.error(\"Error parsing: Invalid pattern\");","            }","            ","            //Verify grouping is correct","            i = s.length - this._parent._primaryGrouping - 1;","            ","            if(matches[1]) {","                //If there is a decimal part, ignore that. Grouping assumed to apply only to whole number part","                i = i - matches[1].length;","            }","            ","            //Use primary grouping for first group","            if(i > 0) {","                //There should be a comma at i","                if(s.charAt(i) !== ',') {","                    Y.error(\"Error parsing: Number does not match pattern\");","                }","                ","                //Remove comma","                s = s.slice(0, i) + s.slice(i+1);","            }","            ","            i = i - grouping - 1;","            ","            while(i > 0) {","                //There should be a comma at i","                if(s.charAt(i) !== ',') {","                    Y.error(\"Error parsing: Number does not match pattern\");","                }","                ","                //Remove comma","                s = s.slice(0, i) + s.slice(i+1);","                i = i - grouping - 1;","            }","            ","            //Verify there are no more grouping separators","            if(s.indexOf(comma) !== -1) {","                Y.error(\"Error parsing: Number does not match pattern\");","            }","        }","        ","        if(scientific) {","            object.value = parseFloat(scientific[0], 10) * Math.pow(10, parseFloat(scientific[1], 10));","        } else {","            object.value = parseFloat(s, 10);","        }","        ","        //Special types","        if(negativeNum) { object.value *= -1; }","        if (this._parent._isPercent) { object.value /= 100; }","        else if (this._parent._isPerMille) { object.value /= 1000; }","        ","        return endIndex;","    }","}, true);","","/**"," * Number Formatting"," * @class __YNumberFormat"," * @namespace Number"," * @private"," * @constructor"," * @param [style='NUMBER_STYLE'] {Number} the given style. Should be key/value from Y.Number.STYLES"," */","Y.Number.__YNumberFormat = function(style) {","    style = style || Y.Number.STYLES.NUMBER_STYLE;","    ","    if(Y.Lang.isString(style)) {","        style = Y.Number.STYLES[style];","    }","    ","    var pattern = \"\",","        formats = Y.Intl.get(\"datatype-number-advanced-format\");","    switch(style) {","        case Y.Number.STYLES.CURRENCY_STYLE:","            pattern = formats.currencyFormat;","            break;","        case Y.Number.STYLES.ISO_CURRENCY_STYLE:","            pattern = formats.currencyFormat;","            pattern = pattern.replace(\"\\u00a4\", \"\\u00a4\\u00a4\");","            break;","        case Y.Number.STYLES.NUMBER_STYLE:","            pattern = formats.decimalFormat;","            break;","        case Y.Number.STYLES.PERCENT_STYLE:","            pattern = formats.percentFormat;","            break;","        case Y.Number.STYLES.PLURAL_CURRENCY_STYLE:","            //This is like <value> <currency>. This may be dependent on whether the value is singular or plural. Will be handled during formatting","            pattern = \"{plural_style}\";","            break;","        case Y.Number.STYLES.SCIENTIFIC_STYLE:","            pattern = formats.scientificFormat;","            break;","    }","        ","    this._numberFormatInstance = new NumberFormat(pattern, formats);","};","","YNumberFormat = Y.Number.__YNumberFormat;","","Y.mix(Y.Number, {","    /**","     * Style values to use during format/parse","     * @property STYLES","     * @type Object","     * @static","     * @final","     * @for Number","     */","    STYLES: {","        CURRENCY_STYLE: 1,","        ISO_CURRENCY_STYLE: 2,","        NUMBER_STYLE: 4,","        PERCENT_STYLE: 8,","        PLURAL_CURRENCY_STYLE: 16,","        SCIENTIFIC_STYLE: 32","    }","});","   ","Y.mix(YNumberFormat.prototype, {","    /**","     * Format a number","     * @method format","     * @param number {Number} the number to format","     * @for Number.YNumberFormat","     * @return {Number}","     */","    format: function(number) {","        return this._numberFormatInstance.format(number);","    },","    ","    /**","     * Return true if this format will parse numbers as integers only.","     * For example in the English locale, with ParseIntegerOnly true, the string \"1234.\" would be parsed as the integer value 1234","     * and parsing would stop at the \".\" character. Of course, the exact format accepted by the parse operation is locale dependant.","     * @method isParseIntegerOnly","     * @return {Boolean}","     */","    isParseIntegerOnly: function() {","        return this._numberFormatInstance._parseIntegerOnly;","    },","    ","    /**","     * Parse the string to get a number","     * @method parse","     * @param {String} txt The string to parse","     * @param {Number} [pp=0] Parse position. The position to start parsing at.","     */","    parse: function(txt, pp) {","        return this._numberFormatInstance.parse(txt, pp);","    },","    ","    /**","     * Sets whether or not numbers should be parsed as integers only.","     * @method setParseIntegerOnly","     * @param {Boolean} newValue set True, this format will parse numbers as integers only.","     */","    setParseIntegerOnly: function(newValue) {","        this._numberFormatInstance._parseIntegerOnly = newValue;","    }","});","Y.mix( Y.Number, {","     _oldFormat: Y.Number.format,","     _oldParse:  Y.Number.parse","});","","Y.mix( Y.Number, {","     /**","      * Takes a Number and formats to string for display to user","      *","      * @for Number","      * @method format","      * @param data {Number} Number","      * @param [config] {Object} Optional Configuration values.","      *   <dl>","      *      <dt>[style] {Number|String}</dt>","      *         <dd>Format/Style to use. See Y.Number.STYLES</dd>","      *      <dt>[parseIntegerOnly] {Boolean}</dt>","      *         <dd>If set to true, only the whole number part of data will be used</dd>","      *      <dt>[prefix] {String}</dd>","      *         <dd>String prepended before each number, like a currency designator \"$\"</dd>","      *      <dt>[decimalPlaces] {Number}</dd>","      *         <dd>Number of decimal places to round. Must be a number 0 to 20.</dd>","      *      <dt>[decimalSeparator] {String}</dd>","      *         <dd>Decimal separator</dd>","      *      <dt>[thousandsSeparator] {String}</dd>","      *         <dd>Thousands separator</dd>","      *      <dt>[suffix] {String}</dd>","      *         <dd>String appended after each number, like \" items\" (note the space)</dd>","      *   </dl>","      * @return {String} Formatted string representation of data","      */","     format: function(data, config) {","         config = config || {};","    ","         if(config.prefix !== undefined || config.decimalPlaces !== undefined || config.decimalSeparator !== undefined","               || config.thousandsSeparator !== undefined || config.suffix !== undefined) {","             return Y.Number._oldFormat(data, config);","         }","    ","         try {","             var formatter = new YNumberFormat(config.style);","             if(config.parseIntegerOnly) {","                 formatter.setParseIntegerOnly(true);","             }","             return formatter.format(data);","         } catch(e) {","             //Error. Fallback to original format","         }","         return Y.Number._oldFormat(data, config);","     },","","     /**","      * Parses data and returns a number","      *","      * @for Number","      * @method format","      * @param data {String} Data to be parsed","      * @param [config] (Object} Object containg 'style' (Pattern data is represented in.","               See Y.Number.STYLES) and 'parsePosition' (index position in data to start parsing at) Both parameters are optional.","               If omitted, style defaults to NUMBER_STYLE, and parsePosition defaults to 0","      * @return {Number} Number represented by data","      */","     parse: function(data, config) {","         try {","             var formatter = new YNumberFormat(config.style);","             return formatter.parse(data, config.parsePosition);","         } catch(e) {","             //Fallback on deprecated parse","         }","    ","         return Y.Number._oldParse(data);","     }","}, true);","","//Update Parsers shortcut","Y.namespace(\"Parsers\").number = Y.Number.parse;","","","}, '@VERSION@', {","    \"lang\": [","        \"af\",","        \"af-NA\",","        \"af-ZA\",","        \"am-ET\",","        \"am\",","        \"ar-AE\",","        \"ar-BH\",","        \"ar-DZ\",","        \"ar-EG\",","        \"ar-IQ\",","        \"ar-JO\",","        \"ar\",","        \"ar-KW\",","        \"ar-LB\",","        \"ar-LY\",","        \"ar-MA\",","        \"ar-OM\",","        \"ar-QA\",","        \"ar-SA\",","        \"ar-SD\",","        \"ar-SY\",","        \"ar-TN\",","        \"ar-YE\",","        \"as-IN\",","        \"as\",","        \"az-AZ\",","        \"az-Cyrl-AZ\",","        \"az-Cyrl\",","        \"az\",","        \"az-Latn-AZ\",","        \"be-BY\",","        \"be\",","        \"bg-BG\",","        \"bg\",","        \"bn-BD\",","        \"bn-IN\",","        \"bn\",","        \"bo-CN\",","        \"bo-IN\",","        \"bo\",","        \"ca-ES\",","        \"ca\",","        \"cs-CZ\",","        \"cs\",","        \"cy-GB\",","        \"cy\",","        \"da-DK\",","        \"da\",","        \"de-AT\",","        \"de-BE\",","        \"de-CH\",","        \"de-DE\",","        \"de\",","        \"de-LI\",","        \"de-LU\",","        \"el-CY\",","        \"el-GR\",","        \"el\",","        \"en-AU\",","        \"en-BE\",","        \"en-BW\",","        \"en-BZ\",","        \"en-CA\",","        \"en-GB\",","        \"en-HK\",","        \"en-IE\",","        \"en-IN\",","        \"en-JM\",","        \"en-JO\",","        \"en-MH\",","        \"en-MT\",","        \"en-MY\",","        \"en-NA\",","        \"en-NZ\",","        \"en-PH\",","        \"en-PK\",","        \"en-RH\",","        \"en-SG\",","        \"en-TT\",","        \"en-US\",","        \"en-US-POSIX\",","        \"en-VI\",","        \"en-ZA\",","        \"en-ZW\",","        \"eo\",","        \"es-AR\",","        \"es-BO\",","        \"es-CL\",","        \"es-CO\",","        \"es-CR\",","        \"es-DO\",","        \"es-EC\",","        \"es-ES\",","        \"es-GT\",","        \"es-HN\",","        \"es\",","        \"es-MX\",","        \"es-NI\",","        \"es-PA\",","        \"es-PE\",","        \"es-PR\",","        \"es-PY\",","        \"es-SV\",","        \"es-US\",","        \"es-UY\",","        \"es-VE\",","        \"et-EE\",","        \"et\",","        \"eu-ES\",","        \"eu\",","        \"fa-AF\",","        \"fa-IR\",","        \"fa\",","        \"fi-FI\",","        \"fi\",","        \"fil\",","        \"fil-PH\",","        \"fo-FO\",","        \"fo\",","        \"fr-BE\",","        \"fr-CA\",","        \"fr-CH\",","        \"fr-FR\",","        \"fr\",","        \"fr-LU\",","        \"fr-MC\",","        \"fr-SN\",","        \"ga-IE\",","        \"ga\",","        \"gl-ES\",","        \"gl\",","        \"gsw-CH\",","        \"gsw\",","        \"gu-IN\",","        \"gu\",","        \"gv-GB\",","        \"gv\",","        \"ha-GH\",","        \"ha\",","        \"ha-Latn-GH\",","        \"ha-Latn-NE\",","        \"ha-Latn-NG\",","        \"ha-NE\",","        \"ha-NG\",","        \"haw\",","        \"haw-US\",","        \"he-IL\",","        \"he\",","        \"hi-IN\",","        \"hi\",","        \"hr-HR\",","        \"hr\",","        \"hu-HU\",","        \"hu\",","        \"hy-AM\",","        \"hy\",","        \"id-ID\",","        \"id\",","        \"ii-CN\",","        \"ii\",","        \"in-ID\",","        \"in\",","        \"is-IS\",","        \"is\",","        \"it-CH\",","        \"it-IT\",","        \"it\",","        \"iw-IL\",","        \"iw\",","        \"ja-JP\",","        \"ja-JP-TRADITIONAL\",","        \"ja\",","        \"\",","        \"ka-GE\",","        \"ka\",","        \"kk-Cyrl-KZ\",","        \"kk\",","        \"kk-KZ\",","        \"kl-GL\",","        \"kl\",","        \"km\",","        \"km-KH\",","        \"kn-IN\",","        \"kn\",","        \"ko\",","        \"kok-IN\",","        \"kok\",","        \"ko-KR\",","        \"kw-GB\",","        \"kw\",","        \"lt\",","        \"lt-LT\",","        \"lv\",","        \"lv-LV\",","        \"mk\",","        \"mk-MK\",","        \"ml-IN\",","        \"ml\",","        \"mr-IN\",","        \"mr\",","        \"ms-BN\",","        \"ms\",","        \"ms-MY\",","        \"mt\",","        \"mt-MT\",","        \"nb\",","        \"nb-NO\",","        \"ne-IN\",","        \"ne\",","        \"ne-NP\",","        \"nl-BE\",","        \"nl\",","        \"nl-NL\",","        \"nn\",","        \"nn-NO\",","        \"no\",","        \"no-NO\",","        \"no-NO-NY\",","        \"om-ET\",","        \"om\",","        \"om-KE\",","        \"or-IN\",","        \"or\",","        \"pa-Arab\",","        \"pa-Arab-PK\",","        \"pa-Guru-IN\",","        \"pa-IN\",","        \"pa\",","        \"pa-PK\",","        \"pl\",","        \"pl-PL\",","        \"ps-AF\",","        \"ps\",","        \"pt-BR\",","        \"pt\",","        \"pt-PT\",","        \"ro\",","        \"ro-MD\",","        \"ro-RO\",","        \"ru\",","        \"ru-RU\",","        \"ru-UA\",","        \"sh-BA\",","        \"sh-CS\",","        \"sh\",","        \"sh-YU\",","        \"si\",","        \"si-LK\",","        \"sk\",","        \"sk-SK\",","        \"sl\",","        \"sl-SI\",","        \"so-DJ\",","        \"so-ET\",","        \"so\",","        \"so-KE\",","        \"so-SO\",","        \"sq-AL\",","        \"sq\",","        \"sr-BA\",","        \"sr-CS\",","        \"sr-Cyrl-BA\",","        \"sr-Cyrl-CS\",","        \"sr-Cyrl-ME\",","        \"sr-Cyrl-RS\",","        \"sr-Cyrl-YU\",","        \"sr\",","        \"sr-Latn-BA\",","        \"sr-Latn-CS\",","        \"sr-Latn\",","        \"sr-Latn-ME\",","        \"sr-Latn-RS\",","        \"sr-Latn-YU\",","        \"sr-ME\",","        \"sr-RS\",","        \"sr-YU\",","        \"sv-FI\",","        \"sv\",","        \"sv-SE\",","        \"sw\",","        \"sw-KE\",","        \"sw-TZ\",","        \"ta-IN\",","        \"ta\",","        \"te-IN\",","        \"te\",","        \"th\",","        \"th-TH\",","        \"ti-ER\",","        \"ti-ET\",","        \"ti\",","        \"tl\",","        \"tl-PH\",","        \"tr\",","        \"tr-TR\",","        \"uk\",","        \"uk-UA\",","        \"ur-IN\",","        \"ur\",","        \"ur-PK\",","        \"uz-AF\",","        \"uz-Arab-AF\",","        \"uz-Arab\",","        \"uz-Cyrl-UZ\",","        \"uz\",","        \"uz-Latn\",","        \"uz-Latn-UZ\",","        \"uz-UZ\",","        \"vi\",","        \"vi-VN\",","        \"zh-CN\",","        \"zh-Hans-CN\",","        \"zh-Hans-HK\",","        \"zh-Hans-MO\",","        \"zh-Hans-SG\",","        \"zh-Hant-HK\",","        \"zh-Hant\",","        \"zh-Hant-MO\",","        \"zh-Hant-TW\",","        \"zh-HK\",","        \"zh\",","        \"zh-MO\",","        \"zh-SG\",","        \"zh-TW\",","        \"zu\",","        \"zu-ZA\"","    ],","    \"requires\": [","        \"datatype-number-format\",","        \"datatype-number-parse\"","    ]","});"];
+_yuitest_coverage["build/datatype-number-advanced-format/datatype-number-advanced-format.js"].lines = {"1":0,"7":0,"21":0,"22":0,"24":0,"26":0,"28":0,"29":0,"30":0,"32":0,"34":0,"52":0,"53":0,"54":0,"57":0,"74":0,"76":0,"84":0,"86":0,"87":0,"89":0,"105":0,"108":0,"109":0,"112":0,"113":0,"115":0,"127":0,"145":0,"146":0,"147":0,"148":0,"151":0,"159":0,"177":0,"186":0,"190":0,"202":0,"203":0,"205":0,"206":0,"207":0,"210":0,"235":0,"239":0,"240":0,"241":0,"242":0,"245":0,"246":0,"247":0,"249":0,"250":0,"252":0,"253":0,"254":0,"255":0,"256":0,"259":0,"262":0,"280":0,"281":0,"282":0,"285":0,"287":0,"295":0,"307":0,"332":0,"333":0,"335":0,"337":0,"338":0,"340":0,"341":0,"342":0,"343":0,"347":0,"348":0,"349":0,"352":0,"353":0,"355":0,"356":0,"359":0,"360":0,"361":0,"362":0,"364":0,"365":0,"366":0,"370":0,"372":0,"373":0,"374":0,"375":0,"376":0,"380":0,"381":0,"383":0,"385":0,"387":0,"388":0,"389":0,"390":0,"391":0,"392":0,"395":0,"396":0,"397":0,"402":0,"403":0,"404":0,"405":0,"407":0,"410":0,"411":0,"412":0,"413":0,"414":0,"416":0,"419":0,"422":0,"423":0,"424":0,"425":0,"429":0,"431":0,"432":0,"433":0,"437":0,"438":0,"440":0,"441":0,"442":0,"444":0,"448":0,"449":0,"453":0,"462":0,"477":0,"478":0,"481":0,"483":0,"484":0,"486":0,"487":0,"490":0,"491":0,"494":0,"497":0,"508":0,"509":0,"510":0,"513":0,"514":0,"517":0,"520":0,"521":0,"522":0,"523":0,"525":0,"528":0,"540":0,"541":0,"542":0,"543":0,"544":0,"545":0,"547":0,"549":0,"550":0,"551":0,"553":0,"554":0,"555":0,"557":0,"558":0,"559":0,"561":0,"562":0,"563":0,"565":0,"566":0,"567":0,"569":0,"571":0,"572":0,"574":0,"576":0,"590":0,"613":0,"614":0,"615":0,"617":0,"619":0,"627":0,"629":0,"630":0,"631":0,"635":0,"636":0,"637":0,"638":0,"639":0,"642":0,"643":0,"644":0,"647":0,"648":0,"659":0,"669":0,"670":0,"672":0,"673":0,"674":0,"675":0,"676":0,"677":0,"678":0,"680":0,"682":0,"685":0,"686":0,"688":0,"689":0,"692":0,"693":0,"694":0,"697":0,"698":0,"699":0,"701":0,"702":0,"706":0,"718":0,"727":0,"728":0,"730":0,"731":0,"734":0,"735":0,"737":0,"738":0,"741":0,"742":0,"743":0,"746":0,"747":0,"748":0,"750":0,"752":0,"756":0,"758":0,"760":0,"764":0,"766":0,"767":0,"771":0,"774":0,"776":0,"778":0,"779":0,"783":0,"784":0,"788":0,"789":0,"793":0,"794":0,"796":0,"800":0,"801":0,"802":0,"804":0,"816":0,"817":0,"819":0,"820":0,"823":0,"825":0,"827":0,"828":0,"830":0,"831":0,"832":0,"834":0,"835":0,"837":0,"838":0,"841":0,"842":0,"844":0,"845":0,"848":0,"851":0,"853":0,"872":0,"881":0,"892":0,"902":0,"911":0,"914":0,"919":0,"946":0,"948":0,"950":0,"953":0,"954":0,"955":0,"956":0,"958":0,"962":0,"977":0,"978":0,"979":0,"984":0,"989":0};
+_yuitest_coverage["build/datatype-number-advanced-format/datatype-number-advanced-format.js"].functions = {"_zeroPad:21":0,"__BaseFormat:52":0,"format:83":0,"parse:104":0,"_createParseObject:126":0,"Segment:145":0,"format:158":0,"parse:176":0,"getFormat:185":0,"_parseLiteral:201":0,"_parseInt:234":0,"TextSegment:280":0,"toString:294":0,"parse:306":0,"__zNumberFormat:332":0,"format:476":0,"parse:507":0,"__parseStatic:539":0,"_createParseObject:589":0,"NumberSegment:613":0,"format:626":0,"_normalize:658":0,"parse:717":0,"__YNumberFormat:816":0,"format:880":0,"isParseIntegerOnly:891":0,"parse:901":0,"setParseIntegerOnly:910":0,"format:945":0,"parse:976":0,"(anonymous 1):1":0};
+_yuitest_coverage["build/datatype-number-advanced-format/datatype-number-advanced-format.js"].coveredLines = 316;
+_yuitest_coverage["build/datatype-number-advanced-format/datatype-number-advanced-format.js"].coveredFunctions = 31;
 _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 1);
 YUI.add('datatype-number-advanced-format', function (Y, NAME) {
 
 /*
- * Copyright 2012 Yahoo! Inc. All Rights Reserved. Based on code owned by VMWare, Inc. 
+ * Copyright 2012 Yahoo! Inc. All Rights Reserved. Based on code owned by VMWare, Inc.
  */
+
+_yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "(anonymous 1)", 1);
+_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 7);
+var Format, NumberFormat, YNumberFormat;
+
+/**
+ * Pad string to specified length
+ * @method _zeroPad
+ * @for Number
+ * @static
+ * @private
+ * @param {String|Number} s The string or number to be padded
+ * @param {Number} length The maximum length s should be padded to have
+ * @param {String} [zeroChar='0'] The character to be used to pad the string.
+ * @param {Boolean} [rightSide=false] If true, padding will be done from the right-side of the string
+ * @return {String} The padded string
+ */
+_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 21);
+Y.Number._zeroPad  = function(s, length, zeroChar, rightSide) {
+    _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "_zeroPad", 21);
+_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 22);
+s = typeof s === "string" ? s : String(s);
+
+    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 24);
+if (s.length >= length) { return s; }
+
+    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 26);
+zeroChar = zeroChar || '0';
+	
+    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 28);
+var a = [], i;
+    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 29);
+for (i = s.length; i < length; i++) {
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 30);
+a.push(zeroChar);
+    }
+    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 32);
+a[rightSide ? "unshift" : "push"](s);
+
+    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 34);
+return a.join("");
+};
 
 //
 // Format class
 //
 
 /**
- * Base class for all formats. To format an object, instantiate the
- * format of your choice and call the <code>format</code> method which
+ * Base class for all formats. To format an object, instantiate the format of your choice and call the format method which
  * returns the formatted string.
+ * For internal use only.
+ * @class __BaseFormat
+ * @namespace Number
+ * @constructor
+ * @private
+ * @param {String} pattern
+ * @param {Object} formats
  */
-_yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "(anonymous 1)", 1);
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 16);
-Format = function(pattern, formats) {
-    _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "Format", 16);
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 17);
-if (arguments.length == 0) {
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 18);
+_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 52);
+Y.Number.__BaseFormat = function(pattern, formats) {
+    _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "__BaseFormat", 52);
+_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 53);
+if ( !pattern && !formats ) {
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 54);
 return;
     }
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 20);
-this._pattern = pattern;
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 21);
-this._segments = []; 
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 22);
-this.Formats = formats; 
-}
 
-// Data
+    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 57);
+Y.mix(this, {
+        /**
+         * Pattern to format/parse
+         * @property _pattern
+         * @type String
+         */
+        _pattern: pattern,
+        /**
+         * Segments in the pattern
+         * @property _segments
+         * @type Number.__BaseFormat.Segment
+         */
+        _segments: [],
+        Formats: formats
+    });
+};
 
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 27);
-Format.prototype._pattern = null;
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 28);
-Format.prototype._segments = null;
+_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 74);
+Format = Y.Number.__BaseFormat;
 
-//Exceptions
-
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 32);
-Y.mix(Format, {
-    Exception: function(name, message) {
-        _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "Exception", 33);
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 34);
-this.name = name;
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 35);
-this.message = message;
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 36);
-this.toString = function() {
-            _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "toString", 36);
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 37);
-return this.name + ": " + this.message;
+_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 76);
+Y.mix(Format.prototype, {
+    /**
+     * Format object
+     * @method format
+     * @param object The object to be formatted
+     * @return {String} Formatted result
+     */
+    format: function(object) {
+        _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "format", 83);
+_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 84);
+var s = [], i = 0;
+    
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 86);
+for (; i < this._segments.length; i++) {
+            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 87);
+s.push(this._segments[i].format(object));
         }
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 89);
+return s.join("");
     },
-    ParsingException: function(message) {
-        _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "ParsingException", 40);
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 41);
-Format.ParsingException.superclass.constructor.call(this, "ParsingException", message);
+
+    
+    /**
+     * Parses the given string according to this format's pattern and returns
+     * an object.
+     * Note:
+     * The default implementation of this method assumes that the sub-class
+     * has implemented the _createParseObject method.
+     * @method parse
+     * @for Number.__BaseFormat
+     * @param {String} s The string to be parsed
+     * @param {Number} [pp=0] Parse position. String will only be read from here
+     */
+    parse: function(s, pp) {
+        _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "parse", 104);
+_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 105);
+var object = this._createParseObject(),
+            index = pp || 0,
+            i = 0;
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 108);
+for (; i < this._segments.length; i++) {
+            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 109);
+index = this._segments[i].parse(object, s, index);
+        }
+        
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 112);
+if (index < s.length) {
+            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 113);
+Y.error("Parse Error: Input too long");
+        }
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 115);
+return object;
     },
-    IllegalArgumentsException: function(message) {
-        _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "IllegalArgumentsException", 43);
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 44);
-Format.IllegalArgumentsException.superclass.constructor.call(this, "IllegalArgumentsException", message);
-    },
-    FormatException: function(message) {
-        _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "FormatException", 46);
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 47);
-Format.FormatException.superclass.constructor.call(this, "FormatException", message);
+    
+    /**
+     * Creates the object that is initialized by parsing. For internal use only.
+     * Note:
+     * This must be implemented by sub-classes.
+     * @method _createParseObject
+     * @private
+     * //return {Object}
+     */
+    _createParseObject: function(/*s*/) {
+        _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "_createParseObject", 126);
+_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 127);
+Y.error("Not implemented");
     }
 });
-
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 51);
-Y.extend(Format.ParsingException, Format.Exception);
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 52);
-Y.extend(Format.IllegalArgumentsException, Format.Exception);
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 53);
-Y.extend(Format.FormatException, Format.Exception);
-
-// Public methods
-
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 57);
-Format.prototype.format = function(object) { 
-    _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "format", 57);
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 58);
-var s = [];
-        
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 60);
-for (var i = 0; i < this._segments.length; i++) {
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 61);
-s.push(this._segments[i].format(object));
-    }
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 63);
-return s.join("");
-};
-
-// Protected static methods
-
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 68);
-function zeroPad (s, length, zeroChar, rightSide) {
-    _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "zeroPad", 68);
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 69);
-s = typeof s == "string" ? s : String(s);
-
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 71);
-if (s.length >= length) {return s;}
-
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 73);
-zeroChar = zeroChar || '0';
-	
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 75);
-var a = [];
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 76);
-for (var i = s.length; i < length; i++) {
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 77);
-a.push(zeroChar);
-    }
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 79);
-a[rightSide ? "unshift" : "push"](s);
-
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 81);
-return a.join("");
-}
-    
-/** 
- * Parses the given string according to this format's pattern and returns
- * an object.
- * <p>
- * <strong>Note:</strong>
- * The default implementation of this method assumes that the sub-class
- * has implemented the <code>_createParseObject</code> method.
- */
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 92);
-Format.prototype.parse = function(s, pp) {
-    _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "parse", 92);
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 93);
-var object = this._createParseObject();
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 94);
-var index = pp || 0;
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 95);
-for (var i = 0; i < this._segments.length; i++) {
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 96);
-var segment = this._segments[i];
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 97);
-index = segment.parse(object, s, index);
-    }
-        
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 100);
-if (index < s.length) {
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 101);
-throw new Format.ParsingException("Input too long");
-    }
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 103);
-return object;
-};
-    
-/**
- * Creates the object that is initialized by parsing
- * <p>
- * <strong>Note:</strong>
- * This must be implemented by sub-classes.
- */
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 112);
-Format.prototype._createParseObject = function(s) {
-    _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "_createParseObject", 112);
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 113);
-throw new Format.ParsingException("Not implemented");
-};
 
 //
 // Segment class
 //
 
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 120);
+/**
+ * Segments in the pattern to be formatted
+ * @class __BaseFormat.Segment
+ * @for __BaseFormat
+ * @namespace Number
+ * @private
+ * @constructor
+ * @param {Format} format The format object that created this segment
+ * @param {String} s String representing this segment
+ */
+_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 145);
 Format.Segment = function(format, s) {
-    _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "Segment", 120);
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 121);
-if (arguments.length == 0) {return;}
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 122);
+    _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "Segment", 145);
+_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 146);
+if( !format && !s ) { return; }
+    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 147);
 this._parent = format;
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 123);
+    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 148);
 this._s = s;
 };
-    
-// Public methods
 
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 128);
-Format.Segment.prototype.format = function(o) { 
-    _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "format", 128);
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 129);
-return this._s; 
-};
+_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 151);
+Y.mix(Format.Segment.prototype, {
+    /**
+     * Formats the object. Will be overridden in most subclasses.
+     * @method format
+     * //param o The object to format
+     * @return {String} Formatted result
+     */
+    format: function(/*o*/) {
+        _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "format", 158);
+_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 159);
+return this._s;
+    },
 
-/**
- * Parses the string at the given index, initializes the parse object
- * (as appropriate), and returns the new index within the string for
- * the next parsing step.
- * <p>
- * <strong>Note:</strong>
- * This method must be implemented by sub-classes.
- *
- * @param o     [object] The parse object to be initialized.
- * @param s     [string] The input string to be parsed.
- * @param index [number] The index within the string to start parsing.
- */
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 144);
-Format.Segment.prototype.parse = function(o, s, index) {
-    _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "parse", 144);
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 145);
-throw new Format.ParsingException("Not implemented");
-};
+    /**
+     * Parses the string at the given index, initializes the parse object
+     * (as appropriate), and returns the new index within the string for
+     * the next parsing step.
+     *
+     * Note:
+     * This method must be implemented by sub-classes.
+     *
+     * @method parse
+     * //param o     {Object} The parse object to be initialized.
+     * //param s     {String} The input string to be parsed.
+     * //param index {Number} The index within the string to start parsing.
+     * //return The parsed result.
+     */
+    parse: function(/*o, s, index*/) {
+        _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "parse", 176);
+_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 177);
+Y.error("Not implemented");
+    },
 
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 148);
-Format.Segment.prototype.getFormat = function() {
-    _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "getFormat", 148);
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 149);
+    /**
+     * Return the parent Format object
+     * @method getFormat
+     * @return {Number.__BaseFormat}
+     */
+    getFormat: function() {
+        _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "getFormat", 185);
+_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 186);
 return this._parent;
-};
+    }
+});
 
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 152);
-Format.Segment._parseLiteral = function(literal, s, index) {
-    _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "_parseLiteral", 152);
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 153);
+_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 190);
+Y.mix(Format.Segment, {
+    /**
+     * Parse literal string that matches the pattern
+     * @method _parseLiteral
+     * @static
+     * @private
+     * @param {String} literal The pattern that literal should match
+     * @param {String} s The literal to be parsed
+     * @param {Number} index The position in s where literal is expected to start from
+     * @return {Number} Last position read in s. This is used to continue parsing from the end of the literal.
+     */
+    _parseLiteral: function(literal, s, index) {
+        _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "_parseLiteral", 201);
+_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 202);
 if (s.length - index < literal.length) {
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 154);
-throw new Format.ParsingException("Input too short");
-    }
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 156);
+            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 203);
+Y.error("Parse Error: Input too short");
+        }
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 205);
 for (var i = 0; i < literal.length; i++) {
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 157);
-if (literal.charAt(i) != s.charAt(index + i)) {
-            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 158);
-throw new Format.ParsingException("Input doesn't match");
+            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 206);
+if (literal.charAt(i) !== s.charAt(index + i)) {
+                _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 207);
+Y.error("Parse Error: Input does not match");
+            }
         }
-    }
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 161);
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 210);
 return index + literal.length;
-};
+    },
     
-/**
- * Parses an integer at the offset of the given string and calls a
- * method on the specified object.
- *
- * @param o         [object]   The target object.
- * @param f         [function|string] The method to call on the target object.
- *                             If this parameter is a string, then it is used
- *                             as the name of the property to set on the
- *                             target object.
- * @param adjust    [number]   The numeric adjustment to make on the
- *                             value before calling the object method.
- * @param s         [string]   The string to parse.
- * @param index     [number]   The index within the string to start parsing.
- * @param fixedlen  [number]   If specified, specifies the required number
- *                             of digits to be parsed.
- * @param radix     [number]   Optional. Specifies the radix of the parse
- *                             string. Defaults to 10 if not specified.
- */
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 182);
-Format.Segment._parseInt = function(o, f, adjust, s, index, fixedlen, radix) {
-    _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "_parseInt", 182);
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 183);
-var len = fixedlen || s.length - index;
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 184);
-var head = index;
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 185);
-for (var i = 0; i < len; i++) {
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 186);
+    /**
+     * Parses an integer at the offset of the given string and calls a
+     * method on the specified object.
+     *
+     * @method _parseInt
+     * @private
+     *
+     * @param o           {Object}   The target object.
+     * @param f           {function|String} The method to call on the target object.
+     *                               If this parameter is a string, then it is used
+     *                               as the name of the property to set on the
+     *                               target object.
+     * @param adjust      {Number}   The numeric adjustment to make on the
+     *                               value before calling the object method.
+     * @param s           {String}   The string to parse.
+     * @param index       {Number}   The index within the string to start parsing.
+     * @param fixedlen    {Number}   If specified, specifies the required number
+     *                               of digits to be parsed.
+     * @param [radix=10]  {Number}   Specifies the radix of the parse string.
+     * @return {Number}   The position where the parsed number was found
+     */
+    _parseInt: function(o, f, adjust, s, index, fixedlen, radix) {
+        _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "_parseInt", 234);
+_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 235);
+var len = fixedlen || s.length - index,
+            head = index,
+            i = 0,
+            tail, value, target;
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 239);
+for (; i < len; i++) {
+            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 240);
 if (!s.charAt(index++).match(/\d/)) {
-            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 187);
+                _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 241);
 index--;
-            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 188);
+                _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 242);
 break;
+            }
         }
-    }
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 191);
-var tail = index;
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 192);
-if (head == tail) {
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 193);
-throw new Format.ParsingException("Number not present");
-    }
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 195);
-if (fixedlen && tail - head != fixedlen) {
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 196);
-throw new Format.ParsingException("Number too short");
-    }
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 198);
-var value = parseInt(s.substring(head, tail), radix || 10);
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 199);
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 245);
+tail = index;
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 246);
+if (head === tail) {
+            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 247);
+Y.error("Error parsing number. Number not present");
+        }
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 249);
+if (fixedlen && tail - head !== fixedlen) {
+            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 250);
+Y.error("Error parsing number. Number too short");
+        }
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 252);
+value = parseInt(s.substring(head, tail), radix || 10);
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 253);
 if (f) {
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 200);
-var target = o || window;
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 201);
-if (typeof f == "function") {
-            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 202);
+            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 254);
+target = o || Y.config.win;
+            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 255);
+if (typeof f === "function") {
+                _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 256);
 f.call(target, value + adjust);
-        }
-        else {
-            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 205);
+            }
+            else {
+                _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 259);
 target[f] = value + adjust;
+            }
         }
-    }
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 208);
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 262);
 return tail;
-};
+    }
+});
 
 //
 // Text segment class
 //
 
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 215);
+/**
+ * Text segment in the pattern.
+ * @class __BaseFormat.TextSegment
+ * @for __BaseFormat
+ * @namespace Number
+ * @extends Segment
+ * @constructor
+ * @param {Format} format The parent Format object
+ * @param {String} s The pattern representing this segment
+ */
+_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 280);
 Format.TextSegment = function(format, s) {
-    _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "TextSegment", 215);
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 216);
-if (arguments.length == 0) {return;}
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 217);
+    _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "TextSegment", 280);
+_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 281);
+if (!format && !s) { return; }
+    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 282);
 Format.TextSegment.superclass.constructor.call(this, format, s);
 };
 
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 220);
+_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 285);
 Y.extend(Format.TextSegment, Format.Segment);
 
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 222);
-Format.TextSegment.prototype.toString = function() { 
-    _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "toString", 222);
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 223);
-return "text: \""+this._s+'"'; 
-};
-    
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 226);
-Format.TextSegment.prototype.parse = function(o, s, index) {
-    _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "parse", 226);
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 227);
-return Format.Segment._parseLiteral(this._s, s, index);
-};
+_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 287);
+Y.mix(Format.TextSegment.prototype, {
+    /**
+     * String representation of the class
+     * @method toString
+     * @private
+     * @return {String}
+     */
+    toString: function() {
+        _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "toString", 294);
+_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 295);
+return "text: \""+this._s+'"';
+    },
 
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 230);
-if(String.prototype.trim == null) {
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 231);
-String.prototype.trim = function() {
-        _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "trim", 231);
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 232);
-return this.replace(/^\s+/, '').replace(/\s+$/, '');
-    };
-}
+    /**
+     * Parse an object according to the pattern
+     * @method parse
+     * @param o The parse object. Not used here. This is only used in more complex segment types
+     * @param s {String} The string being parsed
+     * @param index {Number} The index in s to start parsing from
+     * @return {Number} Last position read in s. This is used to continue parsing from the end of the literal.
+     */
+    parse: function(o, s, index) {
+        _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "parse", 306);
+_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 307);
+return Format.Segment._parseLiteral(this._s, s, index);
+    }
+}, true);
 /**
  * NumberFormat helps you to format and parse numbers for any locale.
  * Your code can be completely independent of the locale conventions for decimal points, thousands-separators,
  * or even the particular decimal digits used, or whether the number format is even decimal.
- * 
+ *
  * This module uses parts of zimbra NumberFormat
- * 
- * @module format-numbers
- * @requires format-base
+ *
+ * @module datatype-number-advanced-format
+ * @requires datatype-number-format, datatype-number-parse
  */
 
 /**
- * @param pattern       The number pattern.
- * @param formats       locale data
- * @param skipNegFormat Specifies whether to skip the generation of this
- *                      format's negative value formatter.
- *                      <p>
- *                      <strong>Note:</strong> 
- *                      This parameter is only used by the implementation 
- *                      and should not be passed by application code 
- *                      instantiating a custom number format.
+ * Class to handle Number formatting.
+ * @class __zNumberFormat
+ * @extends __BaseFormat
+ * @namespace Number
+ * @private
+ * @constructor
+ * @param pattern {String}       The number pattern.
+ * @param formats {Object}       locale data
+ * @param [skipNegFormat] {Boolean} Specifies whether to skip the generation of this format's negative value formatter. Internal use only
  */
+_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 332);
+Y.Number.__zNumberFormat = function(pattern, formats, skipNegFormat) {
+    _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "__zNumberFormat", 332);
+_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 333);
+var patterns, numberPattern, groupingRegex, groups, i, results, hasPrefix, start, end,
+        numPattern, e, expon, dot, whole, zero, fract, formatter, index, minus;
+    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 335);
+if (arguments.length === 0) { return; }
 
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 258);
-var MODULE_NAME = "datatype-number-advanced-format";
-
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 260);
-NumberFormat = function(pattern, formats, skipNegFormat) {
-    _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "NumberFormat", 260);
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 261);
-if (arguments.length == 0) {
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 262);
-return;
-    }
-
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 265);
+    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 337);
 NumberFormat.superclass.constructor.call(this, pattern, formats);
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 266);
-if (!pattern) {
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 267);
-return;
-    }
+    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 338);
+if (!pattern) { return; }
 
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 270);
-if(pattern == "{plural_style}") {
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 271);
+    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 340);
+if(pattern === "{plural_style}") {
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 341);
 pattern = this.Formats.decimalFormat;
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 272);
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 342);
 this._isPluralCurrency = true;
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 273);
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 343);
 this._pattern = pattern;
     }
 
     //Default currency
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 277);
+    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 347);
 this.currency = this.Formats.defaultCurrency;
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 278);
-if(this.currency == null || this.currency == "") {
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 279);
+    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 348);
+if(this.currency === undefined || !this.currency) {
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 349);
 this.currency = "USD";
     }
         
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 282);
-var patterns = pattern.split(/;/);
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 283);
+    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 352);
+patterns = pattern.split(/;/);
+    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 353);
 pattern = patterns[0];
 	
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 285);
-this._useGrouping = (pattern.indexOf(",") != -1);      //Will be set to true if pattern uses grouping
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 286);
-this._parseIntegerOnly = (pattern.indexOf(".") == -1);  //Will be set to false if pattern contains fractional parts
+    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 355);
+this._useGrouping = (pattern.indexOf(",") !== -1);      //Will be set to true if pattern uses grouping
+    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 356);
+this._parseIntegerOnly = (pattern.indexOf(".") === -1);  //Will be set to false if pattern contains fractional parts
         
     //If grouping is used, find primary and secondary grouping
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 289);
+    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 359);
 if(this._useGrouping) {
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 290);
-var numberPattern = pattern.match(/[0#,]+/);
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 291);
-var groupingRegex = new RegExp("[0#]+", "g");
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 292);
-var groups = numberPattern[0].match(groupingRegex);
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 360);
+numberPattern = pattern.match(/[0#,]+/);
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 361);
+groupingRegex = new RegExp("[0#]+", "g");
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 362);
+groups = numberPattern[0].match(groupingRegex);
             
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 294);
-var i = groups.length - 2;
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 295);
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 364);
+i = groups.length - 2;
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 365);
 this._primaryGrouping = groups[i+1].length;
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 296);
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 366);
 this._secondaryGrouping = (i > 0 ? groups[i].length : groups[i+1].length);
     }
         
     // parse prefix
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 300);
+    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 370);
 i = 0;
         
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 302);
-var results = this.__parseStatic(pattern, i);
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 303);
+    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 372);
+results = this.__parseStatic(pattern, i);
+    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 373);
 i = results.offset;
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 304);
-var hasPrefix = results.text != "";
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 305);
+    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 374);
+hasPrefix = results.text !== "";
+    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 375);
 if (hasPrefix) {
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 306);
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 376);
 this._segments.push(new Format.TextSegment(this, results.text));
     }
 	
     // parse number descriptor
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 310);
-var start = i;
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 311);
+    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 380);
+start = i;
+    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 381);
 while (i < pattern.length &&
-        NumberFormat._META_CHARS.indexOf(pattern.charAt(i)) != -1) {
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 313);
+        NumberFormat._META_CHARS.indexOf(pattern.charAt(i)) !== -1) {
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 383);
 i++;
     }
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 315);
-var end = i;
+    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 385);
+end = i;
 
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 317);
-var numPattern = pattern.substring(start, end);
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 318);
-var e = numPattern.indexOf(this.Formats.exponentialSymbol);
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 319);
-var expon = e != -1 ? numPattern.substring(e + 1) : null;
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 320);
+    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 387);
+numPattern = pattern.substring(start, end);
+    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 388);
+e = numPattern.indexOf(this.Formats.exponentialSymbol);
+    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 389);
+expon = e !== -1 ? numPattern.substring(e + 1) : null;
+    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 390);
 if (expon) {
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 321);
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 391);
 numPattern = numPattern.substring(0, e);
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 322);
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 392);
 this._showExponent = true;
     }
 	
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 325);
-var dot = numPattern.indexOf('.');
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 326);
-var whole = dot != -1 ? numPattern.substring(0, dot) : numPattern;
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 327);
+    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 395);
+dot = numPattern.indexOf('.');
+    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 396);
+whole = dot !== -1 ? numPattern.substring(0, dot) : numPattern;
+    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 397);
 if (whole) {
         /*var comma = whole.lastIndexOf(',');
             if (comma != -1) {
                 this._groupingOffset = whole.length - comma - 1;
             }*/
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 332);
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 402);
 whole = whole.replace(/[^#0]/g,"");
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 333);
-var zero = whole.indexOf('0');
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 334);
-if (zero != -1) {
-            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 335);
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 403);
+zero = whole.indexOf('0');
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 404);
+if (zero !== -1) {
+            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 405);
 this._minIntDigits = whole.length - zero;
         }
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 337);
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 407);
 this._maxIntDigits = whole.length;
     }
 	
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 340);
-var fract = dot != -1 ? numPattern.substring(dot + 1) : null;
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 341);
+    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 410);
+fract = dot !== -1 ? numPattern.substring(dot + 1) : null;
+    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 411);
 if (fract) {
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 342);
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 412);
 zero = fract.lastIndexOf('0');
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 343);
-if (zero != -1) {
-            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 344);
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 413);
+if (zero !== -1) {
+            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 414);
 this._minFracDigits = zero + 1;
         }
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 346);
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 416);
 this._maxFracDigits = fract.replace(/[^#0]/g,"").length;
     }
 	
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 349);
+    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 419);
 this._segments.push(new NumberFormat.NumberSegment(this, numPattern));
 	
     // parse suffix
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 352);
+    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 422);
 results = this.__parseStatic(pattern, i);
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 353);
+    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 423);
 i = results.offset;
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 354);
-if (results.text != "") {
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 355);
+    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 424);
+if (results.text !== "") {
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 425);
 this._segments.push(new Format.TextSegment(this, results.text));
     }
 	
     // add negative formatter
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 359);
-if (skipNegFormat) {return;}
+    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 429);
+if (skipNegFormat) { return; }
 	
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 361);
+    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 431);
 if (patterns.length > 1) {
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 362);
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 432);
 pattern = patterns[1];
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 363);
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 433);
 this._negativeFormatter = new NumberFormat(pattern, formats, true);
     }
     else {
         // no negative pattern; insert minus sign before number segment
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 367);
-var formatter = new NumberFormat("", formats);
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 368);
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 437);
+formatter = new NumberFormat("", formats);
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 438);
 formatter._segments = formatter._segments.concat(this._segments);
 
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 370);
-var index = hasPrefix ? 1 : 0;
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 371);
-var minus = new Format.TextSegment(formatter, this.Formats.minusSign);
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 372);
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 440);
+index = hasPrefix ? 1 : 0;
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 441);
+minus = new Format.TextSegment(formatter, this.Formats.minusSign);
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 442);
 formatter._segments.splice(index, 0, minus);
 		
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 374);
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 444);
 this._negativeFormatter = formatter;
     }
-}
+};
 
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 378);
-Y.extend(NumberFormat, Format);
+_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 448);
+NumberFormat = Y.Number.__zNumberFormat;
+_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 449);
+Y.extend(NumberFormat, Y.Number.__BaseFormat);
     
 // Constants
 
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 382);
+_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 453);
 Y.mix(NumberFormat, {
     _NUMBER: "number",
     _INTEGER: "integer",
@@ -607,540 +646,572 @@ Y.mix(NumberFormat, {
     _META_CHARS: "0#.,E"
 });
 
-// Data
+_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 462);
+Y.mix( NumberFormat.prototype, {
+    _groupingOffset: Number.MAX_VALUE,
+    _minIntDigits: 1,
+    _isCurrency: false,
+    _isPercent: false,
+    _isPerMille: false,
+    _showExponent: false,
 
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 393);
-NumberFormat.prototype._groupingOffset = Number.MAX_VALUE;
-//NumberFormat.prototype._maxIntDigits;
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 395);
-NumberFormat.prototype._minIntDigits = 1;
-//NumberFormat.prototype._maxFracDigits;
-//NumberFormat.prototype._minFracDigits;
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 398);
-NumberFormat.prototype._isCurrency = false;
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 399);
-NumberFormat.prototype._isPercent = false;
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 400);
-NumberFormat.prototype._isPerMille = false;
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 401);
-NumberFormat.prototype._showExponent = false;
-//NumberFormat.prototype._negativeFormatter;
-
-// Public methods
-
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 406);
-NumberFormat.prototype.format = function(number) {
-    _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "format", 406);
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 407);
+    /**
+     * Format a number
+     * @method format
+     * @param number {Number}
+     * @return {String} Formatted result
+     */
+    format: function(number) {
+        _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "format", 476);
+_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 477);
 if (number < 0 && this._negativeFormatter) {
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 408);
+            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 478);
 return this._negativeFormatter.format(number);
-    }
+        }
         
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 411);
-var result = Format.prototype.format.call(this, number);
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 481);
+var result = Format.prototype.format.call(this, number), pattern = "";
         
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 413);
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 483);
 if(this._isPluralCurrency) {
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 414);
-var pattern = "";
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 415);
-if(number == 1) {
-            //Singular
-            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 417);
+            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 484);
+if(number === 1) {
+                //Singular
+                _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 486);
 pattern = this.Formats.currencyPatternSingular;
-            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 418);
+                _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 487);
 pattern = pattern.replace("{1}", this.Formats[this.currency + "_currencySingular"]);
-        } else {
-            //Plural
-            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 421);
-pattern = this.Formats.currencyPatternPlural;
-            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 422);
-pattern = pattern.replace("{1}", this.Formats[this.currency + "_currencyPlural"]);
-        }
-            
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 425);
-result = pattern.replace("{0}", result);
-    }
-        
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 428);
-return result;
-};
-    
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 431);
-NumberFormat.prototype.parse = function(s, pp) {
-    _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "parse", 431);
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 432);
-if(s.indexOf(this.Formats.minusSign) != -1 && this._negativeFormatter) {
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 433);
-return this._negativeFormatter.parse(s, pp);
-    }
-        
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 436);
-if(this._isPluralCurrency) {
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 437);
-var singular = this.Formats[this.currency + "_currencySingular"];
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 438);
-var plural = this.Formats[this.currency + "_currencyPlural"];
-            
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 440);
-s = s.replace(plural, "").replace(singular, "").trim();
-    }
-        
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 443);
-var object = null;
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 444);
-try {
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 445);
-object = Format.prototype.parse.call(this, s, pp);
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 446);
-object = object.value;
-    } catch(e) {
-    }
-        
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 450);
-return object;
-}
-
-// Private methods
-
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 455);
-NumberFormat.prototype.__parseStatic = function(s, i) {
-    _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "__parseStatic", 455);
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 456);
-var data = [];
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 457);
-while (i < s.length) {
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 458);
-var c = s.charAt(i++);
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 459);
-if (NumberFormat._META_CHARS.indexOf(c) != -1) {
-            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 460);
-i--;
-            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 461);
-break;
-        }
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 463);
-switch (c) {
-            case "'": {
-                _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 465);
-var start = i;
-                _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 466);
-while (i < s.length && s.charAt(i++) != "'") {
-                // do nothing
-                }
-                _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 469);
-var end = i;
-                _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 470);
-c = end - start == 0 ? "'" : s.substring(start, end);
-                _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 471);
-break;
-            }
-            case '%': {
-                _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 474);
-c = this.Formats.percentSign; 
-                _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 475);
-this._isPercent = true;
-                _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 476);
-break;
-            }
-            case '\u2030': {
-                _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 479);
-c = this.Formats.perMilleSign; 
-                _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 480);
-this._isPerMille = true;
-                _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 481);
-break;
-            }
-            case '\u00a4': {
-                _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 484);
-if(s.charAt(i) == '\u00a4') {
-                    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 485);
-c = this.Formats[this.currency + "_currencyISO"];
-                    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 486);
-i++;
-                } else {
-                    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 488);
-c = this.Formats[this.currency + "_currencySymbol"];
-                }
+            } else {
+                //Plural
                 _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 490);
-this._isCurrency = true;
+pattern = this.Formats.currencyPatternPlural;
                 _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 491);
+pattern = pattern.replace("{1}", this.Formats[this.currency + "_currencyPlural"]);
+            }
+            
+            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 494);
+result = pattern.replace("{0}", result);
+        }
+        
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 497);
+return result;
+    },
+
+    /**
+     * Parse string and return number
+     * @method parse
+     * @param s {String} The string to parse
+     * @param pp {Number} Parse position. Will start parsing from this index in string s.
+     * @return {Number} Parse result
+     */
+    parse: function(s, pp) {
+        _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "parse", 507);
+_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 508);
+var singular, plural, object;
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 509);
+if(s.indexOf(this.Formats.minusSign) !== -1 && this._negativeFormatter) {
+            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 510);
+return this._negativeFormatter.parse(s, pp);
+        }
+        
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 513);
+if(this._isPluralCurrency) {
+            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 514);
+singular = this.Formats[this.currency + "_currencySingular"],
+                plural = this.Formats[this.currency + "_currencyPlural"];
+            
+            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 517);
+s = Y.Lang.trim(s.replace(plural, "").replace(singular, ""));
+        }
+        
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 520);
+object = null;
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 521);
+try {
+            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 522);
+object = Format.prototype.parse.call(this, s, pp);
+            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 523);
+object = object.value;
+        } catch(e) {
+            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 525);
+Y.error("Failed to parse: " + s, e);
+        }
+        
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 528);
+return object;
+    },
+
+    /**
+     * Parse static. Internal use only.
+     * @method __parseStatic
+     * @private
+     * @param {String} s Pattern
+     * @param {Number} i Index
+     * @return {Object}
+     */
+    __parseStatic: function(s, i) {
+        _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "__parseStatic", 539);
+_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 540);
+var data = [], c, start, end;
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 541);
+while (i < s.length) {
+            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 542);
+c = s.charAt(i++);
+            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 543);
+if (NumberFormat._META_CHARS.indexOf(c) !== -1) {
+                _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 544);
+i--;
+                _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 545);
 break;
             }
-        }
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 494);
+            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 547);
+switch (c) {
+                case "'":
+                    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 549);
+start = i;
+                    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 550);
+while (i < s.length && s.charAt(i) !== "'") {
+			_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 551);
+i++;
+                    }
+                    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 553);
+end = i;
+                    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 554);
+c = end - start === 0 ? "'" : s.substring(start, end);
+                    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 555);
+break;
+                case '%':
+                    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 557);
+c = this.Formats.percentSign;
+                    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 558);
+this._isPercent = true;
+                    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 559);
+break;
+                case '\u2030':
+                    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 561);
+c = this.Formats.perMilleSign;
+                    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 562);
+this._isPerMille = true;
+                    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 563);
+break;
+                case '\u00a4':
+                    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 565);
+if(s.charAt(i) === '\u00a4') {
+                        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 566);
+c = this.Formats[this.currency + "_currencyISO"];
+                        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 567);
+i++;
+                    } else {
+                        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 569);
+c = this.Formats[this.currency + "_currencySymbol"];
+                    }
+                    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 571);
+this._isCurrency = true;
+                    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 572);
+break;
+            }
+            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 574);
 data.push(c);
+        }
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 576);
+return {
+            text: data.join(""),
+            offset: i
+        };
+    },
+
+    /**
+     * Creates the object that is initialized by parsing. For internal use only.
+     * Overrides method from __BaseFormat
+     * @method _createParseObject
+     * @private
+     * @return {Object}
+     */
+    _createParseObject: function() {
+        _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "_createParseObject", 589);
+_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 590);
+return {
+            value: null
+        };
     }
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 496);
-return {
-        text: data.join(""), 
-        offset: i
-    };
-};
-    
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 502);
-NumberFormat.prototype._createParseObject = function() {
-    _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "_createParseObject", 502);
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 503);
-return {
-        value: null
-    };
-};
+}, true);
     
 //
 // NumberFormat.NumberSegment class
 //
 
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 512);
+/**
+ * Number segment class.
+ * @class __zNumberFormat.NumberSegment
+ * @for __zNumberFormat
+ * @namespace Number
+ * @extends Number.__BaseFormat.Segment
+ *
+ * @private
+ * @constructor
+ *
+ * @param format {Number.__zNumberFormat} Parent Format object
+ * @param s {String} Pattern representing this segment
+ */
+_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 613);
 NumberFormat.NumberSegment = function(format, s) {
-    _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "NumberSegment", 512);
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 513);
-if (arguments.length == 0) {return;}
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 514);
+    _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "NumberSegment", 613);
+_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 614);
+if (format === null && s === null) { return; }
+    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 615);
 NumberFormat.NumberSegment.superclass.constructor.call(this, format, s);
 };
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 516);
+_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 617);
 Y.extend(NumberFormat.NumberSegment, Format.Segment);
-    
-// Public methods
 
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 520);
-NumberFormat.NumberSegment.prototype.format = function(number) {
-    // special values
-    _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "format", 520);
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 522);
-if (isNaN(number)) {return this._parent.Formats.nanSymbol;}
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 523);
+_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 619);
+Y.mix(NumberFormat.NumberSegment.prototype, {
+    /**
+     * Format number segment
+     * @method format
+     * @param number {Number}
+     * @return {String} Formatted result
+     */
+    format: function(number) {
+        _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "format", 626);
+_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 627);
+var expon, exponReg, s;
+        // special values
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 629);
+if (isNaN(number)) { return this._parent.Formats.nanSymbol; }
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 630);
 if (number === Number.NEGATIVE_INFINITY || number === Number.POSITIVE_INFINITY) {
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 524);
+            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 631);
 return this._parent.Formats.infinitySign;
-    }
-
-    // adjust value
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 528);
-if (typeof number != "number") {number = Number(number);}
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 529);
-number = Math.abs(number); // NOTE: minus sign is part of pattern
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 530);
-if (this._parent._isPercent) {number *= 100;}
-    else {_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 531);
-if (this._parent._isPerMille) {number *= 1000;}}
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 532);
-if(this._parent._parseIntegerOnly) {number = Math.floor(number);}
-        
-    // format
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 535);
-var expon = this._parent.Formats.exponentialSymbol;
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 536);
-var exponReg = new RegExp(expon + "+");
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 537);
-var s = this._parent._showExponent
-    ? number.toExponential(this._parent._maxFracDigits).toUpperCase().replace(exponReg,expon)
-    : number.toFixed(this._parent._maxFracDigits || 0);
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 540);
-s = this._normalize(s);
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 541);
-return s;
-};
-
-// Protected methods
-
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 546);
-NumberFormat.NumberSegment.prototype._normalize = function(s) {
-    _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "_normalize", 546);
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 547);
-var exponSymbol = this._parent.Formats.exponentialSymbol;
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 548);
-var splitReg = new RegExp("[\\." + exponSymbol + "]")
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 549);
-var match = s.split(splitReg);
-	
-    // normalize whole part
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 552);
-var whole = match.shift();
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 553);
-if (whole.length < this._parent._minIntDigits) {
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 554);
-whole = zeroPad(whole, this._parent._minIntDigits, this._parent.Formats.numberZero);
-    }
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 556);
-if (whole.length > this._parent._primaryGrouping && this._parent._useGrouping) {
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 557);
-var a = [];
-	    
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 559);
-var offset = this._parent._primaryGrouping;
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 560);
-var i = whole.length - offset;
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 561);
-while (i > 0) {
-            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 562);
-a.unshift(whole.substr(i, offset));
-            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 563);
-a.unshift(this._parent.Formats.groupingSeparator);
-            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 564);
-offset = this._parent._secondaryGrouping;
-            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 565);
-i -= offset;
         }
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 567);
+
+        // adjust value
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 635);
+if (typeof number !== "number") { number = Number(number); }
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 636);
+number = Math.abs(number); // NOTE: minus sign is part of pattern
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 637);
+if (this._parent._isPercent) { number *= 100; }
+        else {_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 638);
+if (this._parent._isPerMille) { number *= 1000; }}
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 639);
+if(this._parent._parseIntegerOnly) { number = Math.floor(number); }
+        
+        // format
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 642);
+expon = this._parent.Formats.exponentialSymbol;
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 643);
+exponReg = new RegExp(expon + "+");
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 644);
+s = this._parent._showExponent
+            ? number.toExponential(this._parent._maxFracDigits).toUpperCase().replace(exponReg,expon)
+            : number.toFixed(this._parent._maxFracDigits || 0);
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 647);
+s = this._normalize(s);
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 648);
+return s;
+    },
+
+    /**
+     * Normalize pattern
+     * @method _normalize
+     * @protected
+     * @param {String} s Pattern
+     * @return {String} Normalized pattern
+     */
+    _normalize: function(s) {
+        _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "_normalize", 658);
+_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 659);
+var exponSymbol = this._parent.Formats.exponentialSymbol,
+            splitReg = new RegExp("[\\." + exponSymbol + "]"),
+            match = s.split(splitReg),
+            whole = match.shift(),  //Normalize the whole part
+            a = [],
+            offset = this._parent._primaryGrouping,
+            fract = '0',
+            decimal = this._parent.Formats.decimalSeparator,
+            expon, i;
+
+	_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 669);
+if (whole.length < this._parent._minIntDigits) {
+            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 670);
+whole = Y.Number._zeroPad(whole, this._parent._minIntDigits, this._parent.Formats.numberZero);
+        }
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 672);
+if (whole.length > this._parent._primaryGrouping && this._parent._useGrouping) {
+            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 673);
+i = whole.length - offset;
+            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 674);
+while (i > 0) {
+                _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 675);
+a.unshift(whole.substr(i, offset));
+                _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 676);
+a.unshift(this._parent.Formats.groupingSeparator);
+                _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 677);
+offset = this._parent._secondaryGrouping;
+                _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 678);
+i -= offset;
+            }
+            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 680);
 a.unshift(whole.substring(0, i + offset));
 		
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 569);
+            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 682);
 whole = a.join("");
-    }
+        }
 	
-    // normalize rest
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 573);
-var fract = '0';
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 574);
-var expon;
-        
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 576);
-if(s.match(/\./))
-        {_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 577);
-fract = match.shift();}
-    else {_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 578);
-if(s.match(/\e/) || s.match(/\E/))
-        {_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 579);
-expon = match.shift();}}
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 685);
+if(s.match(/\./)) {
+            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 686);
+fract = match.shift();
+        }
+        else {_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 688);
+if(s.match(/\e/) || s.match(/\E/)) {
+            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 689);
+expon = match.shift();
+        }}
 
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 581);
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 692);
 fract = fract.replace(/0+$/,"");
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 582);
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 693);
 if (fract.length < this._parent._minFracDigits) {
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 583);
-fract = zeroPad(fract, this._parent._minFracDigits, this._parent.Formats.numberZero, true);
-    }
+            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 694);
+fract = Y.Number._zeroPad(fract, this._parent._minFracDigits, this._parent.Formats.numberZero, true);
+        }
 	
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 586);
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 697);
 a = [ whole ];
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 587);
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 698);
 if (fract.length > 0) {
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 588);
-var decimal = this._parent.Formats.decimalSeparator;
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 589);
+            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 699);
 a.push(decimal, fract);
-    }
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 591);
+        }
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 701);
 if (expon) {
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 592);
+            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 702);
 a.push(exponSymbol, expon.replace(/^\+/,""));
-    }
+        }
 	
-    // return normalize result
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 596);
+        // return normalize result
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 706);
 return a.join("");
-}
-    
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 599);
-NumberFormat.NumberSegment.prototype.parse = function(object, s, index) {
-    _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "parse", 599);
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 600);
-var comma = this._parent.Formats.groupingSeparator;
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 601);
-var dot = this._parent.Formats.decimalSeparator;
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 602);
-var minusSign = this._parent.Formats.minusSign;
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 603);
-var expon = this._parent.Formats.exponentialSymbol;
-        
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 605);
-var numberRegexPattern = "[\\" + minusSign + "0-9" + comma + "]+";
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 606);
+    },
+
+    /**
+     * Parse Number Segment
+     * @method parse
+     * @param object {Object} Result will be stored in object.value
+     * @param s {String} Pattern
+     * @param index {Number}
+     * @return {Number} Index in s where parse ended
+     */
+    parse: function(object, s, index) {
+        _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "parse", 717);
+_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 718);
+var comma = this._parent.Formats.groupingSeparator,
+            dot = this._parent.Formats.decimalSeparator,
+            minusSign = this._parent.Formats.minusSign,
+            expon = this._parent.Formats.exponentialSymbol,
+            numberRegexPattern = "[\\" + minusSign + "0-9" + comma + "]+",
+            numberRegex, matches, negativeNum, endIndex, scientific = null, i,
+            //If more groups, use primary/secondary grouping as applicable
+            grouping = this._parent._secondaryGrouping || this._parent._primaryGrouping;
+
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 727);
 if(!this._parent._parseIntegerOnly) {
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 607);
+            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 728);
 numberRegexPattern += "(\\" + dot + "[0-9]+)?";
-    }
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 609);
+        }
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 730);
 if(this._parent._showExponent) {
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 610);
+            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 731);
 numberRegexPattern += "(" + expon +"\\+?[0-9]+)";
-    }
+        }
         
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 613);
-var numberRegex = new RegExp(numberRegexPattern);
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 614);
-var matches = s.match(numberRegex);
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 734);
+numberRegex = new RegExp(numberRegexPattern);
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 735);
+matches = s.match(numberRegex);
         
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 616);
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 737);
 if(!matches) {
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 617);
-throw new Format.ParsingException("Number does not match pattern");
-    }
+            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 738);
+Y.error("Error parsing: Number does not match pattern");
+        }
         
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 620);
-var negativeNum = s.indexOf(minusSign) != -1;
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 621);
-var endIndex = index + matches[0].length;
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 622);
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 741);
+negativeNum = s.indexOf(minusSign) !== -1;
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 742);
+endIndex = index + matches[0].length;
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 743);
 s = s.slice(index, endIndex);
         
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 624);
-var scientific = null;
-        
-    //Scientific format does not use grouping
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 627);
+        //Scientific format does not use grouping
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 746);
 if(this._parent.showExponent) {
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 628);
+            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 747);
 scientific = s.split(expon);
-    } else {_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 629);
+        } else {_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 748);
 if(this._parent._useGrouping) {
-        //Verify grouping data exists
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 631);
+            //Verify grouping data exists
+            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 750);
 if(!this._parent._primaryGrouping) {
-            //Should not happen
-            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 633);
-throw new Format.ParsingException("Invalid pattern");
-        }
+                //Should not happen
+                _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 752);
+Y.error("Error parsing: Invalid pattern");
+            }
             
-        //Verify grouping is correct
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 637);
-var i = s.length - this._parent._primaryGrouping - 1;
+            //Verify grouping is correct
+            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 756);
+i = s.length - this._parent._primaryGrouping - 1;
             
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 639);
+            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 758);
 if(matches[1]) {
-            //If there is a decimal part, ignore that. Grouping assumed to apply only to whole number part
-            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 641);
+                //If there is a decimal part, ignore that. Grouping assumed to apply only to whole number part
+                _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 760);
 i = i - matches[1].length;
-        }
+            }
             
-        //Use primary grouping for first group
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 645);
+            //Use primary grouping for first group
+            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 764);
 if(i > 0) {
-            //There should be a comma at i
-            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 647);
-if(s.charAt(i) != ',') {
-                _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 648);
-throw new Format.ParsingException("Number does not match pattern");
-            }
+                //There should be a comma at i
+                _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 766);
+if(s.charAt(i) !== ',') {
+                    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 767);
+Y.error("Error parsing: Number does not match pattern");
+                }
                 
-            //Remove comma
-            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 652);
+                //Remove comma
+                _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 771);
 s = s.slice(0, i) + s.slice(i+1);
-        }
+            }
             
-        //If more groups, use primary/secondary grouping as applicable
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 656);
-var grouping = this._parent._secondaryGrouping || this._parent._primaryGrouping;
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 657);
+            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 774);
 i = i - grouping - 1;
             
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 659);
+            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 776);
 while(i > 0) {
-            //There should be a comma at i
-            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 661);
-if(s.charAt(i) != ',') {
-                _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 662);
-throw new Format.ParsingException("Number does not match pattern");
-            }
+                //There should be a comma at i
+                _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 778);
+if(s.charAt(i) !== ',') {
+                    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 779);
+Y.error("Error parsing: Number does not match pattern");
+                }
                 
-            //Remove comma
-            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 666);
+                //Remove comma
+                _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 783);
 s = s.slice(0, i) + s.slice(i+1);
-            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 667);
+                _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 784);
 i = i - grouping - 1;
-        }
+            }
             
-        //Verify there are no more grouping separators
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 671);
-if(s.indexOf(comma) != -1) {
-            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 672);
-throw new Format.ParsingException("Number does not match pattern");
-        }
-    }}
+            //Verify there are no more grouping separators
+            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 788);
+if(s.indexOf(comma) !== -1) {
+                _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 789);
+Y.error("Error parsing: Number does not match pattern");
+            }
+        }}
         
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 676);
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 793);
 if(scientific) {
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 677);
+            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 794);
 object.value = parseFloat(scientific[0], 10) * Math.pow(10, parseFloat(scientific[1], 10));
-    } else {
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 679);
+        } else {
+            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 796);
 object.value = parseFloat(s, 10);
-    }
+        }
         
-    //Special types
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 683);
-if(negativeNum) {object.value *= -1;}
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 684);
-if (this._parent._isPercent) {object.value /= 100;}
-    else {_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 685);
-if (this._parent._isPerMille) {object.value /= 1000;}}
+        //Special types
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 800);
+if(negativeNum) { object.value *= -1; }
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 801);
+if (this._parent._isPercent) { object.value /= 100; }
+        else {_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 802);
+if (this._parent._isPerMille) { object.value /= 1000; }}
         
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 687);
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 804);
 return endIndex;
-};
-    
-//
-// YUI Code
-//
-    
+    }
+}, true);
+
 /**
- * NumberFormat
- * @class YNumberFormat
+ * Number Formatting
+ * @class __YNumberFormat
+ * @namespace Number
+ * @private
  * @constructor
- * @param {Number} style (Optional) the given style. Defaults to Number style
+ * @param [style='NUMBER_STYLE'] {Number} the given style. Should be key/value from Y.Number.STYLES
  */
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 700);
-YNumberFormat = function(style) {
-    _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "YNumberFormat", 700);
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 701);
+_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 816);
+Y.Number.__YNumberFormat = function(style) {
+    _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "__YNumberFormat", 816);
+_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 817);
 style = style || Y.Number.STYLES.NUMBER_STYLE;
     
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 703);
+    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 819);
 if(Y.Lang.isString(style)) {
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 704);
+        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 820);
 style = Y.Number.STYLES[style];
     }
     
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 707);
-var pattern = "";
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 708);
-var formats = Y.Intl.get(MODULE_NAME);
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 709);
+    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 823);
+var pattern = "",
+        formats = Y.Intl.get("datatype-number-advanced-format");
+    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 825);
 switch(style) {
         case Y.Number.STYLES.CURRENCY_STYLE:
-            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 711);
+            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 827);
 pattern = formats.currencyFormat;
-            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 712);
+            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 828);
 break;
         case Y.Number.STYLES.ISO_CURRENCY_STYLE:
-            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 714);
+            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 830);
 pattern = formats.currencyFormat;
-            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 715);
+            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 831);
 pattern = pattern.replace("\u00a4", "\u00a4\u00a4");
-            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 716);
+            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 832);
 break;
         case Y.Number.STYLES.NUMBER_STYLE:
-            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 718);
+            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 834);
 pattern = formats.decimalFormat;
-            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 719);
+            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 835);
 break;
         case Y.Number.STYLES.PERCENT_STYLE:
-            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 721);
+            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 837);
 pattern = formats.percentFormat;
-            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 722);
+            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 838);
 break;
         case Y.Number.STYLES.PLURAL_CURRENCY_STYLE:
             //This is like <value> <currency>. This may be dependent on whether the value is singular or plural. Will be handled during formatting
-            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 725);
+            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 841);
 pattern = "{plural_style}";
-            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 726);
+            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 842);
 break;
         case Y.Number.STYLES.SCIENTIFIC_STYLE:
-            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 728);
+            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 844);
 pattern = formats.scientificFormat;
-            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 729);
+            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 845);
 break;
     }
         
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 732);
+    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 848);
 this._numberFormatInstance = new NumberFormat(pattern, formats);
-}
-    
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 735);
+};
+
+_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 851);
+YNumberFormat = Y.Number.__YNumberFormat;
+
+_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 853);
 Y.mix(Y.Number, {
+    /**
+     * Style values to use during format/parse
+     * @property STYLES
+     * @type Object
+     * @static
+     * @final
+     * @for Number
+     */
     STYLES: {
         CURRENCY_STYLE: 1,
         ISO_CURRENCY_STYLE: 2,
@@ -1148,345 +1219,160 @@ Y.mix(Y.Number, {
         PERCENT_STYLE: 8,
         PLURAL_CURRENCY_STYLE: 16,
         SCIENTIFIC_STYLE: 32
-    },
-    
-    //Static methods
-    
-    
-    /**
-     * Create an instance of NumberFormat 
-     * @param {Number} style (Optional) the given style
-     */    
-    createInstance: function(style) {
-        _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "createInstance", 752);
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 753);
-return new YNumberFormat(style);
-    },
-    
-    /**
-     * Returns an array of BCP 47 language tags for the languages supported by this class
-     * @return {Array} an array of BCP 47 language tags for the languages supported by this class.
-     */
-    getAvailableLocales: function() {
-        _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "getAvailableLocales", 760);
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 761);
-return Y.Intl.getAvailableLangs(MODULE_NAME);
     }
 });
-
-
-
-    
-//Public methods
-    
-/**
- * Format a number to product a String.
- * @param {Number} number the number to format
- */
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 774);
-YNumberFormat.prototype.format = function(number) {
-    _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "format", 774);
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 775);
-return this._numberFormatInstance.format(number);
-}
-    
-/**
- * Gets the currency used to display currency amounts. This may be an empty string for some cases. 
- * @return {String} a 3-letter ISO code indicating the currency in use, or an empty string.
- */
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 782);
-YNumberFormat.prototype.getCurrency = function() {
-    _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "getCurrency", 782);
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 783);
-return this._numberFormatInstance.currency;
-}
-    
-/**
- * Returns the maximum number of digits allowed in the fraction portion of a number. 
- * @return {Number} the maximum number of digits allowed in the fraction portion of a number.
- */
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 790);
-YNumberFormat.prototype.getMaximumFractionDigits = function() {
-    _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "getMaximumFractionDigits", 790);
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 791);
-return this._numberFormatInstance._maxFracDigits || 0;
-}
-    
-/**
- * Returns the maximum number of digits allowed in the integer portion of a number. 
- * @return {Number} the maximum number of digits allowed in the integer portion of a number.
- */
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 798);
-YNumberFormat.prototype.getMaximumIntegerDigits = function() {
-    _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "getMaximumIntegerDigits", 798);
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 799);
-return this._numberFormatInstance._maxIntDigits || 0;
-}
-    
-/**
- * Returns the minimum number of digits allowed in the fraction portion of a number. 
- * @return {Number} the minimum number of digits allowed in the fraction portion of a number.
- */
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 806);
-YNumberFormat.prototype.getMinimumFractionDigits = function() {
-    _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "getMinimumFractionDigits", 806);
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 807);
-return this._numberFormatInstance._minFracDigits || 0;
-}
-    
-/**
- * Returns the minimum number of digits allowed in the integer portion of a number.
- * @return {Number} the minimum number of digits allowed in the integer portion of a number.
- */
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 814);
-YNumberFormat.prototype.getMinimumIntegerDigits = function() {
-    _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "getMinimumIntegerDigits", 814);
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 815);
-return this._numberFormatInstance._minIntDigits || 0;
-}
-    
-/**
- * Returns true if grouping is used in this format.
- * For example, in the English locale, with grouping on, the number 1234567 might be formatted as "1,234,567".
- * The grouping separator as well as the size of each group is locale dependant.
- * @return {Boolean}
- */
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 824);
-YNumberFormat.prototype.isGroupingUsed = function() {
-    _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "isGroupingUsed", 824);
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 825);
-return this._numberFormatInstance._useGrouping;
-}
-    
-/**
- * Return true if this format will parse numbers as integers only.
- * For example in the English locale, with ParseIntegerOnly true, the string "1234." would be parsed as the integer value 1234
- * and parsing would stop at the "." character. Of course, the exact format accepted by the parse operation is locale dependant.
- * @return {Boolean}
- */
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 834);
-YNumberFormat.prototype.isParseIntegerOnly = function() {
-    _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "isParseIntegerOnly", 834);
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 835);
-return this._numberFormatInstance._parseIntegerOnly;
-}
-    
-/**
- * Parse the string to get a number
- * @param {String} txt The string to parse
- * @param {Number} pp (Optional) Parse position. The position to start parsing at. Defaults to 0
- */
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 843);
-YNumberFormat.prototype.parse = function(txt, pp) {
-    _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "parse", 843);
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 844);
-return this._numberFormatInstance.parse(txt, pp);
-}
-    
-/**
- * Sets the currency used to display currency amounts.
- * This takes effect immediately, if this format is a currency format.
- * If this format is not a currency format, then the currency is used if and when this object becomes a currency format.
- * @param {String} currency a 3-letter ISO code indicating new currency to use. May be the empty string to indicate no currency.
- */
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 853);
-YNumberFormat.prototype.setCurrency = function(currency) {
-    _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "setCurrency", 853);
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 854);
-this._numberFormatInstance.currency = currency;
-}
-    
-/**
- * Set whether or not grouping will be used in this format. 
- * @param {Boolean} value
- */
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 861);
-YNumberFormat.prototype.setGroupingUsed = function(value) {
-    _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "setGroupingUsed", 861);
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 862);
-this._numberFormatInstance._useGrouping = value;
-}
-    
-/**
- * Sets the maximum number of digits allowed in the fraction portion of a number.
- * maximumFractionDigits must be >= minimumFractionDigits.
- * If the new value for maximumFractionDigits is less than the current value of minimumFractionDigits,
- * then minimumFractionDigits will also be set to the new value. 
- * @param {Number} newValue the new value to be set.
- */
+   
 _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 872);
-YNumberFormat.prototype.setMaximumFractionDigits = function(newValue) {
-    _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "setMaximumFractionDigits", 872);
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 873);
-this._numberFormatInstance._maxFracDigits = newValue;
-        
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 875);
-if(this.getMinimumFractionDigits() > newValue) {
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 876);
-this.setMinimumFractionDigits(newValue);
-    }
-}
+Y.mix(YNumberFormat.prototype, {
+    /**
+     * Format a number
+     * @method format
+     * @param number {Number} the number to format
+     * @for Number.YNumberFormat
+     * @return {Number}
+     */
+    format: function(number) {
+        _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "format", 880);
+_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 881);
+return this._numberFormatInstance.format(number);
+    },
     
-/**
- * Sets the maximum number of digits allowed in the integer portion of a number.
- * maximumIntegerDigits must be >= minimumIntegerDigits.
- * If the new value for maximumIntegerDigits is less than the current value of minimumIntegerDigits,
- * then minimumIntegerDigits will also be set to the new value.
- * @param {Number} newValue the new value to be set.
- */
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 887);
-YNumberFormat.prototype.setMaximumIntegerDigits = function(newValue) {
-    _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "setMaximumIntegerDigits", 887);
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 888);
-this._numberFormatInstance._maxIntDigits = newValue;
-        
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 890);
-if(this.getMinimumIntegerDigits() > newValue) {
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 891);
-this.setMinimumIntegerDigits(newValue);
-    }
-}
+    /**
+     * Return true if this format will parse numbers as integers only.
+     * For example in the English locale, with ParseIntegerOnly true, the string "1234." would be parsed as the integer value 1234
+     * and parsing would stop at the "." character. Of course, the exact format accepted by the parse operation is locale dependant.
+     * @method isParseIntegerOnly
+     * @return {Boolean}
+     */
+    isParseIntegerOnly: function() {
+        _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "isParseIntegerOnly", 891);
+_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 892);
+return this._numberFormatInstance._parseIntegerOnly;
+    },
     
-/**
- * Sets the minimum number of digits allowed in the fraction portion of a number.
- * minimumFractionDigits must be <= maximumFractionDigits.
- * If the new value for minimumFractionDigits exceeds the current value of maximumFractionDigits,
- * then maximumIntegerDigits will also be set to the new value
- * @param {Number} newValue the new value to be set.
- */
+    /**
+     * Parse the string to get a number
+     * @method parse
+     * @param {String} txt The string to parse
+     * @param {Number} [pp=0] Parse position. The position to start parsing at.
+     */
+    parse: function(txt, pp) {
+        _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "parse", 901);
 _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 902);
-YNumberFormat.prototype.setMinimumFractionDigits = function(newValue) {
-    _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "setMinimumFractionDigits", 902);
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 903);
-this._numberFormatInstance._minFracDigits = newValue;
-        
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 905);
-if(this.getMaximumFractionDigits() < newValue) {
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 906);
-this.setMaximumFractionDigits(newValue);
-    }
-}
+return this._numberFormatInstance.parse(txt, pp);
+    },
     
-/**
- * Sets the minimum number of digits allowed in the integer portion of a number.
- * minimumIntegerDigits must be <= maximumIntegerDigits.
- * If the new value for minimumIntegerDigits exceeds the current value of maximumIntegerDigits,
- * then maximumIntegerDigits will also be set to the new value. 
- * @param {Number} newValue the new value to be set.
- */
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 917);
-YNumberFormat.prototype.setMinimumIntegerDigits = function(newValue) {
-    _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "setMinimumIntegerDigits", 917);
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 918);
-this._numberFormatInstance._minIntDigits = newValue;
-        
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 920);
-if(this.getMaximumIntegerDigits() < newValue) {
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 921);
-this.setMaximumIntegerDigits(newValue);
-    }
-}
-    
-/**
- * Sets whether or not numbers should be parsed as integers only. 
- * @param {Boolean} newValue set True, this format will parse numbers as integers only.
- */
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 929);
-YNumberFormat.prototype.setParseIntegerOnly = function(newValue) {
-    _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "setParseIntegerOnly", 929);
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 930);
+    /**
+     * Sets whether or not numbers should be parsed as integers only.
+     * @method setParseIntegerOnly
+     * @param {Boolean} newValue set True, this format will parse numbers as integers only.
+     */
+    setParseIntegerOnly: function(newValue) {
+        _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "setParseIntegerOnly", 910);
+_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 911);
 this._numberFormatInstance._parseIntegerOnly = newValue;
-}
+    }
+});
+_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 914);
+Y.mix( Y.Number, {
+     _oldFormat: Y.Number.format,
+     _oldParse:  Y.Number.parse
+});
 
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 933);
-Y.Number.deprecatedFormat = Y.Number.format;
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 934);
-Y.Number.deprecatedParse = Y.Number.parse;
-
-/**
- * Takes a Number and formats to string for display to user
- *
- * @for Number
- * @method format
- * @param data {Number} Number
- * @param config {Object} (Optional) Configuration values:
- *   <dl>
- *      <dt>style {Number/String} (Optional)</dt>
- *         <dd>Format/Style to use. See Y.Number.STYLES</dd>
- *      <dt>parseIntegerOnly {Boolean} (Optional)</dt>
- *         <dd>If true, only the whole number part of data will be used</dd>
- *   </dl>
- * @return {String} Formatted string representation of data
- */
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 951);
-Y.Number.format = function(data, config) {
-    _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "format", 951);
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 952);
+_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 919);
+Y.mix( Y.Number, {
+     /**
+      * Takes a Number and formats to string for display to user
+      *
+      * @for Number
+      * @method format
+      * @param data {Number} Number
+      * @param [config] {Object} Optional Configuration values.
+      *   <dl>
+      *      <dt>[style] {Number|String}</dt>
+      *         <dd>Format/Style to use. See Y.Number.STYLES</dd>
+      *      <dt>[parseIntegerOnly] {Boolean}</dt>
+      *         <dd>If set to true, only the whole number part of data will be used</dd>
+      *      <dt>[prefix] {String}</dd>
+      *         <dd>String prepended before each number, like a currency designator "$"</dd>
+      *      <dt>[decimalPlaces] {Number}</dd>
+      *         <dd>Number of decimal places to round. Must be a number 0 to 20.</dd>
+      *      <dt>[decimalSeparator] {String}</dd>
+      *         <dd>Decimal separator</dd>
+      *      <dt>[thousandsSeparator] {String}</dd>
+      *         <dd>Thousands separator</dd>
+      *      <dt>[suffix] {String}</dd>
+      *         <dd>String appended after each number, like " items" (note the space)</dd>
+      *   </dl>
+      * @return {String} Formatted string representation of data
+      */
+     format: function(data, config) {
+         _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "format", 945);
+_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 946);
 config = config || {};
     
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 954);
-if(config.prefix != null || config.decimalPlaces != null || config.decimalSeparator != null || config.thousandsSeparator != null || config.suffix != null) {
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 955);
-return Y.Number.deprecatedFormat(data, config);
-    }
+         _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 948);
+if(config.prefix !== undefined || config.decimalPlaces !== undefined || config.decimalSeparator !== undefined
+               || config.thousandsSeparator !== undefined || config.suffix !== undefined) {
+             _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 950);
+return Y.Number._oldFormat(data, config);
+         }
     
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 958);
+         _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 953);
 try {
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 959);
+             _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 954);
 var formatter = new YNumberFormat(config.style);
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 960);
+             _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 955);
 if(config.parseIntegerOnly) {
-            _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 961);
+                 _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 956);
 formatter.setParseIntegerOnly(true);
-        }
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 963);
+             }
+             _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 958);
 return formatter.format(data);
-    } catch(e) {
-        //Error. Fallback to deprecated format
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 966);
-console.log(e);
-    }
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 968);
-return Y.Number.deprecatedFormat(data, config);
-}
+         } catch(e) {
+             //Error. Fallback to original format
+         }
+         _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 962);
+return Y.Number._oldFormat(data, config);
+     },
 
-/**
- * Parses data and returns a number
- * 
- * @for Number
- * @method format
- * @param data {String} Data to be parsed
- * @param config (Object} (Optional) Object containg 'style' (Pattern data is represented in. See Y.Number.STYLES) and 'parsePosition' (index position in data to start parsing at) Both parameters are optional. If omitted, style defaults to NUMBER_STYLE, and parsePosition defaults to 0
- * @return {Number} Number represented by data 
- */
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 980);
-Y.Number.parse = function(data, config) {
-    _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "parse", 980);
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 981);
+     /**
+      * Parses data and returns a number
+      *
+      * @for Number
+      * @method format
+      * @param data {String} Data to be parsed
+      * @param [config] (Object} Object containg 'style' (Pattern data is represented in.
+               See Y.Number.STYLES) and 'parsePosition' (index position in data to start parsing at) Both parameters are optional.
+               If omitted, style defaults to NUMBER_STYLE, and parsePosition defaults to 0
+      * @return {Number} Number represented by data
+      */
+     parse: function(data, config) {
+         _yuitest_coverfunc("build/datatype-number-advanced-format/datatype-number-advanced-format.js", "parse", 976);
+_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 977);
 try {
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 982);
+             _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 978);
 var formatter = new YNumberFormat(config.style);
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 983);
+             _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 979);
 return formatter.parse(data, config.parsePosition);
-    } catch(e) {
-        //Fallback on deprecated parse
-        _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 986);
-console.log(e);
-    }
+         } catch(e) {
+             //Fallback on deprecated parse
+         }
     
-    _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 989);
-return Y.Number.parse(data);
-}
+         _yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 984);
+return Y.Number._oldParse(data);
+     }
+}, true);
 
 //Update Parsers shortcut
-_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 993);
-Y.namespace("Parsers").number = Y.Number.parse
+_yuitest_coverline("build/datatype-number-advanced-format/datatype-number-advanced-format.js", 989);
+Y.namespace("Parsers").number = Y.Number.parse;
 
 
 }, '@VERSION@', {
     "lang": [
-        "af-NA",
         "af",
+        "af-NA",
         "af-ZA",
         "am-ET",
         "am",
@@ -1496,6 +1382,7 @@ Y.namespace("Parsers").number = Y.Number.parse
         "ar-EG",
         "ar-IQ",
         "ar-JO",
+        "ar",
         "ar-KW",
         "ar-LB",
         "ar-LY",
@@ -1506,16 +1393,14 @@ Y.namespace("Parsers").number = Y.Number.parse
         "ar-SD",
         "ar-SY",
         "ar-TN",
-        "ar",
         "ar-YE",
         "as-IN",
         "as",
         "az-AZ",
         "az-Cyrl-AZ",
         "az-Cyrl",
-        "az-Latn-AZ",
-        "az-Latn",
         "az",
+        "az-Latn-AZ",
         "be-BY",
         "be",
         "bg-BG",
@@ -1538,9 +1423,9 @@ Y.namespace("Parsers").number = Y.Number.parse
         "de-BE",
         "de-CH",
         "de-DE",
+        "de",
         "de-LI",
         "de-LU",
-        "de",
         "el-CY",
         "el-GR",
         "el",
@@ -1565,9 +1450,8 @@ Y.namespace("Parsers").number = Y.Number.parse
         "en-RH",
         "en-SG",
         "en-TT",
-        "en",
-        "en-US-POSIX",
         "en-US",
+        "en-US-POSIX",
         "en-VI",
         "en-ZA",
         "en-ZW",
@@ -1582,6 +1466,7 @@ Y.namespace("Parsers").number = Y.Number.parse
         "es-ES",
         "es-GT",
         "es-HN",
+        "es",
         "es-MX",
         "es-NI",
         "es-PA",
@@ -1589,7 +1474,6 @@ Y.namespace("Parsers").number = Y.Number.parse
         "es-PR",
         "es-PY",
         "es-SV",
-        "es",
         "es-US",
         "es-UY",
         "es-VE",
@@ -1602,18 +1486,18 @@ Y.namespace("Parsers").number = Y.Number.parse
         "fa",
         "fi-FI",
         "fi",
-        "fil-PH",
         "fil",
+        "fil-PH",
         "fo-FO",
         "fo",
         "fr-BE",
         "fr-CA",
         "fr-CH",
         "fr-FR",
+        "fr",
         "fr-LU",
         "fr-MC",
         "fr-SN",
-        "fr",
         "ga-IE",
         "ga",
         "gl-ES",
@@ -1625,13 +1509,12 @@ Y.namespace("Parsers").number = Y.Number.parse
         "gv-GB",
         "gv",
         "ha-GH",
+        "ha",
         "ha-Latn-GH",
         "ha-Latn-NE",
         "ha-Latn-NG",
-        "ha-Latn",
         "ha-NE",
         "ha-NG",
-        "ha",
         "haw",
         "haw-US",
         "he-IL",
@@ -1642,7 +1525,6 @@ Y.namespace("Parsers").number = Y.Number.parse
         "hr",
         "hu-HU",
         "hu",
-        "hy-AM-REVISED",
         "hy-AM",
         "hy",
         "id-ID",
@@ -1658,95 +1540,94 @@ Y.namespace("Parsers").number = Y.Number.parse
         "it",
         "iw-IL",
         "iw",
-        "ja-JP-TRADITIONAL",
         "ja-JP",
+        "ja-JP-TRADITIONAL",
         "ja",
+        "",
         "ka-GE",
         "ka",
         "kk-Cyrl-KZ",
-        "kk-Cyrl",
-        "kk-KZ",
         "kk",
+        "kk-KZ",
         "kl-GL",
         "kl",
-        "km-KH",
         "km",
+        "km-KH",
         "kn-IN",
         "kn",
+        "ko",
         "kok-IN",
         "kok",
         "ko-KR",
-        "ko",
         "kw-GB",
         "kw",
-        "lt-LT",
         "lt",
-        "lv-LV",
+        "lt-LT",
         "lv",
-        "mk-MK",
+        "lv-LV",
         "mk",
+        "mk-MK",
         "ml-IN",
         "ml",
         "mr-IN",
         "mr",
         "ms-BN",
-        "ms-MY",
         "ms",
-        "mt-MT",
+        "ms-MY",
         "mt",
-        "nb-NO",
+        "mt-MT",
         "nb",
+        "nb-NO",
         "ne-IN",
-        "ne-NP",
         "ne",
+        "ne-NP",
         "nl-BE",
-        "nl-NL",
         "nl",
-        "nn-NO",
+        "nl-NL",
         "nn",
-        "no-NO-NY",
-        "no-NO",
+        "nn-NO",
         "no",
+        "no-NO",
+        "no-NO-NY",
         "om-ET",
-        "om-KE",
         "om",
+        "om-KE",
         "or-IN",
         "or",
-        "pa-Arab-PK",
         "pa-Arab",
+        "pa-Arab-PK",
         "pa-Guru-IN",
-        "pa-Guru",
         "pa-IN",
-        "pa-PK",
         "pa",
-        "pl-PL",
+        "pa-PK",
         "pl",
+        "pl-PL",
         "ps-AF",
         "ps",
         "pt-BR",
-        "pt-PT",
         "pt",
+        "pt-PT",
+        "ro",
         "ro-MD",
         "ro-RO",
-        "ro",
-        "ru-RU",
         "ru",
+        "ru-RU",
         "ru-UA",
         "sh-BA",
         "sh-CS",
         "sh",
         "sh-YU",
-        "si-LK",
         "si",
-        "sk-SK",
+        "si-LK",
         "sk",
-        "sl-SI",
+        "sk-SK",
         "sl",
+        "sl-SI",
         "so-DJ",
         "so-ET",
+        "so",
         "so-KE",
         "so-SO",
-        "so",
         "sq-AL",
         "sq",
         "sr-BA",
@@ -1755,51 +1636,48 @@ Y.namespace("Parsers").number = Y.Number.parse
         "sr-Cyrl-CS",
         "sr-Cyrl-ME",
         "sr-Cyrl-RS",
-        "sr-Cyrl",
         "sr-Cyrl-YU",
+        "sr",
         "sr-Latn-BA",
         "sr-Latn-CS",
+        "sr-Latn",
         "sr-Latn-ME",
         "sr-Latn-RS",
-        "sr-Latn",
         "sr-Latn-YU",
         "sr-ME",
         "sr-RS",
-        "sr",
         "sr-YU",
         "sv-FI",
-        "sv-SE",
         "sv",
-        "sw-KE",
+        "sv-SE",
         "sw",
+        "sw-KE",
         "sw-TZ",
         "ta-IN",
         "ta",
         "te-IN",
         "te",
-        "th-TH-TRADITIONAL",
-        "th-TH",
         "th",
+        "th-TH",
         "ti-ER",
         "ti-ET",
         "ti",
-        "tl-PH",
         "tl",
-        "tr-TR",
+        "tl-PH",
         "tr",
+        "tr-TR",
         "uk",
         "uk-UA",
         "ur-IN",
-        "ur-PK",
         "ur",
+        "ur-PK",
         "uz-AF",
         "uz-Arab-AF",
         "uz-Arab",
-        "uz-Cyrl",
         "uz-Cyrl-UZ",
+        "uz",
         "uz-Latn",
         "uz-Latn-UZ",
-        "uz",
         "uz-UZ",
         "vi",
         "vi-VN",
@@ -1808,16 +1686,15 @@ Y.namespace("Parsers").number = Y.Number.parse
         "zh-Hans-HK",
         "zh-Hans-MO",
         "zh-Hans-SG",
-        "zh-Hans",
         "zh-Hant-HK",
+        "zh-Hant",
         "zh-Hant-MO",
         "zh-Hant-TW",
-        "zh-Hant",
         "zh-HK",
+        "zh",
         "zh-MO",
         "zh-SG",
         "zh-TW",
-        "zh",
         "zu",
         "zu-ZA"
     ],

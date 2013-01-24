@@ -1,3 +1,11 @@
+/**
+ * Date formatter
+ * @class
+ * @extends Formatter
+ * @private
+ * @constructor
+ * @param values {Array|Object} The data to be processed and inserted. 
+ */
 DateFormatter = function(values) {
     DateFormatter.superclass.constructor.call(this, values);
     this.styles = {
@@ -15,6 +23,15 @@ DateFormatter.createInstance = function(values) {
     return new DateFormatter(values);
 }
 
+/**
+ * Get parameters from regex match
+ * For internal use only.
+ * @method
+ * @private
+ * @param params {Object} Object to receive value. Function will store the values key, value, style in this variable
+ * @param matches {Array} Result of regex match over pattern string.
+ * @return {Boolean} True if value found, False otherwise
+ */
 DateFormatter.prototype.getParams = function(params, matches) {
     if(matches) {
         if(matches[1]) {
@@ -40,6 +57,14 @@ DateFormatter.prototype.getParams = function(params, matches) {
     return false;
 }
 
+/**
+ * Format all instances in str that can be handled by DateFormatter 
+ * @method
+ * @private
+ * @param str {String} Input string/pattern
+ * @param [config] {Object} Optional configuration parameters. Used to pass timezone for time formatting
+ * @return {String} Formatted result
+ */
 DateFormatter.prototype.format = function(str, config) {
     var regex = new RegExp(this.regex, "gm");
     var matches = null;

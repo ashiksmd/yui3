@@ -13,7 +13,7 @@
         },
         "datatype-number-advanced-format": {
             "jsfiles": [
-		"../../date/js/advanced-format/BaseFormat.js",
+		"./advanced-format/BaseFormat.js",
                 "./advanced-format/NumberFormat.js",
                 "./advanced-format/format-numbers-advanced.js"
             ]

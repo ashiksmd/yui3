@@ -2,38 +2,33 @@
  * NumberFormat helps you to format and parse numbers for any locale.
  * Your code can be completely independent of the locale conventions for decimal points, thousands-separators,
  * or even the particular decimal digits used, or whether the number format is even decimal.
- * 
+ *
  * This module uses parts of zimbra NumberFormat
- * 
- * @module format-numbers
- * @requires format-base
+ *
+ * @module datatype-number-advanced-format
+ * @requires datatype-number-format, datatype-number-parse
  */
 
 /**
- * @param pattern       The number pattern.
- * @param formats       locale data
- * @param skipNegFormat Specifies whether to skip the generation of this
- *                      format's negative value formatter.
- *                      <p>
- *                      <strong>Note:</strong> 
- *                      This parameter is only used by the implementation 
- *                      and should not be passed by application code 
- *                      instantiating a custom number format.
+ * Class to handle Number formatting.
+ * @class __zNumberFormat
+ * @extends __BaseFormat
+ * @namespace Number
+ * @private
+ * @constructor
+ * @param pattern {String}       The number pattern.
+ * @param formats {Object}       locale data
+ * @param [skipNegFormat] {Boolean} Specifies whether to skip the generation of this format's negative value formatter. Internal use only
  */
-
-var MODULE_NAME = "datatype-number-advanced-format";
-
-NumberFormat = function(pattern, formats, skipNegFormat) {
-    if (arguments.length == 0) {
-        return;
-    }
+Y.Number.__zNumberFormat = function(pattern, formats, skipNegFormat) {
+    var patterns, numberPattern, groupingRegex, groups, i, results, hasPrefix, start, end,
+        numPattern, e, expon, dot, whole, zero, fract, formatter, index, minus;
+    if (arguments.length === 0) { return; }
 
     NumberFormat.superclass.constructor.call(this, pattern, formats);
-    if (!pattern) {
-        return;
-    }
+    if (!pattern) { return; }
 
-    if(pattern == "{plural_style}") {
+    if(pattern === "{plural_style}") {
         pattern = this.Formats.decimalFormat;
         this._isPluralCurrency = true;
         this._pattern = pattern;
@@ -41,23 +36,23 @@ NumberFormat = function(pattern, formats, skipNegFormat) {
 
     //Default currency
     this.currency = this.Formats.defaultCurrency;
-    if(this.currency == null || this.currency == "") {
+    if(this.currency === undefined || !this.currency) {
         this.currency = "USD";
     }
         
-    var patterns = pattern.split(/;/);
+    patterns = pattern.split(/;/);
     pattern = patterns[0];
 	
-    this._useGrouping = (pattern.indexOf(",") != -1);      //Will be set to true if pattern uses grouping
-    this._parseIntegerOnly = (pattern.indexOf(".") == -1);  //Will be set to false if pattern contains fractional parts
+    this._useGrouping = (pattern.indexOf(",") !== -1);      //Will be set to true if pattern uses grouping
+    this._parseIntegerOnly = (pattern.indexOf(".") === -1);  //Will be set to false if pattern contains fractional parts
         
     //If grouping is used, find primary and secondary grouping
     if(this._useGrouping) {
-        var numberPattern = pattern.match(/[0#,]+/);
-        var groupingRegex = new RegExp("[0#]+", "g");
-        var groups = numberPattern[0].match(groupingRegex);
+        numberPattern = pattern.match(/[0#,]+/);
+        groupingRegex = new RegExp("[0#]+", "g");
+        groups = numberPattern[0].match(groupingRegex);
             
-        var i = groups.length - 2;
+        i = groups.length - 2;
         this._primaryGrouping = groups[i+1].length;
         this._secondaryGrouping = (i > 0 ? groups[i].length : groups[i+1].length);
     }
@@ -65,48 +60,48 @@ NumberFormat = function(pattern, formats, skipNegFormat) {
     // parse prefix
     i = 0;
         
-    var results = this.__parseStatic(pattern, i);
+    results = this.__parseStatic(pattern, i);
     i = results.offset;
-    var hasPrefix = results.text != "";
+    hasPrefix = results.text !== "";
     if (hasPrefix) {
         this._segments.push(new Format.TextSegment(this, results.text));
     }
 	
     // parse number descriptor
-    var start = i;
+    start = i;
     while (i < pattern.length &&
-        NumberFormat._META_CHARS.indexOf(pattern.charAt(i)) != -1) {
+        NumberFormat._META_CHARS.indexOf(pattern.charAt(i)) !== -1) {
         i++;
     }
-    var end = i;
+    end = i;
 
-    var numPattern = pattern.substring(start, end);
-    var e = numPattern.indexOf(this.Formats.exponentialSymbol);
-    var expon = e != -1 ? numPattern.substring(e + 1) : null;
+    numPattern = pattern.substring(start, end);
+    e = numPattern.indexOf(this.Formats.exponentialSymbol);
+    expon = e !== -1 ? numPattern.substring(e + 1) : null;
     if (expon) {
         numPattern = numPattern.substring(0, e);
         this._showExponent = true;
     }
 	
-    var dot = numPattern.indexOf('.');
-    var whole = dot != -1 ? numPattern.substring(0, dot) : numPattern;
+    dot = numPattern.indexOf('.');
+    whole = dot !== -1 ? numPattern.substring(0, dot) : numPattern;
     if (whole) {
         /*var comma = whole.lastIndexOf(',');
             if (comma != -1) {
                 this._groupingOffset = whole.length - comma - 1;
             }*/
         whole = whole.replace(/[^#0]/g,"");
-        var zero = whole.indexOf('0');
-        if (zero != -1) {
+        zero = whole.indexOf('0');
+        if (zero !== -1) {
             this._minIntDigits = whole.length - zero;
         }
         this._maxIntDigits = whole.length;
     }
 	
-    var fract = dot != -1 ? numPattern.substring(dot + 1) : null;
+    fract = dot !== -1 ? numPattern.substring(dot + 1) : null;
     if (fract) {
         zero = fract.lastIndexOf('0');
-        if (zero != -1) {
+        if (zero !== -1) {
             this._minFracDigits = zero + 1;
         }
         this._maxFracDigits = fract.replace(/[^#0]/g,"").length;
@@ -117,12 +112,12 @@ NumberFormat = function(pattern, formats, skipNegFormat) {
     // parse suffix
     results = this.__parseStatic(pattern, i);
     i = results.offset;
-    if (results.text != "") {
+    if (results.text !== "") {
         this._segments.push(new Format.TextSegment(this, results.text));
     }
 	
     // add negative formatter
-    if (skipNegFormat) return;
+    if (skipNegFormat) { return; }
 	
     if (patterns.length > 1) {
         pattern = patterns[1];
@@ -130,18 +125,19 @@ NumberFormat = function(pattern, formats, skipNegFormat) {
     }
     else {
         // no negative pattern; insert minus sign before number segment
-        var formatter = new NumberFormat("", formats);
+        formatter = new NumberFormat("", formats);
         formatter._segments = formatter._segments.concat(this._segments);
 
-        var index = hasPrefix ? 1 : 0;
-        var minus = new Format.TextSegment(formatter, this.Formats.minusSign);
+        index = hasPrefix ? 1 : 0;
+        minus = new Format.TextSegment(formatter, this.Formats.minusSign);
         formatter._segments.splice(index, 0, minus);
 		
         this._negativeFormatter = formatter;
     }
-}
+};
 
-Y.extend(NumberFormat, Format);
+NumberFormat = Y.Number.__zNumberFormat;
+Y.extend(NumberFormat, Y.Number.__BaseFormat);
     
 // Constants
 
@@ -154,325 +150,369 @@ Y.mix(NumberFormat, {
     _META_CHARS: "0#.,E"
 });
 
-// Data
+Y.mix( NumberFormat.prototype, {
+    _groupingOffset: Number.MAX_VALUE,
+    _minIntDigits: 1,
+    _isCurrency: false,
+    _isPercent: false,
+    _isPerMille: false,
+    _showExponent: false,
 
-NumberFormat.prototype._groupingOffset = Number.MAX_VALUE;
-//NumberFormat.prototype._maxIntDigits;
-NumberFormat.prototype._minIntDigits = 1;
-//NumberFormat.prototype._maxFracDigits;
-//NumberFormat.prototype._minFracDigits;
-NumberFormat.prototype._isCurrency = false;
-NumberFormat.prototype._isPercent = false;
-NumberFormat.prototype._isPerMille = false;
-NumberFormat.prototype._showExponent = false;
-//NumberFormat.prototype._negativeFormatter;
-
-// Public methods
-
-NumberFormat.prototype.format = function(number) {
-    if (number < 0 && this._negativeFormatter) {
-        return this._negativeFormatter.format(number);
-    }
-        
-    var result = Format.prototype.format.call(this, number);
-        
-    if(this._isPluralCurrency) {
-        var pattern = "";
-        if(number == 1) {
-            //Singular
-            pattern = this.Formats.currencyPatternSingular;
-            pattern = pattern.replace("{1}", this.Formats[this.currency + "_currencySingular"]);
-        } else {
-            //Plural
-            pattern = this.Formats.currencyPatternPlural;
-            pattern = pattern.replace("{1}", this.Formats[this.currency + "_currencyPlural"]);
+    /**
+     * Format a number
+     * @method format
+     * @param number {Number}
+     * @return {String} Formatted result
+     */
+    format: function(number) {
+        if (number < 0 && this._negativeFormatter) {
+            return this._negativeFormatter.format(number);
         }
+        
+        var result = Format.prototype.format.call(this, number), pattern = "";
+        
+        if(this._isPluralCurrency) {
+            if(number === 1) {
+                //Singular
+                pattern = this.Formats.currencyPatternSingular;
+                pattern = pattern.replace("{1}", this.Formats[this.currency + "_currencySingular"]);
+            } else {
+                //Plural
+                pattern = this.Formats.currencyPatternPlural;
+                pattern = pattern.replace("{1}", this.Formats[this.currency + "_currencyPlural"]);
+            }
             
-        result = pattern.replace("{0}", result);
-    }
+            result = pattern.replace("{0}", result);
+        }
         
-    return result;
-};
-    
-NumberFormat.prototype.parse = function(s, pp) {
-    if(s.indexOf(this.Formats.minusSign) != -1 && this._negativeFormatter) {
-        return this._negativeFormatter.parse(s, pp);
-    }
+        return result;
+    },
+
+    /**
+     * Parse string and return number
+     * @method parse
+     * @param s {String} The string to parse
+     * @param pp {Number} Parse position. Will start parsing from this index in string s.
+     * @return {Number} Parse result
+     */
+    parse: function(s, pp) {
+        var singular, plural, object;
+        if(s.indexOf(this.Formats.minusSign) !== -1 && this._negativeFormatter) {
+            return this._negativeFormatter.parse(s, pp);
+        }
         
-    if(this._isPluralCurrency) {
-        var singular = this.Formats[this.currency + "_currencySingular"];
-        var plural = this.Formats[this.currency + "_currencyPlural"];
+        if(this._isPluralCurrency) {
+            singular = this.Formats[this.currency + "_currencySingular"],
+                plural = this.Formats[this.currency + "_currencyPlural"];
             
-        s = s.replace(plural, "").replace(singular, "").trim();
-    }
-        
-    var object = null;
-    try {
-        object = Format.prototype.parse.call(this, s, pp);
-        object = object.value;
-    } catch(e) {
-        Y.log("Failed to parse: " + s + ". Exception: " + e);
-    }
-        
-    return object;
-}
-
-// Private methods
-
-NumberFormat.prototype.__parseStatic = function(s, i) {
-    var data = [];
-    while (i < s.length) {
-        var c = s.charAt(i++);
-        if (NumberFormat._META_CHARS.indexOf(c) != -1) {
-            i--;
-            break;
+            s = Y.Lang.trim(s.replace(plural, "").replace(singular, ""));
         }
-        switch (c) {
-            case "'": {
-                var start = i;
-                while (i < s.length && s.charAt(i++) != "'") {
-                // do nothing
-                }
-                var end = i;
-                c = end - start == 0 ? "'" : s.substring(start, end);
-                break;
-            }
-            case '%': {
-                c = this.Formats.percentSign; 
-                this._isPercent = true;
-                break;
-            }
-            case '\u2030': {
-                c = this.Formats.perMilleSign; 
-                this._isPerMille = true;
-                break;
-            }
-            case '\u00a4': {
-                if(s.charAt(i) == '\u00a4') {
-                    c = this.Formats[this.currency + "_currencyISO"];
-                    i++;
-                } else {
-                    c = this.Formats[this.currency + "_currencySymbol"];
-                }
-                this._isCurrency = true;
-                break;
-            }
+        
+        object = null;
+        try {
+            object = Format.prototype.parse.call(this, s, pp);
+            object = object.value;
+        } catch(e) {
+            Y.error("Failed to parse: " + s, e);
         }
-        data.push(c);
+        
+        return object;
+    },
+
+    /**
+     * Parse static. Internal use only.
+     * @method __parseStatic
+     * @private
+     * @param {String} s Pattern
+     * @param {Number} i Index
+     * @return {Object}
+     */
+    __parseStatic: function(s, i) {
+        var data = [], c, start, end;
+        while (i < s.length) {
+            c = s.charAt(i++);
+            if (NumberFormat._META_CHARS.indexOf(c) !== -1) {
+                i--;
+                break;
+            }
+            switch (c) {
+                case "'":
+                    start = i;
+                    while (i < s.length && s.charAt(i) !== "'") {
+			i++;
+                    }
+                    end = i;
+                    c = end - start === 0 ? "'" : s.substring(start, end);
+                    break;
+                case '%':
+                    c = this.Formats.percentSign;
+                    this._isPercent = true;
+                    break;
+                case '\u2030':
+                    c = this.Formats.perMilleSign;
+                    this._isPerMille = true;
+                    break;
+                case '\u00a4':
+                    if(s.charAt(i) === '\u00a4') {
+                        c = this.Formats[this.currency + "_currencyISO"];
+                        i++;
+                    } else {
+                        c = this.Formats[this.currency + "_currencySymbol"];
+                    }
+                    this._isCurrency = true;
+                    break;
+            }
+            data.push(c);
+        }
+        return {
+            text: data.join(""),
+            offset: i
+        };
+    },
+
+    /**
+     * Creates the object that is initialized by parsing. For internal use only.
+     * Overrides method from __BaseFormat
+     * @method _createParseObject
+     * @private
+     * @return {Object}
+     */
+    _createParseObject: function() {
+        return {
+            value: null
+        };
     }
-    return {
-        text: data.join(""), 
-        offset: i
-    };
-};
-    
-NumberFormat.prototype._createParseObject = function() {
-    return {
-        value: null
-    };
-};
+}, true);
     
 //
 // NumberFormat.NumberSegment class
 //
 
+/**
+ * Number segment class.
+ * @class __zNumberFormat.NumberSegment
+ * @for __zNumberFormat
+ * @namespace Number
+ * @extends Number.__BaseFormat.Segment
+ *
+ * @private
+ * @constructor
+ *
+ * @param format {Number.__zNumberFormat} Parent Format object
+ * @param s {String} Pattern representing this segment
+ */
 NumberFormat.NumberSegment = function(format, s) {
-    if (arguments.length == 0) return;
+    if (format === null && s === null) { return; }
     NumberFormat.NumberSegment.superclass.constructor.call(this, format, s);
 };
 Y.extend(NumberFormat.NumberSegment, Format.Segment);
-    
-// Public methods
 
-NumberFormat.NumberSegment.prototype.format = function(number) {
-    // special values
-    if (isNaN(number)) return this._parent.Formats.nanSymbol;
-    if (number === Number.NEGATIVE_INFINITY || number === Number.POSITIVE_INFINITY) {
-        return this._parent.Formats.infinitySign;
-    }
-
-    // adjust value
-    if (typeof number != "number") number = Number(number);
-    number = Math.abs(number); // NOTE: minus sign is part of pattern
-    if (this._parent._isPercent) number *= 100;
-    else if (this._parent._isPerMille) number *= 1000;
-    if(this._parent._parseIntegerOnly) number = Math.floor(number);
-        
-    // format
-    var expon = this._parent.Formats.exponentialSymbol;
-    var exponReg = new RegExp(expon + "+");
-    var s = this._parent._showExponent
-    ? number.toExponential(this._parent._maxFracDigits).toUpperCase().replace(exponReg,expon)
-    : number.toFixed(this._parent._maxFracDigits || 0);
-    s = this._normalize(s);
-    return s;
-};
-
-// Protected methods
-
-NumberFormat.NumberSegment.prototype._normalize = function(s) {
-    var exponSymbol = this._parent.Formats.exponentialSymbol;
-    var splitReg = new RegExp("[\\." + exponSymbol + "]")
-    var match = s.split(splitReg);
-	
-    // normalize whole part
-    var whole = match.shift();
-    if (whole.length < this._parent._minIntDigits) {
-        whole = zeroPad(whole, this._parent._minIntDigits, this._parent.Formats.numberZero);
-    }
-    if (whole.length > this._parent._primaryGrouping && this._parent._useGrouping) {
-        var a = [];
-	    
-        var offset = this._parent._primaryGrouping;
-        var i = whole.length - offset;
-        while (i > 0) {
-            a.unshift(whole.substr(i, offset));
-            a.unshift(this._parent.Formats.groupingSeparator);
-            offset = this._parent._secondaryGrouping;
-            i -= offset;
+Y.mix(NumberFormat.NumberSegment.prototype, {
+    /**
+     * Format number segment
+     * @method format
+     * @param number {Number}
+     * @return {String} Formatted result
+     */
+    format: function(number) {
+        var expon, exponReg, s;
+        // special values
+        if (isNaN(number)) { return this._parent.Formats.nanSymbol; }
+        if (number === Number.NEGATIVE_INFINITY || number === Number.POSITIVE_INFINITY) {
+            return this._parent.Formats.infinitySign;
         }
-        a.unshift(whole.substring(0, i + offset));
+
+        // adjust value
+        if (typeof number !== "number") { number = Number(number); }
+        number = Math.abs(number); // NOTE: minus sign is part of pattern
+        if (this._parent._isPercent) { number *= 100; }
+        else if (this._parent._isPerMille) { number *= 1000; }
+        if(this._parent._parseIntegerOnly) { number = Math.floor(number); }
+        
+        // format
+        expon = this._parent.Formats.exponentialSymbol;
+        exponReg = new RegExp(expon + "+");
+        s = this._parent._showExponent
+            ? number.toExponential(this._parent._maxFracDigits).toUpperCase().replace(exponReg,expon)
+            : number.toFixed(this._parent._maxFracDigits || 0);
+        s = this._normalize(s);
+        return s;
+    },
+
+    /**
+     * Normalize pattern
+     * @method _normalize
+     * @protected
+     * @param {String} s Pattern
+     * @return {String} Normalized pattern
+     */
+    _normalize: function(s) {
+        var exponSymbol = this._parent.Formats.exponentialSymbol,
+            splitReg = new RegExp("[\\." + exponSymbol + "]"),
+            match = s.split(splitReg),
+            whole = match.shift(),  //Normalize the whole part
+            a = [],
+            offset = this._parent._primaryGrouping,
+            fract = '0',
+            decimal = this._parent.Formats.decimalSeparator,
+            expon, i;
+
+	if (whole.length < this._parent._minIntDigits) {
+            whole = Y.Number._zeroPad(whole, this._parent._minIntDigits, this._parent.Formats.numberZero);
+        }
+        if (whole.length > this._parent._primaryGrouping && this._parent._useGrouping) {
+            i = whole.length - offset;
+            while (i > 0) {
+                a.unshift(whole.substr(i, offset));
+                a.unshift(this._parent.Formats.groupingSeparator);
+                offset = this._parent._secondaryGrouping;
+                i -= offset;
+            }
+            a.unshift(whole.substring(0, i + offset));
 		
-        whole = a.join("");
-    }
+            whole = a.join("");
+        }
 	
-    // normalize rest
-    var fract = '0';
-    var expon;
-        
-    if(s.match(/\./))
-        fract = match.shift();
-    else if(s.match(/\e/) || s.match(/\E/))
-        expon = match.shift();
+        if(s.match(/\./)) {
+            fract = match.shift();
+        }
+        else if(s.match(/\e/) || s.match(/\E/)) {
+            expon = match.shift();
+        }
 
-    fract = fract.replace(/0+$/,"");
-    if (fract.length < this._parent._minFracDigits) {
-        fract = zeroPad(fract, this._parent._minFracDigits, this._parent.Formats.numberZero, true);
-    }
+        fract = fract.replace(/0+$/,"");
+        if (fract.length < this._parent._minFracDigits) {
+            fract = Y.Number._zeroPad(fract, this._parent._minFracDigits, this._parent.Formats.numberZero, true);
+        }
 	
-    a = [ whole ];
-    if (fract.length > 0) {
-        var decimal = this._parent.Formats.decimalSeparator;
-        a.push(decimal, fract);
-    }
-    if (expon) {
-        a.push(exponSymbol, expon.replace(/^\+/,""));
-    }
+        a = [ whole ];
+        if (fract.length > 0) {
+            a.push(decimal, fract);
+        }
+        if (expon) {
+            a.push(exponSymbol, expon.replace(/^\+/,""));
+        }
 	
-    // return normalize result
-    return a.join("");
-}
-    
-NumberFormat.NumberSegment.prototype.parse = function(object, s, index) {
-    var comma = this._parent.Formats.groupingSeparator;
-    var dot = this._parent.Formats.decimalSeparator;
-    var minusSign = this._parent.Formats.minusSign;
-    var expon = this._parent.Formats.exponentialSymbol;
-        
-    var numberRegexPattern = "[\\" + minusSign + "0-9" + comma + "]+";
-    if(!this._parent._parseIntegerOnly) {
-        numberRegexPattern += "(\\" + dot + "[0-9]+)?";
-    }
-    if(this._parent._showExponent) {
-        numberRegexPattern += "(" + expon +"\\+?[0-9]+)";
-    }
-        
-    var numberRegex = new RegExp(numberRegexPattern);
-    var matches = s.match(numberRegex);
-        
-    if(!matches) {
-        throw new Format.ParsingException("Number does not match pattern");
-    }
-        
-    var negativeNum = s.indexOf(minusSign) != -1;
-    var endIndex = index + matches[0].length;
-    s = s.slice(index, endIndex);
-        
-    var scientific = null;
-        
-    //Scientific format does not use grouping
-    if(this._parent.showExponent) {
-        scientific = s.split(expon);
-    } else if(this._parent._useGrouping) {
-        //Verify grouping data exists
-        if(!this._parent._primaryGrouping) {
-            //Should not happen
-            throw new Format.ParsingException("Invalid pattern");
+        // return normalize result
+        return a.join("");
+    },
+
+    /**
+     * Parse Number Segment
+     * @method parse
+     * @param object {Object} Result will be stored in object.value
+     * @param s {String} Pattern
+     * @param index {Number}
+     * @return {Number} Index in s where parse ended
+     */
+    parse: function(object, s, index) {
+        var comma = this._parent.Formats.groupingSeparator,
+            dot = this._parent.Formats.decimalSeparator,
+            minusSign = this._parent.Formats.minusSign,
+            expon = this._parent.Formats.exponentialSymbol,
+            numberRegexPattern = "[\\" + minusSign + "0-9" + comma + "]+",
+            numberRegex, matches, negativeNum, endIndex, scientific = null, i,
+            //If more groups, use primary/secondary grouping as applicable
+            grouping = this._parent._secondaryGrouping || this._parent._primaryGrouping;
+
+        if(!this._parent._parseIntegerOnly) {
+            numberRegexPattern += "(\\" + dot + "[0-9]+)?";
         }
-            
-        //Verify grouping is correct
-        var i = s.length - this._parent._primaryGrouping - 1;
-            
-        if(matches[1]) {
-            //If there is a decimal part, ignore that. Grouping assumed to apply only to whole number part
-            i = i - matches[1].length;
+        if(this._parent._showExponent) {
+            numberRegexPattern += "(" + expon +"\\+?[0-9]+)";
         }
-            
-        //Use primary grouping for first group
-        if(i > 0) {
-            //There should be a comma at i
-            if(s.charAt(i) != ',') {
-                throw new Format.ParsingException("Number does not match pattern");
+        
+        numberRegex = new RegExp(numberRegexPattern);
+        matches = s.match(numberRegex);
+        
+        if(!matches) {
+            Y.error("Error parsing: Number does not match pattern");
+        }
+        
+        negativeNum = s.indexOf(minusSign) !== -1;
+        endIndex = index + matches[0].length;
+        s = s.slice(index, endIndex);
+        
+        //Scientific format does not use grouping
+        if(this._parent.showExponent) {
+            scientific = s.split(expon);
+        } else if(this._parent._useGrouping) {
+            //Verify grouping data exists
+            if(!this._parent._primaryGrouping) {
+                //Should not happen
+                Y.error("Error parsing: Invalid pattern");
             }
-                
-            //Remove comma
-            s = s.slice(0, i) + s.slice(i+1);
-        }
             
-        //If more groups, use primary/secondary grouping as applicable
-        var grouping = this._parent._secondaryGrouping || this._parent._primaryGrouping;
-        i = i - grouping - 1;
+            //Verify grouping is correct
+            i = s.length - this._parent._primaryGrouping - 1;
             
-        while(i > 0) {
-            //There should be a comma at i
-            if(s.charAt(i) != ',') {
-                throw new Format.ParsingException("Number does not match pattern");
+            if(matches[1]) {
+                //If there is a decimal part, ignore that. Grouping assumed to apply only to whole number part
+                i = i - matches[1].length;
             }
+            
+            //Use primary grouping for first group
+            if(i > 0) {
+                //There should be a comma at i
+                if(s.charAt(i) !== ',') {
+                    Y.error("Error parsing: Number does not match pattern");
+                }
                 
-            //Remove comma
-            s = s.slice(0, i) + s.slice(i+1);
+                //Remove comma
+                s = s.slice(0, i) + s.slice(i+1);
+            }
+            
             i = i - grouping - 1;
-        }
             
-        //Verify there are no more grouping separators
-        if(s.indexOf(comma) != -1) {
-            throw new Format.ParsingException("Number does not match pattern");
+            while(i > 0) {
+                //There should be a comma at i
+                if(s.charAt(i) !== ',') {
+                    Y.error("Error parsing: Number does not match pattern");
+                }
+                
+                //Remove comma
+                s = s.slice(0, i) + s.slice(i+1);
+                i = i - grouping - 1;
+            }
+            
+            //Verify there are no more grouping separators
+            if(s.indexOf(comma) !== -1) {
+                Y.error("Error parsing: Number does not match pattern");
+            }
         }
+        
+        if(scientific) {
+            object.value = parseFloat(scientific[0], 10) * Math.pow(10, parseFloat(scientific[1], 10));
+        } else {
+            object.value = parseFloat(s, 10);
+        }
+        
+        //Special types
+        if(negativeNum) { object.value *= -1; }
+        if (this._parent._isPercent) { object.value /= 100; }
+        else if (this._parent._isPerMille) { object.value /= 1000; }
+        
+        return endIndex;
     }
-        
-    if(scientific) {
-        object.value = parseFloat(scientific[0], 10) * Math.pow(10, parseFloat(scientific[1], 10));
-    } else {
-        object.value = parseFloat(s, 10);
-    }
-        
-    //Special types
-    if(negativeNum) object.value *= -1;
-    if (this._parent._isPercent) object.value /= 100;
-    else if (this._parent._isPerMille) object.value /= 1000;
-        
-    return endIndex;
-};
-    
-//
-// YUI Code
-//
-    
+}, true);
+
 /**
- * NumberFormat
- * @class YNumberFormat
+ * Number Formatting
+ * @class __YNumberFormat
+ * @namespace Number
+ * @private
  * @constructor
- * @param {Number} style (Optional) the given style. Defaults to Number style
+ * @param [style='NUMBER_STYLE'] {Number} the given style. Should be key/value from Y.Number.STYLES
  */
-YNumberFormat = function(style) {
+Y.Number.__YNumberFormat = function(style) {
     style = style || Y.Number.STYLES.NUMBER_STYLE;
     
     if(Y.Lang.isString(style)) {
         style = Y.Number.STYLES[style];
     }
     
-    var pattern = "";
-    var formats = Y.Intl.get(MODULE_NAME);
+    var pattern = "",
+        formats = Y.Intl.get("datatype-number-advanced-format");
     switch(style) {
         case Y.Number.STYLES.CURRENCY_STYLE:
             pattern = formats.currencyFormat;
@@ -497,9 +537,19 @@ YNumberFormat = function(style) {
     }
         
     this._numberFormatInstance = new NumberFormat(pattern, formats);
-}
-    
+};
+
+YNumberFormat = Y.Number.__YNumberFormat;
+
 Y.mix(Y.Number, {
+    /**
+     * Style values to use during format/parse
+     * @property STYLES
+     * @type Object
+     * @static
+     * @final
+     * @for Number
+     */
     STYLES: {
         CURRENCY_STYLE: 1,
         ISO_CURRENCY_STYLE: 2,
@@ -507,192 +557,48 @@ Y.mix(Y.Number, {
         PERCENT_STYLE: 8,
         PLURAL_CURRENCY_STYLE: 16,
         SCIENTIFIC_STYLE: 32
-    },
-    
-    //Static methods
-    
-    
-    /**
-     * Create an instance of NumberFormat 
-     * @param {Number} style (Optional) the given style
-     */    
-    createInstance: function(style) {
-        return new YNumberFormat(style);
-    },
-    
-    /**
-     * Returns an array of BCP 47 language tags for the languages supported by this class
-     * @return {Array} an array of BCP 47 language tags for the languages supported by this class.
-     */
-    getAvailableLocales: function() {
-        return Y.Intl.getAvailableLangs(MODULE_NAME);
     }
 });
-
-
-
+   
+Y.mix(YNumberFormat.prototype, {
+    /**
+     * Format a number
+     * @method format
+     * @param number {Number} the number to format
+     * @for Number.YNumberFormat
+     * @return {Number}
+     */
+    format: function(number) {
+        return this._numberFormatInstance.format(number);
+    },
     
-//Public methods
+    /**
+     * Return true if this format will parse numbers as integers only.
+     * For example in the English locale, with ParseIntegerOnly true, the string "1234." would be parsed as the integer value 1234
+     * and parsing would stop at the "." character. Of course, the exact format accepted by the parse operation is locale dependant.
+     * @method isParseIntegerOnly
+     * @return {Boolean}
+     */
+    isParseIntegerOnly: function() {
+        return this._numberFormatInstance._parseIntegerOnly;
+    },
     
-/**
- * Format a number to product a String.
- * @param {Number} number the number to format
- */
-YNumberFormat.prototype.format = function(number) {
-    return this._numberFormatInstance.format(number);
-}
+    /**
+     * Parse the string to get a number
+     * @method parse
+     * @param {String} txt The string to parse
+     * @param {Number} [pp=0] Parse position. The position to start parsing at.
+     */
+    parse: function(txt, pp) {
+        return this._numberFormatInstance.parse(txt, pp);
+    },
     
-/**
- * Gets the currency used to display currency amounts. This may be an empty string for some cases. 
- * @return {String} a 3-letter ISO code indicating the currency in use, or an empty string.
- */
-YNumberFormat.prototype.getCurrency = function() {
-    return this._numberFormatInstance.currency;
-}
-    
-/**
- * Returns the maximum number of digits allowed in the fraction portion of a number. 
- * @return {Number} the maximum number of digits allowed in the fraction portion of a number.
- */
-YNumberFormat.prototype.getMaximumFractionDigits = function() {
-    return this._numberFormatInstance._maxFracDigits || 0;
-}
-    
-/**
- * Returns the maximum number of digits allowed in the integer portion of a number. 
- * @return {Number} the maximum number of digits allowed in the integer portion of a number.
- */
-YNumberFormat.prototype.getMaximumIntegerDigits = function() {
-    return this._numberFormatInstance._maxIntDigits || 0;
-}
-    
-/**
- * Returns the minimum number of digits allowed in the fraction portion of a number. 
- * @return {Number} the minimum number of digits allowed in the fraction portion of a number.
- */
-YNumberFormat.prototype.getMinimumFractionDigits = function() {
-    return this._numberFormatInstance._minFracDigits || 0;
-}
-    
-/**
- * Returns the minimum number of digits allowed in the integer portion of a number.
- * @return {Number} the minimum number of digits allowed in the integer portion of a number.
- */
-YNumberFormat.prototype.getMinimumIntegerDigits = function() {
-    return this._numberFormatInstance._minIntDigits || 0;
-}
-    
-/**
- * Returns true if grouping is used in this format.
- * For example, in the English locale, with grouping on, the number 1234567 might be formatted as "1,234,567".
- * The grouping separator as well as the size of each group is locale dependant.
- * @return {Boolean}
- */
-YNumberFormat.prototype.isGroupingUsed = function() {
-    return this._numberFormatInstance._useGrouping;
-}
-    
-/**
- * Return true if this format will parse numbers as integers only.
- * For example in the English locale, with ParseIntegerOnly true, the string "1234." would be parsed as the integer value 1234
- * and parsing would stop at the "." character. Of course, the exact format accepted by the parse operation is locale dependant.
- * @return {Boolean}
- */
-YNumberFormat.prototype.isParseIntegerOnly = function() {
-    return this._numberFormatInstance._parseIntegerOnly;
-}
-    
-/**
- * Parse the string to get a number
- * @param {String} txt The string to parse
- * @param {Number} pp (Optional) Parse position. The position to start parsing at. Defaults to 0
- */
-YNumberFormat.prototype.parse = function(txt, pp) {
-    return this._numberFormatInstance.parse(txt, pp);
-}
-    
-/**
- * Sets the currency used to display currency amounts.
- * This takes effect immediately, if this format is a currency format.
- * If this format is not a currency format, then the currency is used if and when this object becomes a currency format.
- * @param {String} currency a 3-letter ISO code indicating new currency to use. May be the empty string to indicate no currency.
- */
-YNumberFormat.prototype.setCurrency = function(currency) {
-    this._numberFormatInstance.currency = currency;
-}
-    
-/**
- * Set whether or not grouping will be used in this format. 
- * @param {Boolean} value
- */
-YNumberFormat.prototype.setGroupingUsed = function(value) {
-    this._numberFormatInstance._useGrouping = value;
-}
-    
-/**
- * Sets the maximum number of digits allowed in the fraction portion of a number.
- * maximumFractionDigits must be >= minimumFractionDigits.
- * If the new value for maximumFractionDigits is less than the current value of minimumFractionDigits,
- * then minimumFractionDigits will also be set to the new value. 
- * @param {Number} newValue the new value to be set.
- */
-YNumberFormat.prototype.setMaximumFractionDigits = function(newValue) {
-    this._numberFormatInstance._maxFracDigits = newValue;
-        
-    if(this.getMinimumFractionDigits() > newValue) {
-        this.setMinimumFractionDigits(newValue);
+    /**
+     * Sets whether or not numbers should be parsed as integers only.
+     * @method setParseIntegerOnly
+     * @param {Boolean} newValue set True, this format will parse numbers as integers only.
+     */
+    setParseIntegerOnly: function(newValue) {
+        this._numberFormatInstance._parseIntegerOnly = newValue;
     }
-}
-    
-/**
- * Sets the maximum number of digits allowed in the integer portion of a number.
- * maximumIntegerDigits must be >= minimumIntegerDigits.
- * If the new value for maximumIntegerDigits is less than the current value of minimumIntegerDigits,
- * then minimumIntegerDigits will also be set to the new value.
- * @param {Number} newValue the new value to be set.
- */
-YNumberFormat.prototype.setMaximumIntegerDigits = function(newValue) {
-    this._numberFormatInstance._maxIntDigits = newValue;
-        
-    if(this.getMinimumIntegerDigits() > newValue) {
-        this.setMinimumIntegerDigits(newValue);
-    }
-}
-    
-/**
- * Sets the minimum number of digits allowed in the fraction portion of a number.
- * minimumFractionDigits must be <= maximumFractionDigits.
- * If the new value for minimumFractionDigits exceeds the current value of maximumFractionDigits,
- * then maximumIntegerDigits will also be set to the new value
- * @param {Number} newValue the new value to be set.
- */
-YNumberFormat.prototype.setMinimumFractionDigits = function(newValue) {
-    this._numberFormatInstance._minFracDigits = newValue;
-        
-    if(this.getMaximumFractionDigits() < newValue) {
-        this.setMaximumFractionDigits(newValue);
-    }
-}
-    
-/**
- * Sets the minimum number of digits allowed in the integer portion of a number.
- * minimumIntegerDigits must be <= maximumIntegerDigits.
- * If the new value for minimumIntegerDigits exceeds the current value of maximumIntegerDigits,
- * then maximumIntegerDigits will also be set to the new value. 
- * @param {Number} newValue the new value to be set.
- */
-YNumberFormat.prototype.setMinimumIntegerDigits = function(newValue) {
-    this._numberFormatInstance._minIntDigits = newValue;
-        
-    if(this.getMaximumIntegerDigits() < newValue) {
-        this.setMaximumIntegerDigits(newValue);
-    }
-}
-    
-/**
- * Sets whether or not numbers should be parsed as integers only. 
- * @param {Boolean} newValue set True, this format will parse numbers as integers only.
- */
-YNumberFormat.prototype.setParseIntegerOnly = function(newValue) {
-    this._numberFormatInstance._parseIntegerOnly = newValue;
-}
+});

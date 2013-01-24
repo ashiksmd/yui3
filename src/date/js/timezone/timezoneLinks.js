@@ -1,4 +1,4 @@
-TimezoneLinks = {
+Y.Date.Timezone.__tzoneLinks = {
     "Mideast/Riyadh88": "Asia/Riyadh88",
     "Europe/Nicosia": "Asia/Nicosia",
     "US/Pacific-New": "America/Los_Angeles",
@@ -139,3 +139,5 @@ TimezoneLinks = {
     "America/St_Barthelemy": "America/Guadeloupe",
     "America/Marigot": "America/Guadeloupe"
 };
+
+TimezoneLinks = Y.Date.Timezone.__tzoneLinks;
