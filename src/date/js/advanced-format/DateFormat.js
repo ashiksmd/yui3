@@ -1,13 +1,14 @@
 /**
  * This module provides absolute/relative date and time formatting, as well as duration formatting
  * Applications can choose date, time, and time zone components separately.
- * For dates, relative descriptions (English "yesterday", German "vorgestern", Japanese "後天") are also supported. 
+ * For dates, relative descriptions (English "yesterday", German "vorgestern", Japanese "後天") are also supported.
  *
  * This module uses a few modified parts of zimbra AjxFormat to handle dates and time.
- * 
+ *
  * Absolute formats use the default calendar specified in CLDR for each locale.
  * Currently this means the Buddhist calendar for Thailand; the Gregorian calendar for all other countries.
- * However, you can specify other calendars using language subtags; for example, for Thai the Gregorian calendar can be specified as th-TH-u-ca-gregory. 
+ * However, you can specify other calendars using language subtags;
+ * for example, for Thai the Gregorian calendar can be specified as th-TH-u-ca-gregory.
  *
  * Relative time formats only support times in the past. It can represent times like "1 hour 5 minutes ago"
  *
@@ -47,12 +48,12 @@ var MODULE_NAME = "datatype-date-advanced-format",
 /**
  * The DateFormat class formats Date objects according to a specified pattern.
  * The patterns are defined the same as the SimpleDateFormat class in the Java libraries.
- * 
+ *
  * Note:
  * The date format differs from the Java patterns a few ways: the pattern
  * "EEEEE" (5 'E's) denotes a <em>short</em> weekday and the pattern "MMMMM"
- * (5 'M's) denotes a <em>short</em> month name. This matches the extended 
- * pattern found in the Common Locale Data Repository (CLDR) found at: 
+ * (5 'M's) denotes a <em>short</em> month name. This matches the extended
+ * pattern found in the Common Locale Data Repository (CLDR) found at:
  * http://www.unicode.org/cldr/.
  *
  * @class __zDateFormat
@@ -68,19 +69,19 @@ Y.Date.__zDateFormat = function(pattern, formats, timeZoneId) {
     DateFormat.superclass.constructor.call(this, pattern, formats);
     this.timeZone = new Y.Date.Timezone(timeZoneId);
         
-    if (pattern == null) {
+    if (pattern === null) {
         return;
     }
-    var head, tail, segment;
-    for (var i = 0; i < pattern.length; i++) {
+    var head, tail, segment, i, c, count, field;
+    for (i = 0; i < pattern.length; i++) {
         // literal
-        var c = pattern.charAt(i);
-        if (c == "'") {
+        c = pattern.charAt(i);
+        if (c === "'") {
             head = i + 1;
             for (i++ ; i < pattern.length; i++) {
                 c = pattern.charAt(i);
-                if (c == "'") {
-                    if (i + 1 < pattern.length && pattern.charAt(i + 1) == "'") {
+                if (c === "'") {
+                    if (i + 1 < pattern.length && pattern.charAt(i + 1) === "'") {
                         pattern = pattern.substr(0, i) + pattern.substr(i + 1);
                     }
                     else {
@@ -88,7 +89,7 @@ Y.Date.__zDateFormat = function(pattern, formats, timeZoneId) {
                     }
                 }
             }
-            if (i == pattern.length) {
+            if (i === pattern.length) {
 		Y.error("unterminated string literal");
             }
             tail = i;
@@ -101,13 +102,13 @@ Y.Date.__zDateFormat = function(pattern, formats, timeZoneId) {
         head = i;
         while(i < pattern.length) {
             c = pattern.charAt(i);
-            if (DateFormat._META_CHARS.indexOf(c) != -1 || c == "'") {
+            if (DateFormat._META_CHARS.indexOf(c) !== -1 || c === "'") {
                 break;
             }
             i++;
         }
         tail = i;
-        if (head != tail) {
+        if (head !== tail) {
             segment = new Format.TextSegment(this, pattern.substring(head, tail));
             this._segments.push(segment);
             i--;
@@ -117,13 +118,13 @@ Y.Date.__zDateFormat = function(pattern, formats, timeZoneId) {
         // meta char
         head = i;
         while(++i < pattern.length) {
-            if (pattern.charAt(i) != c) {
+            if (pattern.charAt(i) !== c) {
                 break;
-            }		
+            }
         }
         tail = i--;
-        var count = tail - head;
-        var field = pattern.substr(head, count);
+        count = tail - head;
+        field = pattern.substr(head, count);
         segment = null;
         switch (c) {
             case 'G':
@@ -168,12 +169,12 @@ Y.Date.__zDateFormat = function(pattern, formats, timeZoneId) {
                 segment = new DateFormat.TimezoneSegment(this, field);
                 break;
         }
-        if (segment != null) {
+        if (segment !== null) {
             segment._index = this._segments.length;
             this._segments.push(segment);
         }
     }
-}
+};
 
 DateFormat = Y.Date.__zDateFormat;
 Y.extend(DateFormat, Format);
@@ -196,23 +197,25 @@ Y.mix(DateFormat, {
  * @return {String} Formatted result
  */
 DateFormat.prototype.format = function(object, relative) {
-    var useRelative = false;
-    if(relative != null && relative != "") {
+    var useRelative = false,
+        s = [],
+        datePattern = false,
+        i;
+
+    if(relative !== null && relative !== "") {
         useRelative = true;
     }
 
-    var s = [];
-    var datePattern = false;
-    for (var i = 0; i < this._segments.length; i++) {
+    for (i = 0; i < this._segments.length; i++) {
         //Mark datePattern sections in case of relative dates
-        if(this._segments[i].toString().indexOf("text: \"<datePattern>\"") == 0) {
+        if(this._segments[i].toString().indexOf("text: \"<datePattern>\"") === 0) {
             if(useRelative) {
                 s.push(relative);
             }
             datePattern = true;
             continue;
         }
-        if(this._segments[i].toString().indexOf("text: \"</datePattern>\"") == 0) {
+        if(this._segments[i].toString().indexOf("text: \"</datePattern>\"") === 0) {
             datePattern = false;
             continue;
         }
@@ -221,7 +224,7 @@ DateFormat.prototype.format = function(object, relative) {
         }
     }
     return s.join("");
-}
+};
 
 //
 // Date segment class
@@ -239,9 +242,8 @@ DateFormat.prototype.format = function(object, relative) {
  * @param s {String} The pattern representing the segment
  */
 DateFormat.DateSegment = function(format, s) {
-    if (arguments.length == 0) return;
     DateFormat.DateSegment.superclass.constructor.call(this, format, s);
-}
+};
 Y.extend(DateFormat.DateSegment, Format.Segment);
 
 //
@@ -260,7 +262,6 @@ Y.extend(DateFormat.DateSegment, Format.Segment);
  * @param s {String} The pattern representing the segment
  */
 DateFormat.EraSegment = function(format, s) {
-    if (arguments.length == 0) return;
     DateFormat.EraSegment.superclass.constructor.call(this, format, s);
 };
 Y.extend(DateFormat.EraSegment, DateFormat.DateSegment);
@@ -268,10 +269,10 @@ Y.extend(DateFormat.EraSegment, DateFormat.DateSegment);
 /**
  * Format date and get the era segment. Currently it only supports the current era, and will always return localized representation of AD
  * @method format
- * @param date {Date} The date to be formatted
+ * //param date {Date} The date to be formatted
  * @return {String} Formatted result
  */
-DateFormat.EraSegment.prototype.format = function(date) { 
+DateFormat.EraSegment.prototype.format = function(/*date*/) {
     // NOTE: Only support current era at the moment...
     return this.getFormat().AD;
 };
@@ -292,7 +293,6 @@ DateFormat.EraSegment.prototype.format = function(date) {
  * @param s {String} The pattern representing the segment
  */
 DateFormat.YearSegment = function(format, s) {
-    if (arguments.length == 0) return;
     DateFormat.YearSegment.superclass.constructor.call(this, format, s);
 };
 Y.extend(DateFormat.YearSegment, DateFormat.DateSegment);
@@ -303,8 +303,8 @@ Y.mix(DateFormat.YearSegment.prototype, {
      * @method toString
      * @return {String}
      */
-    toString: function() { 
-        return "dateYear: \""+this._s+'"'; 
+    toString: function() {
+        return "dateYear: \""+this._s+'"';
     },
 
     /**
@@ -313,9 +313,9 @@ Y.mix(DateFormat.YearSegment.prototype, {
      * @param date {Date} The date to be formatted
      * @return {String} Formatted result
      */
-    format: function(date) { 
+    format: function(date) {
         var year = String(date.getFullYear());
-        return this._s.length != 1 && this._s.length < 4 ? year.substr(year.length - 2) : zeroPad(year, this._s.length);
+        return this._s.length !== 1 && this._s.length < 4 ? year.substr(year.length - 2) : Y.Number._zeroPad(year, this._s.length);
     }
 }, true);
 
@@ -335,7 +335,6 @@ Y.mix(DateFormat.YearSegment.prototype, {
  * @param s {String} The pattern representing the segment
  */
 DateFormat.MonthSegment = function(format, s) {
-    if (arguments.length == 0) return;
     DateFormat.MonthSegment.superclass.constructor.call(this, format, s);
     this.initialize();
 };
@@ -347,8 +346,8 @@ Y.mix(DateFormat.MonthSegment.prototype, {
      * @method toString
      * @return {String}
      */
-    toString: function() { 
-        return "dateMonth: \""+this._s+'"'; 
+    toString: function() {
+        return "dateMonth: \""+this._s+'"';
     },
 
     /**
@@ -391,7 +390,7 @@ Y.mix(DateFormat.MonthSegment.prototype, {
             case 1:
                 return String(month + 1);
             case 2:
-                return zeroPad(month + 1, 2);
+                return Y.Number._zeroPad(month + 1, 2);
             case 3:
                 return DateFormat.MonthSegment.MONTHS[DateFormat.MEDIUM][month];
             case 5:
@@ -417,7 +416,6 @@ Y.mix(DateFormat.MonthSegment.prototype, {
  * @param s {String} The pattern representing the segment
  */
 DateFormat.WeekSegment = function(format, s) {
-    if (arguments.length == 0) return;
     DateFormat.WeekSegment.superclass.constructor.call(this, format, s);
 };
 Y.extend(DateFormat.WeekSegment, DateFormat.DateSegment);
@@ -429,23 +427,21 @@ Y.extend(DateFormat.WeekSegment, DateFormat.DateSegment);
  * @return {String} Formatted result
  */
 DateFormat.WeekSegment.prototype.format = function(date) {
-    var year = date.getYear();
-    var month = date.getMonth();
-    var day = date.getDate();
-	
-    var ofYear = /w/.test(this._s);
-    var date2 = new Date(year, ofYear ? 0 : month, 1);
-
-    var week = 0;
+    var year = date.getYear(),
+        month = date.getMonth(),
+        day = date.getDate(),
+	ofYear = /w/.test(this._s),
+        date2 = new Date(year, ofYear ? 0 : month, 1),
+        week = 0;
     while (true) {
         week++;
-        if (date2.getMonth() > month || (date2.getMonth() == month && date2.getDate() >= day)) {
+        if (date2.getMonth() > month || (date2.getMonth() === month && date2.getDate() >= day)) {
             break;
         }
         date2.setDate(date2.getDate() + 7);
     }
 
-    return zeroPad(week, this._s.length);
+    return Y.Number._zeroPad(week, this._s.length);
 };
 
 //
@@ -463,7 +459,6 @@ DateFormat.WeekSegment.prototype.format = function(date) {
  * @param s {String} The pattern representing the segment
  */
 DateFormat.DaySegment = function(format, s) {
-    if (arguments.length == 0) return;
     DateFormat.DaySegment.superclass.constructor.call(this, format, s);
 };
 Y.extend(DateFormat.DaySegment, DateFormat.DateSegment);
@@ -475,20 +470,22 @@ Y.extend(DateFormat.DaySegment, DateFormat.DateSegment);
  * @return {String} Formatted result
  */
 DateFormat.DaySegment.prototype.format = function(date) {
-    var month = date.getMonth();
-    var day = date.getDate();
+    var month = date.getMonth(),
+        day = date.getDate(),
+        year = date.getYear(),
+        date2;
+
     if (/D/.test(this._s) && month > 0) {
-        var year = date.getYear();
         do {
             // set date to first day of month and then go back one day
-            var date2 = new Date(year, month, 1);
-            date2.setDate(0); 
+            date2 = new Date(year, month, 1);
+            date2.setDate(0);
 			
             day += date2.getDate();
             month--;
         } while (month > 0);
     }
-    return zeroPad(day, this._s.length);
+    return Y.Number._zeroPad(day, this._s.length);
 };
 
 //
@@ -507,20 +504,19 @@ DateFormat.DaySegment.prototype.format = function(date) {
  * @param s {String} The pattern representing the segment
  */
 DateFormat.WeekdaySegment = function(format, s) {
-    if (arguments.length == 0) return;
     DateFormat.WeekdaySegment.superclass.constructor.call(this, format, s);
     this.initialize();
 };
 Y.extend(DateFormat.WeekdaySegment, DateFormat.DateSegment);
 
-Y.mix(DateFormat.DaySegment.prototype, {
+Y.mix(DateFormat.WeekdaySegment.prototype, {
     /**
      * Return a string representation of the object
      * @method toString
      * @return {String}
      */
-    toString: function() { 
-        return "dateDay: \""+this._s+'"'; 
+    toString: function() {
+        return "dateDay: \""+this._s+'"';
     },
 
     /**
@@ -556,9 +552,9 @@ Y.mix(DateFormat.DaySegment.prototype, {
      * @return {String} Formatted result
      */
     format: function(date) {
-        var weekday = date.getDay();
+        var weekday = date.getDay(),
+            style;
         if (/E/.test(this._s)) {
-            var style;
             switch (this._s.length) {
                 case 4:
                     style = DateFormat.LONG;
@@ -591,7 +587,6 @@ Y.mix(DateFormat.DaySegment.prototype, {
  * @param s {String} The pattern representing the segment
  */
 DateFormat.TimeSegment = function(format, s) {
-    if (arguments.length == 0) return;
     DateFormat.TimeSegment.superclass.constructor.call(this, format, s);
 };
 Y.extend(DateFormat.TimeSegment, Y.Number.__BaseFormat.Segment);
@@ -612,7 +607,6 @@ Y.extend(DateFormat.TimeSegment, Y.Number.__BaseFormat.Segment);
  * @param s {String} The pattern representing the segment
  */
 DateFormat.HourSegment = function(format, s) {
-    if (arguments.length == 0) return;
     DateFormat.HourSegment.superclass.constructor.call(this, format, s);
 };
 Y.extend(DateFormat.HourSegment, DateFormat.TimeSegment);
@@ -623,8 +617,8 @@ Y.mix(DateFormat.HourSegment.prototype, {
      * @method toString
      * @return {String}
      */
-    toString: function() { 
-        return "timeHour: \""+this._s+'"'; 
+    toString: function() {
+        return "timeHour: \""+this._s+'"';
     },
 
     /**
@@ -638,18 +632,18 @@ Y.mix(DateFormat.HourSegment.prototype, {
         if (hours > 12 && /[hK]/.test(this._s)) {
             hours -= 12;
         }
-        else if (hours == 0 && /[h]/.test(this._s)) {
+        else if (hours === 0 && /[h]/.test(this._s)) {
             hours = 12;
         }
         /***
-	    // NOTE: This is commented out to match the Java formatter output
-	    //       but from the comments for these meta-chars, it doesn't
-	    //       seem right.
-	    if (/[Hk]/.test(this._s)) {
-	    	hours--;
-	    }
+            // NOTE: This is commented out to match the Java formatter output
+            //       but from the comments for these meta-chars, it doesn't
+            //       seem right.
+            if (/[Hk]/.test(this._s)) {
+                hours--;
+            }
         /***/
-        return zeroPad(hours, this._s.length);
+        return Y.Number._zeroPad(hours, this._s.length);
     }
 }, true);
 
@@ -669,7 +663,6 @@ Y.mix(DateFormat.HourSegment.prototype, {
  * @param s {String} The pattern representing the segment
  */
 DateFormat.MinuteSegment = function(format, s) {
-    if (arguments.length == 0) return;
     DateFormat.MinuteSegment.superclass.constructor.call(this, format, s);
 };
 Y.extend(DateFormat.MinuteSegment, DateFormat.TimeSegment);
@@ -680,8 +673,8 @@ Y.mix(DateFormat.MinuteSegment.prototype, {
      * @method toString
      * @return {String}
      */
-    toString: function() { 
-        return "timeMinute: \""+this._s+'"'; 
+    toString: function() {
+        return "timeMinute: \""+this._s+'"';
     },
 
     /**
@@ -692,7 +685,7 @@ Y.mix(DateFormat.MinuteSegment.prototype, {
      */
     format: function(date) {
         var minutes = date.getMinutes();
-        return zeroPad(minutes, this._s.length);
+        return Y.Number._zeroPad(minutes, this._s.length);
     }
 }, true);
 
@@ -712,7 +705,6 @@ Y.mix(DateFormat.MinuteSegment.prototype, {
  * @param s {String} The pattern representing the segment
  */
 DateFormat.SecondSegment = function(format, s) {
-    if (arguments.length == 0) return;
     DateFormat.SecondSegment.superclass.constructor.call(this, format, s);
 };
 Y.extend(DateFormat.SecondSegment, DateFormat.TimeSegment);
@@ -725,7 +717,7 @@ Y.extend(DateFormat.SecondSegment, DateFormat.TimeSegment);
  */
 DateFormat.SecondSegment.prototype.format = function(date) {
     var minutes = /s/.test(this._s) ? date.getSeconds() : date.getMilliseconds();
-    return zeroPad(minutes, this._s.length);
+    return Y.Number._zeroPad(minutes, this._s.length);
 };
 
 //
@@ -744,7 +736,6 @@ DateFormat.SecondSegment.prototype.format = function(date) {
  * @param s {String} The pattern representing the segment
  */
 DateFormat.AmPmSegment = function(format, s) {
-    if (arguments.length == 0) return;
     DateFormat.AmPmSegment.superclass.constructor.call(this, format, s);
 };
 Y.extend(DateFormat.AmPmSegment, DateFormat.TimeSegment);
@@ -755,8 +746,8 @@ Y.mix(DateFormat.AmPmSegment.prototype, {
      * @method toString
      * @return {String}
      */
-    toString: function() { 
-        return "timeAmPm: \""+this._s+'"'; 
+    toString: function() {
+        return "timeAmPm: \""+this._s+'"';
     },
 
     /**
@@ -797,17 +788,17 @@ Y.mix(DateFormat.TimezoneSegment.prototype, {
      * @method toString
      * @return {String}
      */
-    toString: function() { 
-        return "timeTimezone: \""+this._s+'"'; 
+    toString: function() {
+        return "timeTimezone: \""+this._s+'"';
     },
 
     /**
      * Format date and get the timezone segment.
      * @method format
-     * @param date {Date} The date to be formatted
+     * //param date {Date} The date to be formatted
      * @return {String} Formatted result
      */
-    format: function(date) {
+    format: function(/*date*/) {
         var timeZone = this.getFormat().timeZone;
         if (/Z/.test(this._s)) {
             return timeZone.getShortName();
@@ -819,8 +810,8 @@ Y.mix(DateFormat.TimezoneSegment.prototype, {
 //
 // Non-Gregorian Calendars
 //
-    
-/* 
+
+/*
  * Buddhist Calendar. This is normally used only for Thai locales (th).
  * @class __BuddhistDateFormat
  * @namespace Date
@@ -835,15 +826,15 @@ Y.Date.__BuddhistDateFormat = function(pattern, formats, timeZoneId) {
     BuddhistDateFormat.superclass.constructor.call(this, pattern, formats, timeZoneId);
         
     //Iterate through _segments, and replace the ones that are different for Buddhist Calendar
-    var segments = this._segments;
-    for(var i=0; i<segments.length; i++) {
+    var segments = this._segments, i;
+    for(i=0; i<segments.length; i++) {
         if(segments[i] instanceof DateFormat.YearSegment) {
             segments[i] = new BuddhistDateFormat.YearSegment(segments[i]);
         } else if (segments[i] instanceof DateFormat.EraSegment) {
             segments[i] = new BuddhistDateFormat.EraSegment(segments[i]);
         }
     }
-}
+};
 
 BuddhistDateFormat = Y.Date.__BuddhistDateFormat;
 Y.extend(BuddhistDateFormat, DateFormat);
@@ -858,7 +849,6 @@ Y.extend(BuddhistDateFormat, DateFormat);
  * @param segment {Date.__zDateFormat.YearSegment}
  */
 BuddhistDateFormat.YearSegment = function(segment) {
-    if (arguments.length == 0) return;
     BuddhistDateFormat.YearSegment.superclass.constructor.call(this, segment._parent, segment._s);
 };
 
@@ -870,10 +860,10 @@ Y.extend(BuddhistDateFormat.YearSegment, DateFormat.YearSegment);
  * @param date {Date} The date to be formatted
  * @return {String} Formatted result
  */
-BuddhistDateFormat.YearSegment.prototype.format = function(date) { 
+BuddhistDateFormat.YearSegment.prototype.format = function(date) {
     var year = date.getFullYear();
     year = String(year + 543);      //Buddhist Calendar epoch is in 543 BC
-    return this._s.length != 1 && this._s.length < 4 ? year.substr(year.length - 2) : zeroPad(year, this._s.length);
+    return this._s.length !== 1 && this._s.length < 4 ? year.substr(year.length - 2) : Y.Number._zeroPad(year, this._s.length);
 };
     
 /**
@@ -887,7 +877,6 @@ BuddhistDateFormat.YearSegment.prototype.format = function(date) {
  * @param segment {Date.__zDateFormat.EraSegment}
  */
 BuddhistDateFormat.EraSegment = function(segment) {
-    if (arguments.length == 0) return;
     BuddhistDateFormat.EraSegment.superclass.constructor.call(this, segment._parent, segment._s);
 };
 
@@ -896,10 +885,10 @@ Y.extend(BuddhistDateFormat.EraSegment, DateFormat.EraSegment);
 /**
  * Format date and get the era segment.
  * @method format
- * @param date {Date} The date to be formatted
+ * //param date {Date} The date to be formatted
  * @return {String} Formatted result
  */
-BuddhistDateFormat.EraSegment.prototype.format = function(date) { 
+BuddhistDateFormat.EraSegment.prototype.format = function(/*date*/) {
     return "BE";    //Only Buddhist Era supported for now
 };
 
@@ -910,13 +899,13 @@ BuddhistDateFormat.EraSegment.prototype.format = function(date) {
  * @private
  * @constructor
  * @param {String} [timeZone='Etc/GMT'] TZ database ID for the time zone that should be used.
- * @param {Number} [dateFormat=0] Selector for the desired date format from Y.Date.DATE_FORMATS. 
+ * @param {Number} [dateFormat=0] Selector for the desired date format from Y.Date.DATE_FORMATS.
  * @param {Number} [timeFormat=0] Selector for the desired time format from Y.Date.TIME_FORMATS.
  * @param {Number} [timeZoneFormat=0] Selector for the desired time zone format from Y.Date.TIMEZONE_FORMATS.
  */
 Y.Date.__YDateFormat = function(timeZone, dateFormat, timeFormat, timeZoneFormat) {
         
-    if(timeZone == null) {
+    if(timeZone === null) {
         timeZone = "Etc/GMT";
     }
 
@@ -930,9 +919,9 @@ Y.Date.__YDateFormat = function(timeZone, dateFormat, timeFormat, timeZoneFormat
     this._timeZone = timeZone;
     this._timeZoneInstance = new Y.Date.Timezone(this._timeZone);
 
-    this._dateFormat = dateFormat;
-    this._timeFormat = timeFormat;
-    this._timeZoneFormat = timeZoneFormat;
+    this._dateFormat = dateFormat || 0;
+    this._timeFormat = timeFormat || 0;
+    this._timeZoneFormat = timeZoneFormat || 0;
 
     this._relative = false;
     this._pattern = this._generatePattern();
@@ -945,8 +934,8 @@ Y.Date.__YDateFormat = function(timeZone, dateFormat, timeFormat, timeZoneFormat
     } else {
         //Use gregorian calendar
         this._dateFormatInstance = new DateFormat(this._pattern, this._Formats, this._timeZone);
-    }        
-}
+    }
+};
 
 YDateFormat = Y.Date.__YDateFormat;
 
@@ -1026,11 +1015,13 @@ Y.mix(YDateFormat.prototype, {
             format = Y.Date.DATE_FORMATS[format];
         }
     
-        if(format == null) return "";
+        if(format === null) { return ""; }
+        /*jshint bitwise: false*/
         if(format & Y.Date.DATE_FORMATS.RELATIVE_DATE) {
             this._relative = true;
             format = format ^ Y.Date.DATE_FORMATS.RELATIVE_DATE;
         }
+        /*jshint bitwise: true*/
         switch(format) {
             //Use relative only for formats with day component
             case Y.Date.DATE_FORMATS.NONE:
@@ -1094,7 +1085,7 @@ Y.mix(YDateFormat.prototype, {
             format = Y.Date.TIME_FORMATS[format];
         }
     
-        if(format == null) return "";
+        if(format === null) { return ""; }
         switch(format) {
             case Y.Date.TIME_FORMATS.NONE:
                 return "";
@@ -1121,7 +1112,7 @@ Y.mix(YDateFormat.prototype, {
             format = Y.Date.TIMEZONE_FORMATS[format];
         }
     
-        if(format == null) return "";
+        if(format === null) { return ""; }
         switch(format) {
             case Y.Date.TIMEZONE_FORMATS.NONE:
                 return "";
@@ -1141,23 +1132,23 @@ Y.mix(YDateFormat.prototype, {
      * @return {String} Combined pattern for date, time and time-zone
      */
     _generatePattern: function() {
-        var datePattern = this._generateDatePattern();
-        var timePattern = this._generateTimePattern();
-        var timeZonePattern = this._generateTimeZonePattern();
+        var datePattern = this._generateDatePattern(),
+            timePattern = this._generateTimePattern(),
+            timeZonePattern = this._generateTimeZonePattern(),
+            pattern = "";
 
         //Combine patterns. Mark date pattern part, to use with relative dates.
-        if(datePattern != "") {
+        if(datePattern !== "") {
             datePattern = "'<datePattern>'" + datePattern + "'</datePattern>'";
         }
         
-        var pattern = "";
-        if(timePattern != "" && timeZonePattern != "") {
+        if(timePattern !== "" && timeZonePattern !== "") {
             pattern = this._Formats.DateTimeTimezoneCombination;
-        } else if (timePattern != "") {
+        } else if (timePattern !== "") {
             pattern = this._Formats.DateTimeCombination;
-        } else if(timeZonePattern != "") {
+        } else if(timeZonePattern !== "") {
             pattern = this._Formats.DateTimezoneCombination;
-        } else if(datePattern != ""){
+        } else if(datePattern !== ""){
             //Just date
             pattern = "{1}";
         }
@@ -1177,28 +1168,28 @@ Y.mix(YDateFormat.prototype, {
      * @return {String} The formatted string
      */
     format: function(date) {
-        if(date == null || !Y.Lang.isDate(date)) {
+        if(date === null || !Y.Lang.isDate(date)) {
             Y.error("format called without a date.");
         }
         
-        var offset = this._timeZoneInstance.getRawOffset() * 1000;
+        var offset = this._timeZoneInstance.getRawOffset() * 1000,
+            relativeDate = null,
+            today = new Date(),
+            tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000),
+            yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
+
         date = new Date(date.getTime() + date.getTimezoneOffset() * 60 * 1000 + offset);
         
-        var relativeDate = null;
         if(this._relative) {
-            var today = new Date();
-            var tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
-            var yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
-
-            if(date.getFullYear() == today.getFullYear() && date.getMonth() == today.getMonth() && date.getDate() == today.getDate()) {
+            if(date.getFullYear() === today.getFullYear() && date.getMonth() === today.getMonth() && date.getDate() === today.getDate()) {
                 relativeDate = this._Formats.today;
             }
 
-            if(date.getFullYear() == tomorrow.getFullYear() && date.getMonth() == tomorrow.getMonth() && date.getDate() == tomorrow.getDate()) {
+            if(date.getFullYear() === tomorrow.getFullYear() && date.getMonth() === tomorrow.getMonth() && date.getDate() === tomorrow.getDate()) {
                 relativeDate = this._Formats.tomorrow;
             }
 
-            if(date.getFullYear() == yesterday.getFullYear() && date.getMonth() == yesterday.getMonth() && date.getDate() == yesterday.getDate()) {
+            if(date.getFullYear() === yesterday.getFullYear() && date.getMonth() === yesterday.getMonth() && date.getDate() === yesterday.getDate()) {
                 relativeDate = this._Formats.yesterday;
             }
         }

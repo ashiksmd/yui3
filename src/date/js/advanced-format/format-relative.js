@@ -14,11 +14,11 @@
  * @param [style='ONE_UNIT_LONG'] {Number|String} Selector for the desired relative time format. Should be key/value from Y.Date.RELATIVE_TIME_FORMATS
  */
 Y.Date.__YRelativeTimeFormat = function(style) {
-    if(style == null) {
+    if(style === null) {
         style = Y.Date.RELATIVE_TIME_FORMATS.ONE_UNIT_LONG;
     } else if(Y.Lang.isString(style)) {
         style = Y.Date.RELATIVE_TIME_FORMATS[style];
-    } 
+    }
         
     this.patterns = Y.Intl.get(MODULE_NAME);
     this.style = style;
@@ -43,7 +43,7 @@ Y.Date.__YRelativeTimeFormat = function(style) {
         default:
             Y.error("Unknown style: Use a style from Y.Date.RELATIVE_TIME_FORMATS");
     }
-}
+};
 
 YRelativeTimeFormat = Y.Date.__YRelativeTimeFormat;
 
@@ -77,12 +77,13 @@ Y.mix(Y.Date, {
  * @method format
  * @for Date.__YRelativeTimeFormat
  * @param {Number} timeValue The time value (seconds since Epoch) to be formatted.
- * @param {Number} [relativeTo=Current Time] The time value (seconds since Epoch) in relation to which timeValue should be formatted. It must be greater than or equal to timeValue
+ * @param {Number} [relativeTo=Current Time] The time value (seconds since Epoch) in relation to which timeValue should be formatted.
+          It must be greater than or equal to timeValue
  * @return {String} The formatted string
  */
 YRelativeTimeFormat.prototype.format = function(timeValue, relativeTo) {
-    if(relativeTo == null) { 
-        relativeTo = (new Date()).getTime()/1000; 
+    if(relativeTo === null) {
+        relativeTo = (new Date()).getTime()/1000;
         if(timeValue > relativeTo) {
             Y.error("timeValue must be in the past");
         }
@@ -90,20 +91,18 @@ YRelativeTimeFormat.prototype.format = function(timeValue, relativeTo) {
         Y.error("relativeTo must be greater than or equal to timeValue");
     }
 
-    var date = new Date((relativeTo - timeValue)*1000);
-
-    var result = [];
-    var numUnits = this.numUnits;
-        
-    var value = date.getUTCFullYear() - 1970;	//Need zero-based index
-    var text;
+    var date = new Date((relativeTo - timeValue)*1000),
+        result = [],
+        numUnits = this.numUnits,
+        value = date.getUTCFullYear() - 1970,	//Need zero-based index
+        text, pattern, i;
         
     if(value > 0) {
         if(this.abbr) {
-            text = value + " " + (value != 1 ? this.patterns.years_abbr : this.patterns.year_abbr); 
+            text = value + " " + (value !== 1 ? this.patterns.years_abbr : this.patterns.year_abbr);
             result.push(text);
         } else {
-            text = value + " " + (value != 1 ? this.patterns.years : this.patterns.year); 
+            text = value + " " + (value !== 1 ? this.patterns.years : this.patterns.year);
             result.push(text);
         }
         numUnits--;
@@ -112,10 +111,10 @@ YRelativeTimeFormat.prototype.format = function(timeValue, relativeTo) {
     value = date.getUTCMonth();
     if((numUnits > 0) && (numUnits < this.numUnits || value > 0)) {
         if(this.abbr) {
-            text = value + " " + (value != 1 ? this.patterns.months_abbr : this.patterns.month_abbr); 
+            text = value + " " + (value !== 1 ? this.patterns.months_abbr : this.patterns.month_abbr);
             result.push(text);
         } else {
-            text = value + " " + (value != 1 ? this.patterns.months : this.patterns.month); 
+            text = value + " " + (value !== 1 ? this.patterns.months : this.patterns.month);
             result.push(text);
         }
         numUnits--;
@@ -124,10 +123,10 @@ YRelativeTimeFormat.prototype.format = function(timeValue, relativeTo) {
     value = date.getUTCDate()-1;			//Need zero-based index
     if(numUnits > 0 && (numUnits < this.numUnits || value > 0)) {
         if(this.abbr) {
-            text = value + " " + (value != 1 ? this.patterns.days_abbr : this.patterns.day_abbr); 
+            text = value + " " + (value !== 1 ? this.patterns.days_abbr : this.patterns.day_abbr);
             result.push(text);
         } else {
-            text = value + " " + (value != 1 ? this.patterns.days : this.patterns.day); 
+            text = value + " " + (value !== 1 ? this.patterns.days : this.patterns.day);
             result.push(text);
         }
         numUnits--;
@@ -136,10 +135,10 @@ YRelativeTimeFormat.prototype.format = function(timeValue, relativeTo) {
     value = date.getUTCHours();
     if(numUnits > 0 && (numUnits < this.numUnits || value > 0)) {
         if(this.abbr) {
-            text = value + " " + (value != 1 ? this.patterns.hours_abbr : this.patterns.hour_abbr); 
+            text = value + " " + (value !== 1 ? this.patterns.hours_abbr : this.patterns.hour_abbr);
             result.push(text);
         } else {
-            text = value + " " + (value != 1 ? this.patterns.hours : this.patterns.hour); 
+            text = value + " " + (value !== 1 ? this.patterns.hours : this.patterns.hour);
             result.push(text);
         }
         numUnits--;
@@ -148,30 +147,30 @@ YRelativeTimeFormat.prototype.format = function(timeValue, relativeTo) {
     value = date.getUTCMinutes();
     if(numUnits > 0 && (numUnits < this.numUnits || value > 0)) {
         if(this.abbr) {
-            text = value + " " + (value != 1 ? this.patterns.minutes_abbr : this.patterns.minute_abbr); 
+            text = value + " " + (value !== 1 ? this.patterns.minutes_abbr : this.patterns.minute_abbr);
             result.push(text);
         } else {
-            text = value + " " + (value != 1 ? this.patterns.minutes : this.patterns.minute); 
+            text = value + " " + (value !== 1 ? this.patterns.minutes : this.patterns.minute);
             result.push(text);
         }
         numUnits--;
     }
 
     value = date.getUTCSeconds();
-    if(result.length == 0 || (numUnits > 0 && (numUnits < this.numUnits || value > 0))) {
+    if(result.length === 0 || (numUnits > 0 && (numUnits < this.numUnits || value > 0))) {
         if(this.abbr) {
-            text = value + " " + (value != 1 ? this.patterns.seconds_abbr : this.patterns.second_abbr); 
+            text = value + " " + (value !== 1 ? this.patterns.seconds_abbr : this.patterns.second_abbr);
             result.push(text);
         } else {
-            text = value + " " + (value != 1 ? this.patterns.seconds : this.patterns.second); 
+            text = value + " " + (value !== 1 ? this.patterns.seconds : this.patterns.second);
             result.push(text);
         }
         numUnits--;
     }
 
-    var pattern = (result.length == 1) ? this.patterns["RelativeTime/oneUnit"] : this.patterns["RelativeTime/twoUnits"];
+    pattern = (result.length === 1) ? this.patterns["RelativeTime/oneUnit"] : this.patterns["RelativeTime/twoUnits"];
         
-    for(var i=0; i<result.length; i++) {
+    for(i=0; i<result.length; i++) {
         pattern = pattern.replace("{" + i + "}", result[i]);
     }
     for(i=result.length; i<this.numUnits; i++) {
@@ -181,4 +180,4 @@ YRelativeTimeFormat.prototype.format = function(timeValue, relativeTo) {
     pattern = Y.Lang.trim(pattern.replace(/\s+/g, " "));
         
     return pattern;
-}
+};

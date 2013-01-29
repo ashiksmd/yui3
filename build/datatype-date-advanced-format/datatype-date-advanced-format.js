@@ -1,309 +1,89 @@
 YUI.add('datatype-date-advanced-format', function (Y, NAME) {
 
-/*
- * Copyright 2012 Yahoo! Inc. All Rights Reserved. Based on code owned by VMWare, Inc. 
- */
-
-//
-// Format class
-//
-
 /**
- * Base class for all formats. To format an object, instantiate the
- * format of your choice and call the <code>format</code> method which
- * returns the formatted string.
- */
-Format = function(pattern, formats) {
-    if (arguments.length == 0) {
-        return;
-    }
-    this._pattern = pattern;
-    this._segments = []; 
-    this.Formats = formats; 
-}
-
-// Data
-
-Format.prototype._pattern = null;
-Format.prototype._segments = null;
-
-//Exceptions
-
-Y.mix(Format, {
-    Exception: function(name, message) {
-        this.name = name;
-        this.message = message;
-        this.toString = function() {
-            return this.name + ": " + this.message;
-        }
-    },
-    ParsingException: function(message) {
-        Format.ParsingException.superclass.constructor.call(this, "ParsingException", message);
-    },
-    IllegalArgumentsException: function(message) {
-        Format.IllegalArgumentsException.superclass.constructor.call(this, "IllegalArgumentsException", message);
-    },
-    FormatException: function(message) {
-        Format.FormatException.superclass.constructor.call(this, "FormatException", message);
-    }
-});
-
-Y.extend(Format.ParsingException, Format.Exception);
-Y.extend(Format.IllegalArgumentsException, Format.Exception);
-Y.extend(Format.FormatException, Format.Exception);
-
-// Public methods
-
-Format.prototype.format = function(object) { 
-    var s = [];
-        
-    for (var i = 0; i < this._segments.length; i++) {
-        s.push(this._segments[i].format(object));
-    }
-    return s.join("");
-};
-
-// Protected static methods
-
-function zeroPad (s, length, zeroChar, rightSide) {
-    s = typeof s == "string" ? s : String(s);
-
-    if (s.length >= length) return s;
-
-    zeroChar = zeroChar || '0';
-	
-    var a = [];
-    for (var i = s.length; i < length; i++) {
-        a.push(zeroChar);
-    }
-    a[rightSide ? "unshift" : "push"](s);
-
-    return a.join("");
-}
-    
-/** 
- * Parses the given string according to this format's pattern and returns
- * an object.
- * <p>
- * <strong>Note:</strong>
- * The default implementation of this method assumes that the sub-class
- * has implemented the <code>_createParseObject</code> method.
- */
-Format.prototype.parse = function(s, pp) {
-    var object = this._createParseObject();
-    var index = pp || 0;
-    for (var i = 0; i < this._segments.length; i++) {
-        var segment = this._segments[i];
-        index = segment.parse(object, s, index);
-    }
-        
-    if (index < s.length) {
-        throw new Format.ParsingException("Input too long");
-    }
-    return object;
-};
-    
-/**
- * Creates the object that is initialized by parsing
- * <p>
- * <strong>Note:</strong>
- * This must be implemented by sub-classes.
- */
-Format.prototype._createParseObject = function(s) {
-    throw new Format.ParsingException("Not implemented");
-};
-
-//
-// Segment class
-//
-
-Format.Segment = function(format, s) {
-    if (arguments.length == 0) return;
-    this._parent = format;
-    this._s = s;
-};
-    
-// Public methods
-
-Format.Segment.prototype.format = function(o) { 
-    return this._s; 
-};
-
-/**
- * Parses the string at the given index, initializes the parse object
- * (as appropriate), and returns the new index within the string for
- * the next parsing step.
- * <p>
- * <strong>Note:</strong>
- * This method must be implemented by sub-classes.
+ * This module provides absolute/relative date and time formatting, as well as duration formatting
+ * Applications can choose date, time, and time zone components separately.
+ * For dates, relative descriptions (English "yesterday", German "vorgestern", Japanese "後天") are also supported.
  *
- * @param o     [object] The parse object to be initialized.
- * @param s     [string] The input string to be parsed.
- * @param index [number] The index within the string to start parsing.
- */
-Format.Segment.prototype.parse = function(o, s, index) {
-    throw new Format.ParsingException("Not implemented");
-};
-
-Format.Segment.prototype.getFormat = function() {
-    return this._parent;
-};
-
-Format.Segment._parseLiteral = function(literal, s, index) {
-    if (s.length - index < literal.length) {
-        throw new Format.ParsingException("Input too short");
-    }
-    for (var i = 0; i < literal.length; i++) {
-        if (literal.charAt(i) != s.charAt(index + i)) {
-            throw new Format.ParsingException("Input doesn't match");
-        }
-    }
-    return index + literal.length;
-};
-    
-/**
- * Parses an integer at the offset of the given string and calls a
- * method on the specified object.
- *
- * @param o         [object]   The target object.
- * @param f         [function|string] The method to call on the target object.
- *                             If this parameter is a string, then it is used
- *                             as the name of the property to set on the
- *                             target object.
- * @param adjust    [number]   The numeric adjustment to make on the
- *                             value before calling the object method.
- * @param s         [string]   The string to parse.
- * @param index     [number]   The index within the string to start parsing.
- * @param fixedlen  [number]   If specified, specifies the required number
- *                             of digits to be parsed.
- * @param radix     [number]   Optional. Specifies the radix of the parse
- *                             string. Defaults to 10 if not specified.
- */
-Format.Segment._parseInt = function(o, f, adjust, s, index, fixedlen, radix) {
-    var len = fixedlen || s.length - index;
-    var head = index;
-    for (var i = 0; i < len; i++) {
-        if (!s.charAt(index++).match(/\d/)) {
-            index--;
-            break;
-        }
-    }
-    var tail = index;
-    if (head == tail) {
-        throw new Format.ParsingException("Number not present");
-    }
-    if (fixedlen && tail - head != fixedlen) {
-        throw new Format.ParsingException("Number too short");
-    }
-    var value = parseInt(s.substring(head, tail), radix || 10);
-    if (f) {
-        var target = o || window;
-        if (typeof f == "function") {
-            f.call(target, value + adjust);
-        }
-        else {
-            target[f] = value + adjust;
-        }
-    }
-    return tail;
-};
-
-//
-// Text segment class
-//
-
-Format.TextSegment = function(format, s) {
-    if (arguments.length == 0) return;
-    Format.TextSegment.superclass.constructor.call(this, format, s);
-};
-
-Y.extend(Format.TextSegment, Format.Segment);
-
-Format.TextSegment.prototype.toString = function() { 
-    return "text: \""+this._s+'"'; 
-};
-    
-Format.TextSegment.prototype.parse = function(o, s, index) {
-    return Format.Segment._parseLiteral(this._s, s, index);
-};
-
-if(String.prototype.trim == null) {
-    String.prototype.trim = function() {
-        return this.replace(/^\s+/, '').replace(/\s+$/, '');
-    };
-}
-/**
- * YDateFormat provides absolute date and time formatting.
- * Applications can choose date, time, and time zone components separately. For dates, relative descriptions (English "yesterday", German "vorgestern", Japanese "後天") are also supported. 
  * This module uses a few modified parts of zimbra AjxFormat to handle dates and time.
- * 
- * Absolute formats use the default calendar specified in CLDR for each locale. Currently this means the Buddhist calendar for Thailand; the Gregorian calendar for all other countries.
- * However, you can specify other calendars using language subtags; for example, for Thai the Gregorian calendar can be specified as th-TH-u-ca-gregory. 
+ *
+ * Absolute formats use the default calendar specified in CLDR for each locale.
+ * Currently this means the Buddhist calendar for Thailand; the Gregorian calendar for all other countries.
+ * However, you can specify other calendars using language subtags;
+ * for example, for Thai the Gregorian calendar can be specified as th-TH-u-ca-gregory.
+ *
+ * Relative time formats only support times in the past. It can represent times like "1 hour 5 minutes ago"
+ *
+ * @module datatype-date-advanced-format
+ * @requires datatype-date-timezone, datatype-date-format, datatype-number-advanced-format
  */
 
-var MODULE_NAME = "datatype-date-advanced-format";
-    
-//
-// Resources
-//
-ShortNames = {
-    "weekdayMonShort":"M",
-    "weekdayTueShort":"T",
-    "weekdayWedShort":"W",
-    "weekdayThuShort":"T",
-    "weekdayFriShort":"F",
-    "weekdaySatShort":"S",
-    "weekdaySunShort":"S",
-    "monthJanShort":"J",
-    "monthFebShort":"F",
-    "monthMarShort":"M",
-    "monthAprShort":"A",
-    "monthMayShort":"M",
-    "monthJunShort":"J",
-    "monthJulShort":"J",
-    "monthAugShort":"A",
-    "monthSepShort":"S",
-    "monthOctShort":"O",
-    "monthNovShort":"N",
-    "monthDecShort":"D"
-}
+var MODULE_NAME = "datatype-date-advanced-format",
+    Format = Y.Number.__BaseFormat,
+    ShortNames = {
+        "weekdayMonShort":"M",
+        "weekdayTueShort":"T",
+        "weekdayWedShort":"W",
+        "weekdayThuShort":"T",
+        "weekdayFriShort":"F",
+        "weekdaySatShort":"S",
+        "weekdaySunShort":"S",
+        "monthJanShort":"J",
+        "monthFebShort":"F",
+        "monthMarShort":"M",
+        "monthAprShort":"A",
+        "monthMayShort":"M",
+        "monthJunShort":"J",
+        "monthJulShort":"J",
+        "monthAugShort":"A",
+        "monthSepShort":"S",
+        "monthOctShort":"O",
+        "monthNovShort":"N",
+        "monthDecShort":"D"
+    },
+    DateFormat, BuddhistDateFormat, YDateFormat, YRelativeTimeFormat, YDurationFormat;
     
 //
 // Date format class
 //
 
 /**
- * The DateFormat class formats Date objects according to a specified 
- * pattern. The patterns are defined the same as the SimpleDateFormat
- * class in the Java libraries.
- * <p>
- * <strong>Note:</strong>
+ * The DateFormat class formats Date objects according to a specified pattern.
+ * The patterns are defined the same as the SimpleDateFormat class in the Java libraries.
+ *
+ * Note:
  * The date format differs from the Java patterns a few ways: the pattern
  * "EEEEE" (5 'E's) denotes a <em>short</em> weekday and the pattern "MMMMM"
- * (5 'M's) denotes a <em>short</em> month name. This matches the extended 
- * pattern found in the Common Locale Data Repository (CLDR) found at: 
+ * (5 'M's) denotes a <em>short</em> month name. This matches the extended
+ * pattern found in the Common Locale Data Repository (CLDR) found at:
  * http://www.unicode.org/cldr/.
+ *
+ * @class __zDateFormat
+ * @extends Number.__BaseFormat
+ * @namespace Date
+ * @private
+ * @constructor
+ * @param pattern {String} The pattern to format date in
+ * @param formats {Object} Locale specific data
+ * @param timeZoneId {String} Timezone Id according to Olson tz database
  */
-DateFormat = function(pattern, formats, timeZoneId) {
-    if (arguments.length == 0) {
-        return;
-    }
+Y.Date.__zDateFormat = function(pattern, formats, timeZoneId) {
     DateFormat.superclass.constructor.call(this, pattern, formats);
     this.timeZone = new Y.Date.Timezone(timeZoneId);
         
-    if (pattern == null) {
+    if (pattern === null) {
         return;
     }
-    var head, tail, segment;
-    for (var i = 0; i < pattern.length; i++) {
+    var head, tail, segment, i, c, count, field;
+    for (i = 0; i < pattern.length; i++) {
         // literal
-        var c = pattern.charAt(i);
-        if (c == "'") {
+        c = pattern.charAt(i);
+        if (c === "'") {
             head = i + 1;
             for (i++ ; i < pattern.length; i++) {
                 c = pattern.charAt(i);
-                if (c == "'") {
-                    if (i + 1 < pattern.length && pattern.charAt(i + 1) == "'") {
+                if (c === "'") {
+                    if (i + 1 < pattern.length && pattern.charAt(i + 1) === "'") {
                         pattern = pattern.substr(0, i) + pattern.substr(i + 1);
                     }
                     else {
@@ -311,8 +91,8 @@ DateFormat = function(pattern, formats, timeZoneId) {
                     }
                 }
             }
-            if (i == pattern.length) {
-                throw new Format.FormatException("unterminated string literal");
+            if (i === pattern.length) {
+		Y.error("unterminated string literal");
             }
             tail = i;
             segment = new Format.TextSegment(this, pattern.substring(head, tail));
@@ -324,13 +104,13 @@ DateFormat = function(pattern, formats, timeZoneId) {
         head = i;
         while(i < pattern.length) {
             c = pattern.charAt(i);
-            if (DateFormat._META_CHARS.indexOf(c) != -1 || c == "'") {
+            if (DateFormat._META_CHARS.indexOf(c) !== -1 || c === "'") {
                 break;
             }
             i++;
         }
         tail = i;
-        if (head != tail) {
+        if (head !== tail) {
             segment = new Format.TextSegment(this, pattern.substring(head, tail));
             this._segments.push(segment);
             i--;
@@ -340,13 +120,13 @@ DateFormat = function(pattern, formats, timeZoneId) {
         // meta char
         head = i;
         while(++i < pattern.length) {
-            if (pattern.charAt(i) != c) {
+            if (pattern.charAt(i) !== c) {
                 break;
-            }		
+            }
         }
         tail = i--;
-        var count = tail - head;
-        var field = pattern.substr(head, count);
+        count = tail - head;
+        field = pattern.substr(head, count);
         segment = null;
         switch (c) {
             case 'G':
@@ -391,41 +171,53 @@ DateFormat = function(pattern, formats, timeZoneId) {
                 segment = new DateFormat.TimezoneSegment(this, field);
                 break;
         }
-        if (segment != null) {
+        if (segment !== null) {
             segment._index = this._segments.length;
             this._segments.push(segment);
         }
     }
-}
+};
+
+DateFormat = Y.Date.__zDateFormat;
 Y.extend(DateFormat, Format);
 
 // Constants
 
-DateFormat.SHORT = 0;
-DateFormat.MEDIUM = 1;
-DateFormat.LONG = 2;
-DateFormat.DEFAULT = DateFormat.MEDIUM;
+Y.mix(DateFormat, {
+	SHORT: 0,
+	MEDIUM: 1,
+	LONG: 2,
+	DEFAULT: 1,
+	_META_CHARS: "GyMwWDdFEaHkKhmsSzZ"
+});
 
-DateFormat._META_CHARS = "GyMwWDdFEaHkKhmsSzZ";
-
+/**
+ * Format the date
+ * @method format
+ * @param object {Date} The date to be formatted
+ * @param [relative=false] {Boolean} Whether relative dates should be used.
+ * @return {String} Formatted result
+ */
 DateFormat.prototype.format = function(object, relative) {
-    var useRelative = false;
-    if(relative != null && relative != "") {
+    var useRelative = false,
+        s = [],
+        datePattern = false,
+        i;
+
+    if(relative !== null && relative !== "") {
         useRelative = true;
     }
 
-    var s = [];
-    var datePattern = false;
-    for (var i = 0; i < this._segments.length; i++) {
+    for (i = 0; i < this._segments.length; i++) {
         //Mark datePattern sections in case of relative dates
-        if(this._segments[i].toString().indexOf("text: \"<datePattern>\"") == 0) {
+        if(this._segments[i].toString().indexOf("text: \"<datePattern>\"") === 0) {
             if(useRelative) {
                 s.push(relative);
             }
             datePattern = true;
             continue;
         }
-        if(this._segments[i].toString().indexOf("text: \"</datePattern>\"") == 0) {
+        if(this._segments[i].toString().indexOf("text: \"</datePattern>\"") === 0) {
             datePattern = false;
             continue;
         }
@@ -434,31 +226,55 @@ DateFormat.prototype.format = function(object, relative) {
         }
     }
     return s.join("");
-}
+};
 
 //
 // Date segment class
 //
 
+/**
+ * Date Segment in the pattern
+ * @class DateSegment
+ * @namespace Date.__zDateFormat
+ * @for Date.__zDateFormat
+ * @extends Number.__BaseFormat.Segment
+ * @private
+ * @constructor
+ * @param format {Date.__zDateFormat} The parent Format object.
+ * @param s {String} The pattern representing the segment
+ */
 DateFormat.DateSegment = function(format, s) {
-    if (arguments.length == 0) return;
     DateFormat.DateSegment.superclass.constructor.call(this, format, s);
-}
+};
 Y.extend(DateFormat.DateSegment, Format.Segment);
 
 //
 // Date era segment class
 //
 
+/**
+ * Era Segment in the pattern
+ * @class EraSegment
+ * @for Date.__DateFormat
+ * @namespace Date.__DateFormat
+ * @extends DateSegment
+ * @private
+ * @constructor
+ * @param format {Date.__DateFormat} The parent Format object.
+ * @param s {String} The pattern representing the segment
+ */
 DateFormat.EraSegment = function(format, s) {
-    if (arguments.length == 0) return;
     DateFormat.EraSegment.superclass.constructor.call(this, format, s);
 };
 Y.extend(DateFormat.EraSegment, DateFormat.DateSegment);
 
-// Public methods
-
-DateFormat.EraSegment.prototype.format = function(date) { 
+/**
+ * Format date and get the era segment. Currently it only supports the current era, and will always return localized representation of AD
+ * @method format
+ * //param date {Date} The date to be formatted
+ * @return {String} Formatted result
+ */
+DateFormat.EraSegment.prototype.format = function(/*date*/) {
     // NOTE: Only support current era at the moment...
     return this.getFormat().AD;
 };
@@ -467,384 +283,631 @@ DateFormat.EraSegment.prototype.format = function(date) {
 // Date year segment class
 //
 
+/**
+ * Year Segment in the pattern
+ * @class YearSegment
+ * @namespace Date.__DateFormat
+ * @for Date.__DateFormat
+ * @extends DateSegment
+ * @private
+ * @constructor
+ * @param format {Date.__DateFormat} The parent Format object.
+ * @param s {String} The pattern representing the segment
+ */
 DateFormat.YearSegment = function(format, s) {
-    if (arguments.length == 0) return;
     DateFormat.YearSegment.superclass.constructor.call(this, format, s);
 };
 Y.extend(DateFormat.YearSegment, DateFormat.DateSegment);
 
-DateFormat.YearSegment.prototype.toString = function() { 
-    return "dateYear: \""+this._s+'"'; 
-};
+Y.mix(DateFormat.YearSegment.prototype, {
+    /**
+     * Return a string representation of the object
+     * @method toString
+     * @return {String}
+     */
+    toString: function() {
+        return "dateYear: \""+this._s+'"';
+    },
 
-// Public methods
-
-DateFormat.YearSegment.prototype.format = function(date) { 
-    var year = String(date.getFullYear());
-    return this._s.length != 1 && this._s.length < 4 ? year.substr(year.length - 2) : zeroPad(year, this._s.length);
-};
+    /**
+     * Format date and get the year segment.
+     * @method format
+     * @param date {Date} The date to be formatted
+     * @return {String} Formatted result
+     */
+    format: function(date) {
+        var year = String(date.getFullYear());
+        return this._s.length !== 1 && this._s.length < 4 ? year.substr(year.length - 2) : Y.Number._zeroPad(year, this._s.length);
+    }
+}, true);
 
 //
 // Date month segment class
 //
 
+/**
+ * Month Segment in the pattern
+ * @class MonthSegment
+ * @namepspace Date.__DateFormat
+ * @for Date.__DateFormat
+ * @extends DateSegment
+ * @private
+ * @constructor
+ * @param format {Date.__DateFormat} The parent Format object.
+ * @param s {String} The pattern representing the segment
+ */
 DateFormat.MonthSegment = function(format, s) {
-    if (arguments.length == 0) return;
     DateFormat.MonthSegment.superclass.constructor.call(this, format, s);
     this.initialize();
 };
 Y.extend(DateFormat.MonthSegment, DateFormat.DateSegment);
 
-DateFormat.MonthSegment.prototype.toString = function() { 
-    return "dateMonth: \""+this._s+'"'; 
-};
+Y.mix(DateFormat.MonthSegment.prototype, {
+    /**
+     * Return a string representation of the object
+     * @method toString
+     * @return {String}
+     */
+    toString: function() {
+        return "dateMonth: \""+this._s+'"';
+    },
 
-DateFormat.MonthSegment.prototype.initialize = function() {
-    DateFormat.MonthSegment.MONTHS = {};
-    DateFormat.MonthSegment.MONTHS[DateFormat.SHORT] = [
-    ShortNames.monthJanShort,ShortNames.monthFebShort,ShortNames.monthMarShort,
-    ShortNames.monthAprShort,ShortNames.monthMayShort,ShortNames.monthJunShort,
-    ShortNames.monthJulShort,ShortNames.monthAugShort,ShortNames.monthSepShort,
-    ShortNames.monthOctShort,ShortNames.monthNovShort,ShortNames.monthDecShort
-    ];
-    DateFormat.MonthSegment.MONTHS[DateFormat.MEDIUM] = [
-    this.getFormat().Formats.monthJanMedium, this.getFormat().Formats.monthFebMedium, this.getFormat().Formats.monthMarMedium,
-    this.getFormat().Formats.monthAprMedium, this.getFormat().Formats.monthMayMedium, this.getFormat().Formats.monthJunMedium,
-    this.getFormat().Formats.monthJulMedium, this.getFormat().Formats.monthAugMedium, this.getFormat().Formats.monthSepMedium,
-    this.getFormat().Formats.monthOctMedium, this.getFormat().Formats.monthNovMedium, this.getFormat().Formats.monthDecMedium
-    ];
-    DateFormat.MonthSegment.MONTHS[DateFormat.LONG] = [
-    this.getFormat().Formats.monthJanLong, this.getFormat().Formats.monthFebLong, this.getFormat().Formats.monthMarLong,
-    this.getFormat().Formats.monthAprLong, this.getFormat().Formats.monthMayLong, this.getFormat().Formats.monthJunLong,
-    this.getFormat().Formats.monthJulLong, this.getFormat().Formats.monthAugLong, this.getFormat().Formats.monthSepLong,
-    this.getFormat().Formats.monthOctLong, this.getFormat().Formats.monthNovLong, this.getFormat().Formats.monthDecLong
-    ];
-};
+    /**
+     * Initialize with locale specific data.
+     * @method initialize
+     */
+    initialize: function() {
+        DateFormat.MonthSegment.MONTHS = {};
+        DateFormat.MonthSegment.MONTHS[DateFormat.SHORT] = [
+            ShortNames.monthJanShort,ShortNames.monthFebShort,ShortNames.monthMarShort,
+            ShortNames.monthAprShort,ShortNames.monthMayShort,ShortNames.monthJunShort,
+            ShortNames.monthJulShort,ShortNames.monthAugShort,ShortNames.monthSepShort,
+            ShortNames.monthOctShort,ShortNames.monthNovShort,ShortNames.monthDecShort
+        ];
 
-// Public methods
+        var Formats = this.getFormat().Formats;
+        DateFormat.MonthSegment.MONTHS[DateFormat.MEDIUM] = [
+            Formats.monthJanMedium, Formats.monthFebMedium, Formats.monthMarMedium,
+            Formats.monthAprMedium, Formats.monthMayMedium, Formats.monthJunMedium,
+            Formats.monthJulMedium, Formats.monthAugMedium, Formats.monthSepMedium,
+            Formats.monthOctMedium, Formats.monthNovMedium, Formats.monthDecMedium
+        ];
+        DateFormat.MonthSegment.MONTHS[DateFormat.LONG] = [
+            Formats.monthJanLong, Formats.monthFebLong, Formats.monthMarLong,
+            Formats.monthAprLong, Formats.monthMayLong, Formats.monthJunLong,
+            Formats.monthJulLong, Formats.monthAugLong, Formats.monthSepLong,
+            Formats.monthOctLong, Formats.monthNovLong, Formats.monthDecLong
+        ];
+    },
 
-DateFormat.MonthSegment.prototype.format = function(date) {
-    var month = date.getMonth();
-    switch (this._s.length) {
-        case 1:
-            return String(month + 1);
-        case 2:
-            return zeroPad(month + 1, 2);
-        case 3:
-            return DateFormat.MonthSegment.MONTHS[DateFormat.MEDIUM][month];
-        case 5:
-            return DateFormat.MonthSegment.MONTHS[DateFormat.SHORT][month];
+    /**
+     * Format date and get the month segment.
+     * @method format
+     * @param date {Date} The date to be formatted
+     * @return {String} Formatted result
+     */
+    format: function(date) {
+        var month = date.getMonth();
+        switch (this._s.length) {
+            case 1:
+                return String(month + 1);
+            case 2:
+                return Y.Number._zeroPad(month + 1, 2);
+            case 3:
+                return DateFormat.MonthSegment.MONTHS[DateFormat.MEDIUM][month];
+            case 5:
+                return DateFormat.MonthSegment.MONTHS[DateFormat.SHORT][month];
+        }
+        return DateFormat.MonthSegment.MONTHS[DateFormat.LONG][month];
     }
-    return DateFormat.MonthSegment.MONTHS[DateFormat.LONG][month];
-};
+}, true);
 
 //
 // Date week segment class
 //
 
+/**
+ * Week Segment in the pattern
+ * @class WeekSegment
+ * @namespace Date.__zDateFormat
+ * @for Date.__zDateFormat
+ * @extends DateSegment
+ * @private
+ * @constructor
+ * @param format {Date.__zDateFormat} The parent Format object. Here it would be of type DateFormat (which extends Format)
+ * @param s {String} The pattern representing the segment
+ */
 DateFormat.WeekSegment = function(format, s) {
-    if (arguments.length == 0) return;
     DateFormat.WeekSegment.superclass.constructor.call(this, format, s);
 };
 Y.extend(DateFormat.WeekSegment, DateFormat.DateSegment);
 
-// Public methods
-
+/**
+ * Format date and get the week segment.
+ * @method format
+ * @param date {Date} The date to be formatted
+ * @return {String} Formatted result
+ */
 DateFormat.WeekSegment.prototype.format = function(date) {
-    var year = date.getYear();
-    var month = date.getMonth();
-    var day = date.getDate();
-	
-    var ofYear = /w/.test(this._s);
-    var date2 = new Date(year, ofYear ? 0 : month, 1);
-
-    var week = 0;
+    var year = date.getYear(),
+        month = date.getMonth(),
+        day = date.getDate(),
+	ofYear = /w/.test(this._s),
+        date2 = new Date(year, ofYear ? 0 : month, 1),
+        week = 0;
     while (true) {
         week++;
-        if (date2.getMonth() > month || (date2.getMonth() == month && date2.getDate() >= day)) {
+        if (date2.getMonth() > month || (date2.getMonth() === month && date2.getDate() >= day)) {
             break;
         }
         date2.setDate(date2.getDate() + 7);
     }
 
-    return zeroPad(week, this._s.length);
+    return Y.Number._zeroPad(week, this._s.length);
 };
 
 //
 // Date day segment class
 //
 
+/**
+ * Day Segment in the pattern
+ * @class DaySegment
+ * @namespace Date.__zDateFormat
+ * @extends DateSegment
+ * @private
+ * @constructor
+ * @param format {Date.__zDateFormat} The parent Format object
+ * @param s {String} The pattern representing the segment
+ */
 DateFormat.DaySegment = function(format, s) {
-    if (arguments.length == 0) return;
     DateFormat.DaySegment.superclass.constructor.call(this, format, s);
 };
 Y.extend(DateFormat.DaySegment, DateFormat.DateSegment);
 
-// Public methods
-
+/**
+ * Format date and get the day segment.
+ * @method format
+ * @param date {Date} The date to be formatted
+ * @return {String} Formatted result
+ */
 DateFormat.DaySegment.prototype.format = function(date) {
-    var month = date.getMonth();
-    var day = date.getDate();
+    var month = date.getMonth(),
+        day = date.getDate(),
+        year = date.getYear(),
+        date2;
+
     if (/D/.test(this._s) && month > 0) {
-        var year = date.getYear();
         do {
             // set date to first day of month and then go back one day
-            var date2 = new Date(year, month, 1);
-            date2.setDate(0); 
+            date2 = new Date(year, month, 1);
+            date2.setDate(0);
 			
             day += date2.getDate();
             month--;
         } while (month > 0);
     }
-    return zeroPad(day, this._s.length);
+    return Y.Number._zeroPad(day, this._s.length);
 };
 
 //
 // Date weekday segment class
 //
 
+/**
+ * Weekday Segment in the pattern
+ * @class WeekdaySegment
+ * @namespace Date.__zDateFormat
+ * @for Date.__zDateFormat
+ * @extends DateSegment
+ * @private
+ * @constructor
+ * @param format {Date.__zDateFormat} The parent Format object
+ * @param s {String} The pattern representing the segment
+ */
 DateFormat.WeekdaySegment = function(format, s) {
-    if (arguments.length == 0) return;
     DateFormat.WeekdaySegment.superclass.constructor.call(this, format, s);
     this.initialize();
 };
 Y.extend(DateFormat.WeekdaySegment, DateFormat.DateSegment);
 
-DateFormat.DaySegment.prototype.toString = function() { 
-    return "dateDay: \""+this._s+'"'; 
-};
+Y.mix(DateFormat.WeekdaySegment.prototype, {
+    /**
+     * Return a string representation of the object
+     * @method toString
+     * @return {String}
+     */
+    toString: function() {
+        return "dateDay: \""+this._s+'"';
+    },
 
-DateFormat.WeekdaySegment.prototype.initialize = function() {
-    DateFormat.WeekdaySegment.WEEKDAYS = {};
-    // NOTE: The short names aren't available in Java so we have to define them.
-    DateFormat.WeekdaySegment.WEEKDAYS[DateFormat.SHORT] = [
-    ShortNames.weekdaySunShort,ShortNames.weekdayMonShort,ShortNames.weekdayTueShort,
-    ShortNames.weekdayWedShort,ShortNames.weekdayThuShort,ShortNames.weekdayFriShort,
-    ShortNames.weekdaySatShort
-    ];
-    DateFormat.WeekdaySegment.WEEKDAYS[DateFormat.MEDIUM] = [
-    this.getFormat().Formats.weekdaySunMedium, this.getFormat().Formats.weekdayMonMedium, this.getFormat().Formats.weekdayTueMedium,
-    this.getFormat().Formats.weekdayWedMedium, this.getFormat().Formats.weekdayThuMedium, this.getFormat().Formats.weekdayFriMedium,
-    this.getFormat().Formats.weekdaySatMedium
-    ];
-    DateFormat.WeekdaySegment.WEEKDAYS[DateFormat.LONG] = [
-    this.getFormat().Formats.weekdaySunLong, this.getFormat().Formats.weekdayMonLong, this.getFormat().Formats.weekdayTueLong,
-    this.getFormat().Formats.weekdayWedLong, this.getFormat().Formats.weekdayThuLong, this.getFormat().Formats.weekdayFriLong,
-    this.getFormat().Formats.weekdaySatLong
-    ];
-};
+    /**
+     * Initialize with locale specific data.
+     * @method initialize
+     */
+    initialize: function() {
+        DateFormat.WeekdaySegment.WEEKDAYS = {};
+        // NOTE: The short names aren't available in Java so we have to define them.
+        DateFormat.WeekdaySegment.WEEKDAYS[DateFormat.SHORT] = [
+            ShortNames.weekdaySunShort,ShortNames.weekdayMonShort,ShortNames.weekdayTueShort,
+            ShortNames.weekdayWedShort,ShortNames.weekdayThuShort,ShortNames.weekdayFriShort,
+            ShortNames.weekdaySatShort
+        ];
 
-// Public methods
+        var Formats = this.getFormat().Formats;
+        DateFormat.WeekdaySegment.WEEKDAYS[DateFormat.MEDIUM] = [
+            Formats.weekdaySunMedium, Formats.weekdayMonMedium, Formats.weekdayTueMedium,
+            Formats.weekdayWedMedium, Formats.weekdayThuMedium, Formats.weekdayFriMedium,
+            Formats.weekdaySatMedium
+        ];
+        DateFormat.WeekdaySegment.WEEKDAYS[DateFormat.LONG] = [
+            Formats.weekdaySunLong, Formats.weekdayMonLong, Formats.weekdayTueLong,
+            Formats.weekdayWedLong, Formats.weekdayThuLong, Formats.weekdayFriLong,
+            Formats.weekdaySatLong
+        ];
+    },
 
-DateFormat.WeekdaySegment.prototype.format = function(date) {
-    var weekday = date.getDay();
-    if (/E/.test(this._s)) {
-        var style;
-        switch (this._s.length) {
-            case 4:
-                style = DateFormat.LONG;
-                break;
-            case 5:
-                style = DateFormat.SHORT;
-                break;
-            default:
-                style = DateFormat.MEDIUM;
+    /**
+     * Format date and get the weekday segment.
+     * @method format
+     * @param date {Date} The date to be formatted
+     * @return {String} Formatted result
+     */
+    format: function(date) {
+        var weekday = date.getDay(),
+            style;
+        if (/E/.test(this._s)) {
+            switch (this._s.length) {
+                case 4:
+                    style = DateFormat.LONG;
+                    break;
+                case 5:
+                    style = DateFormat.SHORT;
+                    break;
+                default:
+                    style = DateFormat.MEDIUM;
+            }
+            return DateFormat.WeekdaySegment.WEEKDAYS[style][weekday];
         }
-        return DateFormat.WeekdaySegment.WEEKDAYS[style][weekday];
+        return Y.Number._zeroPad(weekday, this._s.length);
     }
-    return zeroPad(weekday, this._s.length);
-};
+}, true);
 
 //
 // Time segment class
 //
 
+/**
+ * Time Segment in the pattern
+ * @class TimeSegment
+ * @namespace Date.__zDateFormat
+ * @for Date.__zDateFormat
+ * @extends Number.__BaseFormat.Segment
+ * @private
+ * @constructor
+ * @param format {Date.__zDateFormat} The parent Format object
+ * @param s {String} The pattern representing the segment
+ */
 DateFormat.TimeSegment = function(format, s) {
-    if (arguments.length == 0) return;
     DateFormat.TimeSegment.superclass.constructor.call(this, format, s);
 };
-Y.extend(DateFormat.TimeSegment, Format.Segment);
+Y.extend(DateFormat.TimeSegment, Y.Number.__BaseFormat.Segment);
 
 //
 // Time hour segment class
 //
 
+/**
+ * Hour Segment in the pattern
+ * @class HourSegment
+ * @namespace Date.__zDateFormat
+ * @for Date.__zDateFormat
+ * @extends TimeSegment
+ * @private
+ * @constructor
+ * @param format {Date.__zDateFormat} The parent Format object
+ * @param s {String} The pattern representing the segment
+ */
 DateFormat.HourSegment = function(format, s) {
-    if (arguments.length == 0) return;
     DateFormat.HourSegment.superclass.constructor.call(this, format, s);
 };
 Y.extend(DateFormat.HourSegment, DateFormat.TimeSegment);
 
-DateFormat.HourSegment.prototype.toString = function() { 
-    return "timeHour: \""+this._s+'"'; 
-};
+Y.mix(DateFormat.HourSegment.prototype, {
+    /**
+     * Return a string representation of the object
+     * @method toString
+     * @return {String}
+     */
+    toString: function() {
+        return "timeHour: \""+this._s+'"';
+    },
 
-// Public methods
-
-DateFormat.HourSegment.prototype.format = function(date) {
-    var hours = date.getHours();
-    if (hours > 12 && /[hK]/.test(this._s)) {
-        hours -= 12;
+    /**
+     * Format date and get the hour segment.
+     * @method format
+     * @param date {Date} The date to be formatted
+     * @return {String} Formatted result
+     */
+    format: function(date) {
+        var hours = date.getHours();
+        if (hours > 12 && /[hK]/.test(this._s)) {
+            hours -= 12;
+        }
+        else if (hours === 0 && /[h]/.test(this._s)) {
+            hours = 12;
+        }
+        /***
+            // NOTE: This is commented out to match the Java formatter output
+            //       but from the comments for these meta-chars, it doesn't
+            //       seem right.
+            if (/[Hk]/.test(this._s)) {
+                hours--;
+            }
+        /***/
+        return Y.Number._zeroPad(hours, this._s.length);
     }
-    else if (hours == 0 && /[h]/.test(this._s)) {
-        hours = 12;
-    }
-    /***
-	// NOTE: This is commented out to match the Java formatter output
-	//       but from the comments for these meta-chars, it doesn't
-	//       seem right.
-	if (/[Hk]/.test(this._s)) {
-		hours--;
-	}
-    /***/
-    return zeroPad(hours, this._s.length);
-};
+}, true);
 
 //
 // Time minute segment class
 //
 
+/**
+ * Minute Segment in the pattern
+ * @class MinuteSegment
+ * @namespace Date.__zDateFormat
+ * @for Date.__zDateFormat
+ * @extends TimeSegment
+ * @private
+ * @constructor
+ * @param format {Date.__zDateFormat} The parent Format object
+ * @param s {String} The pattern representing the segment
+ */
 DateFormat.MinuteSegment = function(format, s) {
-    if (arguments.length == 0) return;
     DateFormat.MinuteSegment.superclass.constructor.call(this, format, s);
 };
 Y.extend(DateFormat.MinuteSegment, DateFormat.TimeSegment);
 
-DateFormat.MinuteSegment.prototype.toString = function() { 
-    return "timeMinute: \""+this._s+'"'; 
-};
+Y.mix(DateFormat.MinuteSegment.prototype, {
+    /**
+     * Return a string representation of the object
+     * @method toString
+     * @return {String}
+     */
+    toString: function() {
+        return "timeMinute: \""+this._s+'"';
+    },
 
-// Public methods
-
-DateFormat.MinuteSegment.prototype.format = function(date) {
-    var minutes = date.getMinutes();
-    return zeroPad(minutes, this._s.length);
-};
+    /**
+     * Format date and get the minute segment.
+     * @method format
+     * @param date {Date} The date to be formatted
+     * @return {String} Formatted result
+     */
+    format: function(date) {
+        var minutes = date.getMinutes();
+        return Y.Number._zeroPad(minutes, this._s.length);
+    }
+}, true);
 
 //
 // Time second segment class
 //
 
+/**
+ * Second Segment in the pattern
+ * @class SecondSegment
+ * @namespace Date.__zDateFormat
+ * @for Date.__zDateFormat
+ * @extends TimeSegment
+ * @private
+ * @constructor
+ * @param format {Date.__zDateFormat} The parent Format object
+ * @param s {String} The pattern representing the segment
+ */
 DateFormat.SecondSegment = function(format, s) {
-    if (arguments.length == 0) return;
     DateFormat.SecondSegment.superclass.constructor.call(this, format, s);
 };
 Y.extend(DateFormat.SecondSegment, DateFormat.TimeSegment);
 
-// Public methods
-
+/**
+ * Format date and get the second segment.
+ * @method format
+ * @param date {Date} The date to be formatted
+ * @return {String} Formatted result
+ */
 DateFormat.SecondSegment.prototype.format = function(date) {
     var minutes = /s/.test(this._s) ? date.getSeconds() : date.getMilliseconds();
-    return zeroPad(minutes, this._s.length);
+    return Y.Number._zeroPad(minutes, this._s.length);
 };
 
 //
 // Time am/pm segment class
 //
 
+/**
+ * AM/PM Segment in the pattern
+ * @class AmPmSegment
+ * @namespace Date.__zDateFormat
+ * @for Date.__zDateFormat
+ * @extends TimeSegment
+ * @private
+ * @constructor
+ * @param format {Date.__zDateFormat} The parent Format object. Here it would be of type DateFormat (which extends Format)
+ * @param s {String} The pattern representing the segment
+ */
 DateFormat.AmPmSegment = function(format, s) {
-    if (arguments.length == 0) return;
     DateFormat.AmPmSegment.superclass.constructor.call(this, format, s);
 };
 Y.extend(DateFormat.AmPmSegment, DateFormat.TimeSegment);
 
-DateFormat.AmPmSegment.prototype.toString = function() { 
-    return "timeAmPm: \""+this._s+'"'; 
-};
+Y.mix(DateFormat.AmPmSegment.prototype, {
+    /**
+     * Return a string representation of the object
+     * @method toString
+     * @return {String}
+     */
+    toString: function() {
+        return "timeAmPm: \""+this._s+'"';
+    },
 
-// Public methods
-
-DateFormat.AmPmSegment.prototype.format = function(date) {
-    var hours = date.getHours();
-    return hours < 12 ? this.getFormat().Formats.periodAm : this.getFormat().Formats.periodPm;
-};
+    /**
+     * Format date and get the AM/PM segment.
+     * @method format
+     * @param date {Date} The date to be formatted
+     * @return {String} Formatted result
+     */
+    format: function(date) {
+        var hours = date.getHours();
+        return hours < 12 ? this.getFormat().Formats.periodAm : this.getFormat().Formats.periodPm;
+    }
+}, true);
 
 //
 // Time timezone segment class
 //
 
+/**
+ * TimeZone Segment in the pattern
+ * @class TimezoneSegment
+ * @namespace Date.__zDateFormat
+ * @for Date.__zDateFormat
+ * @extends TimeSegment
+ * @private
+ * @constructor
+ * @param format {Date.__zDateFormat} The parent Format object
+ * @param s {String} The pattern representing the segment
+ */
 DateFormat.TimezoneSegment = function(format, s) {
-    if (arguments.length == 0) return;
     DateFormat.TimezoneSegment.superclass.constructor.call(this, format, s);
 };
 Y.extend(DateFormat.TimezoneSegment, DateFormat.TimeSegment);
 
-DateFormat.TimezoneSegment.prototype.toString = function() { 
-    return "timeTimezone: \""+this._s+'"'; 
-};
+Y.mix(DateFormat.TimezoneSegment.prototype, {
+    /**
+     * Return a string representation of the object
+     * @method toString
+     * @return {String}
+     */
+    toString: function() {
+        return "timeTimezone: \""+this._s+'"';
+    },
 
-// Public methods
-
-DateFormat.TimezoneSegment.prototype.format = function(date) {
-    if (/Z/.test(this._s)) {
-        return this.getFormat().timeZone.getShortName();
+    /**
+     * Format date and get the timezone segment.
+     * @method format
+     * //param date {Date} The date to be formatted
+     * @return {String} Formatted result
+     */
+    format: function(/*date*/) {
+        var timeZone = this.getFormat().timeZone;
+        if (/Z/.test(this._s)) {
+            return timeZone.getShortName();
+        }
+        return this._s.length < 4 ? timeZone.getMediumName() : timeZone.getLongName();
     }
-    return this._s.length < 4 ? this.getFormat().timeZone.getMediumName() : this.getFormat().timeZone.getLongName();
-};
+}, true);
     
 //
 // Non-Gregorian Calendars
 //
-    
-//Buddhist Calendar. This is normally used only for Thai locales (th).
-BuddhistDateFormat = function(pattern, formats, timeZoneId, locale) {
-    if (arguments.length == 0) return;
-    BuddhistDateFormat.superclass.constructor.call(this, pattern, formats, timeZoneId, locale);
+
+/*
+ * Buddhist Calendar. This is normally used only for Thai locales (th).
+ * @class __BuddhistDateFormat
+ * @namespace Date
+ * @extends __zDateFormat
+ * @constructor
+ * @private
+ * @param pattern {String} The pattern to format date in
+ * @param formats {Object} Locale specific data
+ * @param timeZoneId {String} Timezone Id according to Olson tz database
+ */
+Y.Date.__BuddhistDateFormat = function(pattern, formats, timeZoneId) {
+    BuddhistDateFormat.superclass.constructor.call(this, pattern, formats, timeZoneId);
         
     //Iterate through _segments, and replace the ones that are different for Buddhist Calendar
-    var segments = this._segments;
-    for(var i=0; i<segments.length; i++) {
+    var segments = this._segments, i;
+    for(i=0; i<segments.length; i++) {
         if(segments[i] instanceof DateFormat.YearSegment) {
             segments[i] = new BuddhistDateFormat.YearSegment(segments[i]);
         } else if (segments[i] instanceof DateFormat.EraSegment) {
             segments[i] = new BuddhistDateFormat.EraSegment(segments[i]);
         }
     }
-}
+};
 
+BuddhistDateFormat = Y.Date.__BuddhistDateFormat;
 Y.extend(BuddhistDateFormat, DateFormat);
     
-//Override YearSegment class for Buddhist Calender
+/**
+ * YearSegment class for Buddhist Calender
+ * @class YearSegment
+ * @namespace Date.__BuddhistDateFormat
+ * @extends Date.__zDateFormat.YearSegment
+ * @private
+ * @constructor
+ * @param segment {Date.__zDateFormat.YearSegment}
+ */
 BuddhistDateFormat.YearSegment = function(segment) {
-    if (arguments.length == 0) return;
     BuddhistDateFormat.YearSegment.superclass.constructor.call(this, segment._parent, segment._s);
 };
 
 Y.extend(BuddhistDateFormat.YearSegment, DateFormat.YearSegment);
 
-BuddhistDateFormat.YearSegment.prototype.format = function(date) { 
+/**
+ * Format date and get the year segment.
+ * @method format
+ * @param date {Date} The date to be formatted
+ * @return {String} Formatted result
+ */
+BuddhistDateFormat.YearSegment.prototype.format = function(date) {
     var year = date.getFullYear();
     year = String(year + 543);      //Buddhist Calendar epoch is in 543 BC
-    return this._s.length != 1 && this._s.length < 4 ? year.substr(year.length - 2) : zeroPad(year, this._s.length);
+    return this._s.length !== 1 && this._s.length < 4 ? year.substr(year.length - 2) : Y.Number._zeroPad(year, this._s.length);
 };
     
-//Override EraSegment class for Buddhist Calender
+/**
+ * EraSegment class for Buddhist Calender
+ * @class EraSegment
+ * @for Date.__BuddhistDateFormat
+ * @namespace Date.__BuddhistDateFormat
+ * @extends Date.__zDateFormat.EraSegment
+ * @private
+ * @constructor
+ * @param segment {Date.__zDateFormat.EraSegment}
+ */
 BuddhistDateFormat.EraSegment = function(segment) {
-    if (arguments.length == 0) return;
     BuddhistDateFormat.EraSegment.superclass.constructor.call(this, segment._parent, segment._s);
 };
 
 Y.extend(BuddhistDateFormat.EraSegment, DateFormat.EraSegment);
 
-BuddhistDateFormat.EraSegment.prototype.format = function(date) { 
+/**
+ * Format date and get the era segment.
+ * @method format
+ * //param date {Date} The date to be formatted
+ * @return {String} Formatted result
+ */
+BuddhistDateFormat.EraSegment.prototype.format = function(/*date*/) {
     return "BE";    //Only Buddhist Era supported for now
 };
-        
-//
-// Start YUI code
-//
-    
+
 /**
- * @class YDateFormat
+ * Wrapper around the zimbra-based DateFormat for use in YUI. API designed to be similar to ICU
+ * @class __YDateFormat
+ * namespace Date
+ * @private
  * @constructor
- * @param {String} timeZone (Optional) TZ database ID for the time zone that should be used. If no argument is provided, "Etc/GMT" is used. If an argument is provided that is not a valid time zone identifier, an Error exception is thrown.
- * @param {Number} dateFormat (Optional) Selector for the desired date format from Y.Date.DATE_FORMATS. If no argument is provided, NONE is assumed. If an argument is provided that's not a valid selector, an Error exception is thrown. 
- * @param {Number} timeFormat (Optional) Selector for the desired time format from Y.Date.TIME_FORMATS. If no argument is provided, NONE is assumed. If an argument is provided that's not a valid selector, an Error exception is thrown. 
- * @param {Number} timeZoneFormat (Optional) Selector for the desired time zone format from Y.Date.TIMEZONE_FORMATS. If no argument is provided, NONE is assumed. If an argument is provided that's not a valid selector, an Error exception is thrown. 
+ * @param {String} [timeZone='Etc/GMT'] TZ database ID for the time zone that should be used.
+ * @param {Number} [dateFormat=0] Selector for the desired date format from Y.Date.DATE_FORMATS.
+ * @param {Number} [timeFormat=0] Selector for the desired time format from Y.Date.TIME_FORMATS.
+ * @param {Number} [timeZoneFormat=0] Selector for the desired time zone format from Y.Date.TIMEZONE_FORMATS.
  */
-YDateFormat = function(timeZone, dateFormat, timeFormat, timeZoneFormat) {
+Y.Date.__YDateFormat = function(timeZone, dateFormat, timeFormat, timeZoneFormat) {
         
-    if(timeZone == null) {
+    if(timeZone === null) {
         timeZone = "Etc/GMT";
     }
 
@@ -852,15 +915,15 @@ YDateFormat = function(timeZone, dateFormat, timeFormat, timeZoneFormat) {
         
     //If not valid time zone
     if(!Y.Date.Timezone.isValidTimezoneId(timeZone)) {
-        throw new Y.Date.Timezone.UnknownTimeZoneException("Could not find timezone: " + timeZone);
+	Y.error("Could not find timezone: " + timeZone);
     }
 
     this._timeZone = timeZone;
     this._timeZoneInstance = new Y.Date.Timezone(this._timeZone);
 
-    this._dateFormat = dateFormat;
-    this._timeFormat = timeFormat;
-    this._timeZoneFormat = timeZoneFormat;
+    this._dateFormat = dateFormat || 0;
+    this._timeFormat = timeFormat || 0;
+    this._timeZoneFormat = timeZoneFormat || 0;
 
     this._relative = false;
     this._pattern = this._generatePattern();
@@ -873,11 +936,20 @@ YDateFormat = function(timeZone, dateFormat, timeFormat, timeZoneFormat) {
     } else {
         //Use gregorian calendar
         this._dateFormatInstance = new DateFormat(this._pattern, this._Formats, this._timeZone);
-    }        
-}
+    }
+};
+
+YDateFormat = Y.Date.__YDateFormat;
 
 Y.mix(Y.Date, {
-    //Selector values
+    /**
+     * Date Format Style values to use during format/parse
+     * @property DATE_FORMATS
+     * @type Object
+     * @static
+     * @final
+     * @for Date
+     */
     DATE_FORMATS: {
         NONE: 0,
         WYMD_LONG: 1,
@@ -900,233 +972,252 @@ Y.mix(Y.Date, {
         YMD_FULL: 262144,
         RELATIVE_DATE: 524288
     },
+
+    /**
+     * Time Format Style values to use during format/parse
+     * @property TIME_FORMATS
+     * @type Object
+     * @static
+     * @final
+     * @for Date
+     */
     TIME_FORMATS: {
         NONE: 0,
         HM_ABBREVIATED: 1,
         HM_SHORT: 2,
         H_ABBREVIATED: 4
     },
+
+    /**
+     * Timezone Format Style values to use during format/parse
+     * @property TIMEZONE_FORMATS
+     * @type Object
+     * @static
+     * @final
+     * @for Date
+     */
     TIMEZONE_FORMATS: {
         NONE: 0,
         Z_ABBREVIATED: 1,
         Z_SHORT: 2
-    },
-    
-    //Static methods
-    
-    /**
-     * Returns an array of BCP 47 language tags for the languages supported by this class
-     * @return {Array} an array of BCP 47 language tags for the languages supported by this class.
-     */
-    availableLanguages: function() {
-        return Y.Intl.getAvailableLangs(MODULE_NAME);
     }
 });
 
-//Private methods
-
-/**
- * Generate date pattern for selected format
- * @return {String} Date pattern for internal use.
- */
-YDateFormat.prototype._generateDatePattern = function() {
-    var format = this._dateFormat;
-    if(format && Y.Lang.isString(format)) {
-        format = Y.Date.DATE_FORMATS[format];
-    }
-    
-    if(format == null) return "";
-    if(format & Y.Date.DATE_FORMATS.RELATIVE_DATE) {
-        this._relative = true;
-        format = format ^ Y.Date.DATE_FORMATS.RELATIVE_DATE;
-    }
-    switch(format) {
-        //Use relative only for formats with day component
-        case Y.Date.DATE_FORMATS.NONE:
-            this._relative = false;
-            return "";
-        case Y.Date.DATE_FORMATS.WYMD_LONG:
-            return this._Formats.WYMD_long;
-        case Y.Date.DATE_FORMATS.WYMD_ABBREVIATED:
-            return this._Formats.WYMD_abbreviated;
-        case Y.Date.DATE_FORMATS.WYMD_SHORT:
-            return this._Formats.WYMD_short;
-        case Y.Date.DATE_FORMATS.WMD_LONG:
-            return this._Formats.WMD_long;
-        case Y.Date.DATE_FORMATS.WMD_ABBREVIATED:
-            return this._Formats.WMD_abbreviated;
-        case Y.Date.DATE_FORMATS.WMD_SHORT:
-            return this._Formats.WMD_short;
-        case Y.Date.DATE_FORMATS.YMD_LONG:
-            return this._Formats.YMD_long;
-        case Y.Date.DATE_FORMATS.YMD_ABBREVIATED:
-            return this._Formats.YMD_abbreviated;
-        case Y.Date.DATE_FORMATS.YMD_SHORT:
-            return this._Formats.YMD_short;
-        case Y.Date.DATE_FORMATS.YM_LONG:
-            this._relative = false;
-            return this._Formats.YM_long;
-        case Y.Date.DATE_FORMATS.MD_LONG:
-            return this._Formats.MD_long;
-        case Y.Date.DATE_FORMATS.MD_ABBREVIATED:
-            return this._Formats.MD_abbreviated;
-        case Y.Date.DATE_FORMATS.MD_SHORT:
-            return this._Formats.MD_short;
-        case Y.Date.DATE_FORMATS.W_LONG:
-            this._relative = false;
-            return this._Formats.W_long;
-        case Y.Date.DATE_FORMATS.W_ABBREVIATED:
-            this._relative = false;
-            return this._Formats.W_abbreviated;
-        case Y.Date.DATE_FORMATS.M_LONG:
-            this._relative = false;
-            return this._Formats.M_long;
-        case Y.Date.DATE_FORMATS.M_ABBREVIATED:
-            this._relative = false;
-            return this._Formats.M_abbreviated;
-        case Y.Date.DATE_FORMATS.YMD_FULL:
-            return this._Formats.YMD_full;
-        default:
-            throw new Format.IllegalArgumentsException("Date format given does not exist");	//Error no such pattern.
-    }
-}
-    
-/**
- * Generate time pattern for selected format
- * @return {String} Time pattern for internal use.
- */
-YDateFormat.prototype._generateTimePattern = function() {
-    var format = this._timeFormat;
-    if(format && Y.Lang.isString(format)) {
-        format = Y.Date.TIME_FORMATS[format];
-    }
-    
-    if(format == null) return "";
-    switch(format) {
-        case Y.Date.TIME_FORMATS.NONE:
-            return "";
-        case Y.Date.TIME_FORMATS.HM_ABBREVIATED:
-            return this._Formats.HM_abbreviated;
-        case Y.Date.TIME_FORMATS.HM_SHORT:
-            return this._Formats.HM_short;
-        case Y.Date.TIME_FORMATS.H_ABBREVIATED:
-            return this._Formats.H_abbreviated;
-        default:
-            throw new Format.IllegalArgumentsException("Time format given does not exist");	//Error no such pattern.
-    }
-}
-    
-/**
- * Generate time-zone pattern for selected format
- * @return {String} Time-Zone pattern for internal use.
- */
-YDateFormat.prototype._generateTimeZonePattern = function() {
-    var format = this._timeZoneFormat;
-    if(format && Y.Lang.isString(format)) {
-        format = Y.Date.TIMEZONE_FORMATS[format];
-    }
-    
-    if(format == null) return "";
-    switch(format) {
-        case Y.Date.TIMEZONE_FORMATS.NONE:
-            return "";
-        case Y.Date.TIMEZONE_FORMATS.Z_ABBREVIATED:
-            return "z";
-        case Y.Date.TIMEZONE_FORMATS.Z_SHORT:
-            return "Z";
-        default:
-            throw new Format.IllegalArgumentsException("Time Zone format given does not exist");	//Error no such pattern.
-    }
-}
-    
-/**
- * Generate pattern for selected date, time and time-zone formats
- * @return {String} Combined pattern for date, time and time-zone for internal use.
- */
-YDateFormat.prototype._generatePattern = function() {
-    var datePattern = this._generateDatePattern();
-    var timePattern = this._generateTimePattern();
-    var timeZonePattern = this._generateTimeZonePattern();
-
-    //Combine patterns. Mark date pattern part, to use with relative dates.
-    if(datePattern != "") {
-        datePattern = "'<datePattern>'" + datePattern + "'</datePattern>'";
-    }
-        
-    var pattern = "";
-    if(timePattern != "" && timeZonePattern != "") {
-        pattern = this._Formats.DateTimeTimezoneCombination;
-    } else if (timePattern != "") {
-        pattern = this._Formats.DateTimeCombination;
-    } else if(timeZonePattern != "") {
-        pattern = this._Formats.DateTimezoneCombination;
-    } else if(datePattern != ""){
-        //Just date
-        pattern = "{1}";
-    }
-        
-    pattern = pattern.replace("{0}", timePattern).replace("{1}", datePattern).replace("{2}", timeZonePattern);
-        
-    //Remove unnecessary whitespaces
-    pattern = pattern.replace(/\s\s+/g, " ").replace(/^\s+/, "").replace(/\s+$/, "");
-
-    return pattern;
-}
-
-//public methods
-
-/**
- * Formats a time value.
- * @param {Date} date The time value to be formatted. If no valid Date object is provided, an Error exception is thrown.
- * @return {String} The formatted string
- */
-YDateFormat.prototype.format = function(date) {
-    if(date == null || !Y.Lang.isDate(date)) {
-        throw new Format.IllegalArgumentsException("format called without a date.");
-    }
-        
-    var offset = this._timeZoneInstance.getRawOffset() * 1000;
-    date = new Date(date.getTime() + date.getTimezoneOffset() * 60 * 1000 + offset);
-        
-    var relativeDate = null;
-    if(this._relative) {
-        var today = new Date();
-        var tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
-        var yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
-
-        if(date.getFullYear() == today.getFullYear() && date.getMonth() == today.getMonth() && date.getDate() == today.getDate()) {
-            relativeDate = this._Formats.today;
+Y.mix(YDateFormat.prototype, {
+    /**
+     * Generate date pattern for selected format. For internal use only.
+     * @method _generateDatePattern
+     * @for Date.__YDateFormat
+     * @private
+     * @return {String} Date pattern
+     */
+    _generateDatePattern: function() {
+        var format = this._dateFormat;
+        if(format && Y.Lang.isString(format)) {
+            format = Y.Date.DATE_FORMATS[format];
         }
-
-        if(date.getFullYear() == tomorrow.getFullYear() && date.getMonth() == tomorrow.getMonth() && date.getDate() == tomorrow.getDate()) {
-            relativeDate = this._Formats.tomorrow;
+    
+        if(format === null) { return ""; }
+        /*jshint bitwise: false*/
+        if(format & Y.Date.DATE_FORMATS.RELATIVE_DATE) {
+            this._relative = true;
+            format = format ^ Y.Date.DATE_FORMATS.RELATIVE_DATE;
         }
-
-        if(date.getFullYear() == yesterday.getFullYear() && date.getMonth() == yesterday.getMonth() && date.getDate() == yesterday.getDate()) {
-            relativeDate = this._Formats.yesterday;
+        /*jshint bitwise: true*/
+        switch(format) {
+            //Use relative only for formats with day component
+            case Y.Date.DATE_FORMATS.NONE:
+                this._relative = false;
+                return "";
+            case Y.Date.DATE_FORMATS.WYMD_LONG:
+                return this._Formats.WYMD_long;
+            case Y.Date.DATE_FORMATS.WYMD_ABBREVIATED:
+                return this._Formats.WYMD_abbreviated;
+            case Y.Date.DATE_FORMATS.WYMD_SHORT:
+                return this._Formats.WYMD_short;
+            case Y.Date.DATE_FORMATS.WMD_LONG:
+                return this._Formats.WMD_long;
+            case Y.Date.DATE_FORMATS.WMD_ABBREVIATED:
+                return this._Formats.WMD_abbreviated;
+            case Y.Date.DATE_FORMATS.WMD_SHORT:
+                return this._Formats.WMD_short;
+            case Y.Date.DATE_FORMATS.YMD_LONG:
+                return this._Formats.YMD_long;
+            case Y.Date.DATE_FORMATS.YMD_ABBREVIATED:
+                return this._Formats.YMD_abbreviated;
+            case Y.Date.DATE_FORMATS.YMD_SHORT:
+                return this._Formats.YMD_short;
+            case Y.Date.DATE_FORMATS.YM_LONG:
+                this._relative = false;
+                return this._Formats.YM_long;
+            case Y.Date.DATE_FORMATS.MD_LONG:
+                return this._Formats.MD_long;
+            case Y.Date.DATE_FORMATS.MD_ABBREVIATED:
+                return this._Formats.MD_abbreviated;
+            case Y.Date.DATE_FORMATS.MD_SHORT:
+                return this._Formats.MD_short;
+            case Y.Date.DATE_FORMATS.W_LONG:
+                this._relative = false;
+                return this._Formats.W_long;
+            case Y.Date.DATE_FORMATS.W_ABBREVIATED:
+                this._relative = false;
+                return this._Formats.W_abbreviated;
+            case Y.Date.DATE_FORMATS.M_LONG:
+                this._relative = false;
+                return this._Formats.M_long;
+            case Y.Date.DATE_FORMATS.M_ABBREVIATED:
+                this._relative = false;
+                return this._Formats.M_abbreviated;
+            case Y.Date.DATE_FORMATS.YMD_FULL:
+                return this._Formats.YMD_full;
+            default:
+                Y.error("Date format given does not exist");	//Error no such pattern.
         }
+    },
+        
+    /**
+     * Generate time pattern for selected format. For internal use only
+     * @method _generateTimePattern
+     * @private
+     * @return {String} Time pattern
+     */
+    _generateTimePattern: function() {
+        var format = this._timeFormat;
+        if(format && Y.Lang.isString(format)) {
+            format = Y.Date.TIME_FORMATS[format];
+        }
+    
+        if(format === null) { return ""; }
+        switch(format) {
+            case Y.Date.TIME_FORMATS.NONE:
+                return "";
+            case Y.Date.TIME_FORMATS.HM_ABBREVIATED:
+                return this._Formats.HM_abbreviated;
+            case Y.Date.TIME_FORMATS.HM_SHORT:
+                return this._Formats.HM_short;
+            case Y.Date.TIME_FORMATS.H_ABBREVIATED:
+                return this._Formats.H_abbreviated;
+            default:
+                Y.error("Time format given does not exist");	//Error no such pattern.
+        }
+    },
+    
+    /**
+     * Generate time-zone pattern for selected format. For internal use only.
+     * @method _generateTimeZonePattern
+     * @private
+     * @return {String} Time-Zone pattern
+     */
+    _generateTimeZonePattern: function() {
+        var format = this._timeZoneFormat;
+        if(format && Y.Lang.isString(format)) {
+            format = Y.Date.TIMEZONE_FORMATS[format];
+        }
+    
+        if(format === null) { return ""; }
+        switch(format) {
+            case Y.Date.TIMEZONE_FORMATS.NONE:
+                return "";
+            case Y.Date.TIMEZONE_FORMATS.Z_ABBREVIATED:
+                return "z";
+            case Y.Date.TIMEZONE_FORMATS.Z_SHORT:
+                return "Z";
+            default:
+                Y.error("Time Zone format given does not exist");	//Error no such pattern.
+        }
+    },
+    
+    /**
+     * Generate pattern for selected date, time and time-zone formats. For internal use only
+     * @method _generatePattern
+     * @private
+     * @return {String} Combined pattern for date, time and time-zone
+     */
+    _generatePattern: function() {
+        var datePattern = this._generateDatePattern(),
+            timePattern = this._generateTimePattern(),
+            timeZonePattern = this._generateTimeZonePattern(),
+            pattern = "";
+
+        //Combine patterns. Mark date pattern part, to use with relative dates.
+        if(datePattern !== "") {
+            datePattern = "'<datePattern>'" + datePattern + "'</datePattern>'";
+        }
+        
+        if(timePattern !== "" && timeZonePattern !== "") {
+            pattern = this._Formats.DateTimeTimezoneCombination;
+        } else if (timePattern !== "") {
+            pattern = this._Formats.DateTimeCombination;
+        } else if(timeZonePattern !== "") {
+            pattern = this._Formats.DateTimezoneCombination;
+        } else if(datePattern !== ""){
+            //Just date
+            pattern = "{1}";
+        }
+        
+        pattern = pattern.replace("{0}", timePattern).replace("{1}", datePattern).replace("{2}", timeZonePattern);
+        
+        //Remove unnecessary whitespaces
+        pattern = Y.Lang.trim(pattern.replace(/\s\s+/g, " "));
+
+        return pattern;
+    },
+
+    /**
+     * Formats a date
+     * @method format
+     * @param {Date} date The date to be formatted.
+     * @return {String} The formatted string
+     */
+    format: function(date) {
+        if(date === null || !Y.Lang.isDate(date)) {
+            Y.error("format called without a date.");
+        }
+        
+        var offset = this._timeZoneInstance.getRawOffset() * 1000,
+            relativeDate = null,
+            today = new Date(),
+            tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000),
+            yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
+
+        date = new Date(date.getTime() + date.getTimezoneOffset() * 60 * 1000 + offset);
+        
+        if(this._relative) {
+            if(date.getFullYear() === today.getFullYear() && date.getMonth() === today.getMonth() && date.getDate() === today.getDate()) {
+                relativeDate = this._Formats.today;
+            }
+
+            if(date.getFullYear() === tomorrow.getFullYear() && date.getMonth() === tomorrow.getMonth() && date.getDate() === tomorrow.getDate()) {
+                relativeDate = this._Formats.tomorrow;
+            }
+
+            if(date.getFullYear() === yesterday.getFullYear() && date.getMonth() === yesterday.getMonth() && date.getDate() === yesterday.getDate()) {
+                relativeDate = this._Formats.yesterday;
+            }
+        }
+        return this._dateFormatInstance.format(date, relativeDate);
     }
-    return this._dateFormatInstance.format(date, relativeDate);
-}/**
+}, true);
+/**
  * YRelativeTimeFormat class provides localized formatting of relative time values such as "3 minutes ago".
  * Relative time formats supported are defined by how many units they may include.
  * Relative time is only used for past events. The Relative time formats use appropriate singular/plural/paucal/etc. forms for all languages.
  * In order to keep relative time formats independent of time zones, relative day names such as today, yesterday, or tomorrow are not used.
- * @module format-relative
  */
 
-var MODULE_NAME = "datatype-date-advanced-format";
 /**
- * @class YRelativeTimeFormat
+ * Class to handle relative time formatting
+ * @class __YRelativeTimeFormat
+ * @namespace Date
+ * @private
  * @constructor
- * @param {Number} style (Optional) Selector for the desired relative time format. If no argument is provided, default to ONE_UNIT_LONG. If argument is provided but is not a valid selector, an Error exception is thrown.
+ * @param [style='ONE_UNIT_LONG'] {Number|String} Selector for the desired relative time format. Should be key/value from Y.Date.RELATIVE_TIME_FORMATS
  */
-YRelativeTimeFormat = function(style) {
-    if(style && Y.Lang.isString(style)) {
-        style = Y.Date.RELATIVE_TIME_FORMATS[style];
-    }
-    if(style == null) {
+Y.Date.__YRelativeTimeFormat = function(style) {
+    if(style === null) {
         style = Y.Date.RELATIVE_TIME_FORMATS.ONE_UNIT_LONG;
+    } else if(Y.Lang.isString(style)) {
+        style = Y.Date.RELATIVE_TIME_FORMATS[style];
     }
         
     this.patterns = Y.Intl.get(MODULE_NAME);
@@ -1150,14 +1241,29 @@ YRelativeTimeFormat = function(style) {
             this.abbr = false;
             break;
         default:
-            throw new Format.IllegalArgumentsException("Unknown style: Use a style from Y.Date.RELATIVE_TIME_FORMATS");
+            Y.error("Unknown style: Use a style from Y.Date.RELATIVE_TIME_FORMATS");
     }
-}
-	
-//Static data
+};
+
+YRelativeTimeFormat = Y.Date.__YRelativeTimeFormat;
 
 Y.mix(Y.Date, {
+    /**
+     * Returns the current date. Used to calculate relative time. Change this parameter if you require comparison with different time.
+     * @property
+     * @type Number|function
+     * @static
+     */
     currentDate: function() { return new Date(); },
+
+    /**
+     * Format Style values to use during format/parse
+     * @property RELATIVE_TIME_FORMATS
+     * @type Object
+     * @static
+     * @final
+     * @for Date
+     */
     RELATIVE_TIME_FORMATS: {
         ONE_OR_TWO_UNITS_ABBREVIATED: 0,
         ONE_OR_TWO_UNITS_LONG: 1,
@@ -1166,40 +1272,37 @@ Y.mix(Y.Date, {
     }
 });
 	
-//Public methods
-	
 /**
  * Formats a time value.
- * One or two parameters are needed. If only one parameter is specified, this function formats the parameter relative to current time.
- * If two parameters are specified, this function formats the first parameter relative to the second parameter.
+ * @method format
+ * @for Date.__YRelativeTimeFormat
  * @param {Number} timeValue The time value (seconds since Epoch) to be formatted.
- * @param {Number} relativeTo (Optional) The time value (seconds since Epoch) in relation to which timeValue should be formatted. It must be greater than or equal to timeValue, otherwise exception will be thrown.
+ * @param {Number} [relativeTo=Current Time] The time value (seconds since Epoch) in relation to which timeValue should be formatted.
+          It must be greater than or equal to timeValue
  * @return {String} The formatted string
  */
 YRelativeTimeFormat.prototype.format = function(timeValue, relativeTo) {
-    if(relativeTo == null) { 
-        relativeTo = (new Date()).getTime()/1000; 
+    if(relativeTo === null) {
+        relativeTo = (new Date()).getTime()/1000;
         if(timeValue > relativeTo) {
-            throw new Format.IllegalArgumentsException("timeValue must be in the past");
+            Y.error("timeValue must be in the past");
         }
     } else if(timeValue > relativeTo) {
-        throw new Format.IllegalArgumentsException("relativeTo must be greater than or equal to timeValue");
+        Y.error("relativeTo must be greater than or equal to timeValue");
     }
 
-    var date = new Date((relativeTo - timeValue)*1000);
-
-    var result = [];
-    var numUnits = this.numUnits;
-        
-    var value = date.getUTCFullYear() - 1970;	//Need zero-based index
-    var text;
+    var date = new Date((relativeTo - timeValue)*1000),
+        result = [],
+        numUnits = this.numUnits,
+        value = date.getUTCFullYear() - 1970,	//Need zero-based index
+        text, pattern, i;
         
     if(value > 0) {
         if(this.abbr) {
-            text = value + " " + (value != 1 ? this.patterns.years_abbr : this.patterns.year_abbr); 
+            text = value + " " + (value !== 1 ? this.patterns.years_abbr : this.patterns.year_abbr);
             result.push(text);
         } else {
-            text = value + " " + (value != 1 ? this.patterns.years : this.patterns.year); 
+            text = value + " " + (value !== 1 ? this.patterns.years : this.patterns.year);
             result.push(text);
         }
         numUnits--;
@@ -1208,10 +1311,10 @@ YRelativeTimeFormat.prototype.format = function(timeValue, relativeTo) {
     value = date.getUTCMonth();
     if((numUnits > 0) && (numUnits < this.numUnits || value > 0)) {
         if(this.abbr) {
-            text = value + " " + (value != 1 ? this.patterns.months_abbr : this.patterns.month_abbr); 
+            text = value + " " + (value !== 1 ? this.patterns.months_abbr : this.patterns.month_abbr);
             result.push(text);
         } else {
-            text = value + " " + (value != 1 ? this.patterns.months : this.patterns.month); 
+            text = value + " " + (value !== 1 ? this.patterns.months : this.patterns.month);
             result.push(text);
         }
         numUnits--;
@@ -1220,10 +1323,10 @@ YRelativeTimeFormat.prototype.format = function(timeValue, relativeTo) {
     value = date.getUTCDate()-1;			//Need zero-based index
     if(numUnits > 0 && (numUnits < this.numUnits || value > 0)) {
         if(this.abbr) {
-            text = value + " " + (value != 1 ? this.patterns.days_abbr : this.patterns.day_abbr); 
+            text = value + " " + (value !== 1 ? this.patterns.days_abbr : this.patterns.day_abbr);
             result.push(text);
         } else {
-            text = value + " " + (value != 1 ? this.patterns.days : this.patterns.day); 
+            text = value + " " + (value !== 1 ? this.patterns.days : this.patterns.day);
             result.push(text);
         }
         numUnits--;
@@ -1232,10 +1335,10 @@ YRelativeTimeFormat.prototype.format = function(timeValue, relativeTo) {
     value = date.getUTCHours();
     if(numUnits > 0 && (numUnits < this.numUnits || value > 0)) {
         if(this.abbr) {
-            text = value + " " + (value != 1 ? this.patterns.hours_abbr : this.patterns.hour_abbr); 
+            text = value + " " + (value !== 1 ? this.patterns.hours_abbr : this.patterns.hour_abbr);
             result.push(text);
         } else {
-            text = value + " " + (value != 1 ? this.patterns.hours : this.patterns.hour); 
+            text = value + " " + (value !== 1 ? this.patterns.hours : this.patterns.hour);
             result.push(text);
         }
         numUnits--;
@@ -1244,662 +1347,463 @@ YRelativeTimeFormat.prototype.format = function(timeValue, relativeTo) {
     value = date.getUTCMinutes();
     if(numUnits > 0 && (numUnits < this.numUnits || value > 0)) {
         if(this.abbr) {
-            text = value + " " + (value != 1 ? this.patterns.minutes_abbr : this.patterns.minute_abbr); 
+            text = value + " " + (value !== 1 ? this.patterns.minutes_abbr : this.patterns.minute_abbr);
             result.push(text);
         } else {
-            text = value + " " + (value != 1 ? this.patterns.minutes : this.patterns.minute); 
+            text = value + " " + (value !== 1 ? this.patterns.minutes : this.patterns.minute);
             result.push(text);
         }
         numUnits--;
     }
 
     value = date.getUTCSeconds();
-    if(result.length == 0 || (numUnits > 0 && (numUnits < this.numUnits || value > 0))) {
+    if(result.length === 0 || (numUnits > 0 && (numUnits < this.numUnits || value > 0))) {
         if(this.abbr) {
-            text = value + " " + (value != 1 ? this.patterns.seconds_abbr : this.patterns.second_abbr); 
+            text = value + " " + (value !== 1 ? this.patterns.seconds_abbr : this.patterns.second_abbr);
             result.push(text);
         } else {
-            text = value + " " + (value != 1 ? this.patterns.seconds : this.patterns.second); 
+            text = value + " " + (value !== 1 ? this.patterns.seconds : this.patterns.second);
             result.push(text);
         }
         numUnits--;
     }
 
-    var pattern = (result.length == 1) ? this.patterns["RelativeTime/oneUnit"] : this.patterns["RelativeTime/twoUnits"];
+    pattern = (result.length === 1) ? this.patterns["RelativeTime/oneUnit"] : this.patterns["RelativeTime/twoUnits"];
         
-    for(var i=0; i<result.length; i++) {
+    for(i=0; i<result.length; i++) {
         pattern = pattern.replace("{" + i + "}", result[i]);
     }
     for(i=result.length; i<this.numUnits; i++) {
         pattern = pattern.replace("{" + i + "}", "");
     }
     //Remove unnecessary whitespaces
-    pattern = pattern.replace(/\s+/g, " ").replace(/^\s+/, "").replace(/\s+$/, "");
+    pattern = Y.Lang.trim(pattern.replace(/\s+/g, " "));
         
     return pattern;
-}
+};
 /**
  * YDurationFormat class formats time in a language independent manner.
- * The duration formats use appropriate singular/plural/paucal/etc. forms for all languages. 
- * @module format-duration
- * @requires format-numbers
+ * The duration formats use appropriate singular/plural/paucal/etc. forms for all languages.
  */
 
-var MODULE_NAME = "datatype-date-advanced-format";
+Y.mix(Y.Number, {
+    /**
+     * Strip decimal part of argument and return the integer part
+     * @method _stripDecimals
+     * @static
+     * @private
+     * @for Number
+     * @param floatNum A real number
+     * @return Integer part of floatNum
+     */
+    _stripDecimals: function (floatNum) {
+        return floatNum > 0 ? Math.floor(floatNum): Math.ceil(floatNum);
+    }
+});
+
 /**
  * YDurationFormat class formats time in a language independent manner.
- * @class YDurationFormat
+ * @class __YDurationFormat
+ * @namespace Date
+ * @private
  * @constructor
- * @param {Number} style selector for the desired duration format, from Y.Date.DURATION_FORMATS
+ * @param style {Number|String} selector for the desired duration format. Can be key/value from Y.Date.DURATION_FORMATS
  */
-YDurationFormat = function(style) {
+Y.Date.__YDurationFormat = function(style) {
     if(style && Y.Lang.isString(style)) {
         style = Y.Date.DURATION_FORMATS[style];
     }
     this.style = style;
     this.patterns = Y.Intl.get(MODULE_NAME);
-}
-    
-//Exceptions
+};
 
-Y.mix(YDurationFormat, {
-    IllegalArgumentsException: function(message) {
-        this.message = message;
-        this.toString = function() {
-            return "IllegalArgumentsException: " + this.message;
-        }
-    }
-})
+YDurationFormat = Y.Date.__YDurationFormat;
 
-//Static Data
 Y.mix(Y.Date, {
+    /**
+     * Format Style values to use during format/parse of Duration values
+     * @property DURATION_FORMATS
+     * @type Object
+     * @static
+     * @final
+     * @for Date
+     */
     DURATION_FORMATS: {
         HMS_LONG: 0,
         HMS_SHORT: 1
     }
 });
-    
-//Support methods
-    
-/**
- * Strip decimal part of argument and return the integer part
- * @param floatNum A real number
- * @return Integer part of floatNum
- */
-function stripDecimals(floatNum) {
-    return floatNum > 0 ? Math.floor(floatNum): Math.ceil(floatNum);
-}
-    
-function zeroPad (s, length, zeroChar, rightSide) {
-    s = typeof s == "string" ? s : String(s);
 
-    if (s.length >= length) return s;
-
-    zeroChar = zeroChar || '0';
-	
-    var a = [];
-    for (var i = s.length; i < length; i++) {
-        a.push(zeroChar);
-    }
-    a[rightSide ? "unshift" : "push"](s);
-
-    return a.join("");
-}
+Y.mix(YDurationFormat, {
+    /**
+     * Parse XMLDurationFormat (PnYnMnDTnHnMnS) and return an object with hours, minutes and seconds
+     * Any absent values are set to -1, which will be ignored in HMS_long, and set to 0 in HMS_short
+     * Year, Month and Day are ignored. Only Hours, Minutes and Seconds are used
+     * @method _getDuration_XML
+     * @static
+     * @private
+     * @for Date.__YDurationFormat
+     * @param {String} xmlDuration XML Duration String.
+     *      The lexical representation for duration is the [ISO 8601] extended format PnYnMnDTnHnMnS,
+     *      where nY represents the number of years, nM the number of months, nD the number of days,
+     *      'T' is the date/time separator,
+     *      nH the number of hours, nM the number of minutes and nS the number of seconds.
+     *      The number of seconds can include decimal digits to arbitrary precision.
+     * @return {Object} Duration as an object with the parameters hours, minutes and seconds.
+     */
+    _getDuration_XML: function (xmlDuration) {
+        var regex = new RegExp(/P(\d+Y)?(\d+M)?(\d+D)?T(\d+H)?(\d+M)?(\d+(\.\d+)?S)/),
+            matches = xmlDuration.match(regex);
+        
+        if(matches === null) {
+            Y.error("xmlDurationFormat should be in the format: 'PnYnMnDTnHnMnS'");
+        }
+        
+        return {
+            hours: parseInt(matches[4] || -1, 10),
+            minutes: parseInt(matches[5] || -1, 10),
+            seconds: parseFloat(matches[6] || -1, 10)
+        };
+    },
     
-if(String.prototype.trim == null) {
-    String.prototype.trim = function() {
-        return this.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
-    };
-}
+    /**
+     * Get duration from time in seconds.
+     * The value should be integer value in seconds, and should not be negative.
+     * @method _getDuration_Seconds
+     * @static
+     * @private
+     * @param {Number} timeValueInSeconds Duration in seconds
+     * @return {Object} Duration as an object with the parameters hours, minutes and seconds.
+     */
+    _getDuration_Seconds: function (timeValueInSeconds) {
+        var duration = {};
+        if(timeValueInSeconds < 0) {
+            Y.error("TimeValue cannot be negative");
+        }
+                
+        duration.hours = Y.Number._stripDecimals(timeValueInSeconds / 3600);
+                
+        timeValueInSeconds %= 3600;
+        duration.minutes = Y.Number._stripDecimals(timeValueInSeconds / 60);
+                
+        timeValueInSeconds %= 60;
+        duration.seconds = timeValueInSeconds;
+        
+        return duration;
+    }
+});
     
 /**
- * Parse XMLDurationFormat (PnYnMnDTnHnMnS) and return an object with hours, minutes and seconds
- * Any absent values are set to -1, which will be ignored in HMS_long, and set to 0 in HMS_short
- * Year, Month and Day are ignored. Only Hours, Minutes and Seconds are used
- * @param {String} xmlDuration XML Duration String. 
- *      The lexical representation for duration is the [ISO 8601] extended format PnYnMnDTnHnMnS, 
- *      where nY represents the number of years, nM the number of months, nD the number of days, 
- *      'T' is the date/time separator,
- *      nH the number of hours, nM the number of minutes and nS the number of seconds.
- *      The number of seconds can include decimal digits to arbitrary precision.
- * @return {Object} Duration as an object with the parameters hours, minutes and seconds.
- */
-function getDuration_XML(xmlDuration) {
-    var regex = new RegExp(/P(\d+Y)?(\d+M)?(\d+D)?T(\d+H)?(\d+M)?(\d+(\.\d+)?S)/);
-    var matches = xmlDuration.match(regex);
-        
-    if(matches == null) {
-        throw new YDurationFormat.IllegalArgumentsException("xmlDurationFormat should be in the format: 'PnYnMnDTnHnMnS'");
-    }
-        
-    return {
-        hours: parseInt(matches[4] || -1),
-        minutes: parseInt(matches[5] || -1),
-        seconds: parseFloat(matches[6] || -1)
-    };
-}
-    
-/**
- * Get duration from time in seconds.
- * The value should be integer value in seconds, and should not be negative.
- * @param {Number} timeValueInSeconds Duration in seconds
- * @return {Object} Duration as an object with the parameters hours, minutes and seconds.
- */
-function getDuration_Seconds(timeValueInSeconds) {
-    var duration = {};
-    if(timeValueInSeconds < 0) {
-        throw new YDurationFormat.IllegalArgumentsException("TimeValue cannot be negative");
-    }
-                
-    duration.hours = stripDecimals(timeValueInSeconds / 3600);
-                
-    timeValueInSeconds %= 3600;
-    duration.minutes = stripDecimals(timeValueInSeconds / 60);
-                
-    timeValueInSeconds %= 60;
-    duration.seconds = timeValueInSeconds;
-        
-    return duration;
-}
-    
-//Public methods
-    
-/**
- * Formats the given value into a duration format string. This function supports three kinds of usage, listed below:
- *  String format(int timeValueInSeconds):
- *      Formats the given value into a duration format string. The value should be integer value in seconds, and should not be negative.
- *  String format(string xmlDurationFormat):
- *      Formats the given XML duration format into a duration format string. 
- *      The year/month/day fields are ignored in the final format string in this version. For future compatibility, please do not pass in the Year/Month/Day part in the parameter.
- *      For hour, minute, and second, absent parts are ignored in HMS_long format, but are treated as 0 in HMS_short format style.
- *  String format(int hour, int min, int second)
- *      Formats the given duration into a duration format string. Negative values are ignored in HMS_long format, but treated as 0 in HMS_short format.
+ * Formats the given value into a duration format string.
+ * For XML duration format, the string should be in the pattern PnYnMnDTnHnMnS.
+ * Please note that year, month and day fields are ignored in this version.
+ * For future compatibility, please do not pass Year/Month/Day in the parameter.
+ *
+ * For hours, minutes, and seconds, any absent or negative parts are ignored in HMS_long format,
+ * but are treated as 0 in HMS_short format style.
+ *
+ * @method
+ * @private
+ * @param oDuration {String|Number|Object} Duration as time in seconds (Integer),
+          XML duration format (String), or an object with hours, minutes and seconds
  * @return {String} The formatted string
  */
-YDurationFormat.prototype.format = function() {
-    var duration = {};
-    if(arguments.length == 1) {
-        if(arguments[0] == null) {
-            throw new YDurationFormat.IllegalArgumentsException("Argument is null");
-        }
-        if(isNaN(arguments[0])) {                               //Non-numeric string. format(string xmlDurationFormat)
-            duration = getDuration_XML(arguments[0].trim());
-        } else {                                                //format(int timeValueInSeconds)
-            duration = getDuration_Seconds(arguments[0]);
-        }
-    } else if(arguments.length == 3) {                          //format(int hour, int min, int second)
-        if(arguments[2] == null || arguments[1] == null || arguments[0] == null) {
-            throw new YDurationFormat.IllegalArgumentsException("One or more arguments are null/undefined");
-        }
-        if(isNaN(arguments[2]) || isNaN(arguments[1]) || isNaN(arguments[0])) {              //Non-numeric string.
-            throw new YDurationFormat.IllegalArgumentsException("One or more arguments are not numeric");
-        }
-            
-        duration = {
-            hours: parseInt(arguments[0]),
-            minutes: parseInt(arguments[1]),
-            seconds: parseInt(arguments[2])
-        }
-    } else {
-        throw new YDurationFormat.IllegalArgumentsException("Unexpected number of arguments");
+YDurationFormat.prototype.format = function(oDuration) {
+    if(Y.Lang.isNumber(oDuration)) {
+        oDuration = YDurationFormat._getDuration_Seconds(oDuration);
+    } else if(Y.Lang.isString(oDuration)) {
+        oDuration = YDurationFormat._getDuration_XML(oDuration);
     }
-        
+    
+    var defaultValue = this.style === Y.Date.DURATION_FORMATS.HMS_LONG ? -1: 0,
+        result = {
+            hours: "",
+            minutes: "",
+            seconds: ""
+        },
+        resultPattern = "";
+
+    if(oDuration.hours === undefined || oDuration.hours === null || oDuration.hours < 0) { oDuration.hours = defaultValue; }
+    if(oDuration.minutes === undefined || oDuration.minutes === null || oDuration.minutes < 0) { oDuration.minutes = defaultValue; }
+    if(oDuration.seconds === undefined || oDuration.seconds === null || oDuration.seconds < 0) { oDuration.seconds = defaultValue; }
+   
     //Test minutes and seconds for invalid values
-    if(duration.minutes > 59 || duration.seconds > 59) {
-        throw new YDurationFormat.IllegalArgumentsException("Minutes and Seconds should be less than 60");
+    if(oDuration.minutes > 59 || oDuration.seconds > 59) {
+        Y.error("Minutes and Seconds should be less than 60");
     }
-        
-    var result = "";
-        
-    if(this.style == Y.Date.DURATION_FORMATS.HMS_LONG) {
-        result = this.patterns.HMS_long;
-        if(duration.hours < 0) {
-            duration.hours = "";
-        } else {
-            duration.hours = Y.Number.format(duration.hours) + " " + (duration.hours == 1 ? this.patterns.hour : this.patterns.hours);
+    
+    if(this.style === Y.Date.DURATION_FORMATS.HMS_LONG) {
+        resultPattern = this.patterns.HMS_long;
+        if(oDuration.hours >= 0) {
+            result.hours = Y.Number.format(oDuration.hours) + " " + (oDuration.hours === 1 ? this.patterns.hour : this.patterns.hours);
         }
-            
-        if(duration.minutes < 0) {
-            duration.minutes = "";
-        } else {
-            duration.minutes = duration.minutes + " " + (duration.minutes == 1 ? this.patterns.minute : this.patterns.minutes);
+
+        if(oDuration.minutes >= 0) {
+            result.minutes = oDuration.minutes + " " + (oDuration.minutes === 1 ? this.patterns.minute : this.patterns.minutes);
         }
-            
-        if(duration.seconds < 0) {
-            duration.seconds = "";
-        } else {
-            duration.seconds = duration.seconds + " " + (duration.seconds == 1 ? this.patterns.second : this.patterns.seconds);
+
+        if(oDuration.seconds >= 0) {
+            result.seconds = oDuration.seconds + " " + (oDuration.seconds === 1 ? this.patterns.second : this.patterns.seconds);
         }
     } else {                                            //HMS_SHORT
-        result = this.patterns.HMS_short;
-            
-        duration.hours = Y.Number.format(duration.hours < 0 ? 0: duration.hours);
-        duration.minutes = duration.minutes < 0 ? "00": zeroPad(duration.minutes, 2);
-        duration.seconds = duration.seconds < 0 ? "00": zeroPad(duration.seconds, 2);
+        resultPattern = this.patterns.HMS_short;
+        result = {
+             hours: Y.Number.format(oDuration.hours),
+             minutes: Y.Number._zeroPad(oDuration.minutes, 2),
+             seconds: Y.Number._zeroPad(oDuration.seconds, 2)
+        };
     }
         
-    result = result.replace("{0}", duration.hours);
-    result = result.replace("{1}", duration.minutes);
-    result = result.replace("{2}", duration.seconds);
-        
+    resultPattern = resultPattern.replace("{0}", result.hours);
+    resultPattern = resultPattern.replace("{1}", result.minutes);
+    resultPattern = resultPattern.replace("{2}", result.seconds);
+       
     //Remove unnecessary whitespaces
-    result = result.replace(/\s\s+/g, " ").replace(/^\s+/, "").replace(/\s+$/, "");
-        
-    return result;
-}
+    resultPattern = Y.Lang.trim(resultPattern.replace(/\s\s+/g, " "));
+       
+    return resultPattern;
+};
 
-Y.Date.deprecatedFormat = Y.Date.format;
+Y.Date.oldFormat = Y.Date.format;
 
-/**
- * Takes a native JavaScript Date and formats it as a string for display to user.
- * @for Date
- * @method format
- * @param oDate {Date} Date
- * @param oConfig {Obhect} (Optional) Object literal of configuration values:
- *    <dl>
- *       <dt>dateFormat {String/Number} (Optional)</dt>
- *           <dd>Date Format/Style</dd>
- *       <dt>timeFormat {String/Number} (Optional)</dt>
- *           <dd>Time Format/Style</dd>
- *       <dt>timezoneFormat {String/Number} (Optional)</dt>
- *           <dd> Timezone Format/Style</dd>
- *       <dt>format {HTML} (Optional)</dt>
- *           <dd>format string to use the deprecated format method in datatype-date-format module</dd>
- *    </dl>
- * @return {String} string representation of the date
- */
-Y.Date.format = function(oDate, oConfig) {
-    oConfig = oConfig || {};
-    if(oConfig.format && Y.Lang.isString(oConfig.format)) {
-        return Y.Date.deprecatedFormat(oDate, oConfig);
-    }
+Y.mix(Y.Date, {
+    /**
+     * Takes a native JavaScript Date and formats it as a string for display to user. Can be configured with the oConfig parameter.
+     * For relative time format, dates are compared to current time. To compare to a different time, set the parameter Y.Date.currentDate
+     * Configuration object can have 4 optional parameters:
+     *     [dateFormat=0] {String|Number} Date format to use. Should be a key/value from Y.Date.DATE_FORMATS.
+     *     [timeFormat=0] {String|Number} Time format to use. Should be a key/value from Y.Date.TIME_FORMATS.
+     *     [timezoneFormat=0] {String|Number} Timezone format to use. Should be a key/value from Y.Date.TIMEZONE_FORMATS.
+     *     [relativeTimeFormat=0] {String|Number} RelativeTime format to use. Should be a key/value from Y.Date.RELATIVE_TIME_FORMATS.
+     *     [format] {HTML} Format string as pattern. This is passed to the Y.Date.format method from datatype-date-format module.
+                           If this parameter is used, the other three will be ignored.
+     * @for Date
+     * @method format
+     * @param oDate {Date} Date
+     * @param [oConfig] {Object} Object literal of configuration values.
+     * @return {String} string representation of the date
+     * @example
+            var date = new Date();
+            Y.Date.format(date, { timeFormat: "HM_SHORT", timezoneFormat: "Z_SHORT" });
+            Y.Date.format(date, { dateFormat: "YMD_FULL", timeFormat: "HM_SHORT", timezoneFormat: "Z_SHORT" });
+            Y.Date.format(date, { dateFormat: "YMD_FULL" });
+            Y.Date.format(date, { relativeTimeFormat: "ONE_OR_TWO_UNITS_LONG" });
+            Y.Date.format(date, { format: "%Y-%m-%d"});
+     */
+    format: function(oDate, oConfig) {
+        oConfig = oConfig || {};
+        if(oConfig.format && Y.Lang.isString(oConfig.format)) {
+            return Y.Date.oldFormat(oDate, oConfig);
+        }
     
-    if(!Y.Lang.isDate(oDate)) {
-        return Y.Lang.isValue(oDate) ? oDate : "";
-    }
+        if(!Y.Lang.isDate(oDate)) {
+            return Y.Lang.isValue(oDate) ? oDate : "";
+        }
                 
-    var formatter;
-    if(oConfig.dateFormat || oConfig.timeFormat || oConfig.timezoneFormat) {    
-        formatter = new YDateFormat(oConfig.timezone, oConfig.dateFormat, oConfig.timeFormat, oConfig.timezoneFormat);
-        return formatter.format(oDate);
-    }
+        var formatter, relativeTo;
+        if(oConfig.dateFormat || oConfig.timeFormat || oConfig.timezoneFormat) {
+            formatter = new YDateFormat(oConfig.timezone, oConfig.dateFormat, oConfig.timeFormat, oConfig.timezoneFormat);
+            return formatter.format(oDate);
+        }
     
-    var relativeTo = (typeof Y.Date.currentDate == 'function' ?  Y.Date.currentDate() : Y.Date.currentDate);
-    if(oConfig.relativeTimeFormat) {
-        formatter = new YRelativeTimeFormat(oConfig.relativeTimeFormat, relativeTo);
-        return formatter.format(oDate.getTime()/1000, Y.Date.currentDate.getTime()/1000);
-    }
-    
-    throw new Format.FormatException("Unrecognized format options.");
-}
+        relativeTo = (typeof Y.Date.currentDate === 'function' ?  Y.Date.currentDate() : Y.Date.currentDate);
+        if(oConfig.relativeTimeFormat) {
+            formatter = new YRelativeTimeFormat(oConfig.relativeTimeFormat, relativeTo);
+            return formatter.format(oDate.getTime()/1000, Y.Date.currentDate.getTime()/1000);
+        }
 
-/**
- * Returns a string representation of the duration
- * @for Date
- * @method format
- * @param oDuration {String/Number/Object} Duration as time in seconds, xml duration format, or an object with hours, minutes and seconds
- * @param oConfig {Object} (Optional) Configuration object. Used to pass style parameter to the method. 'style' can be a string (HMS_LONG/HMS_SHORT) or the numerical values in Y.Date.DURATION_FORMATS
- * @return {String} string representation of the duration
- */
-Y.Date.formatDuration = function(oDuration, oConfig) {
-    oConfig = oConfig || {};
-    if(oDuration == null) {
-        oDuration = {};
+        Y.error("Unrecognized format options.");
+    },
+
+    /**
+     * Returns a string representation of the duration
+     * @method format
+     * @param oDuration {String|Number|Object} Duration as time in seconds, xml duration format, or an object with hours, minutes and seconds
+     * @param [oConfig] {Object} Configuration object. Used to pass style parameter to the method.
+                        'style' can be a string (HMS_LONG/HMS_SHORT) or the numerical values in Y.Date.DURATION_FORMATS
+     * @return {String} string representation of the duration
+     * @example
+                Y.Date.formatDuration(3601, { style: "HMS_LONG" });
+                Y.Date.formatDuration("PT11H22M33S", { style: "HMS_SHORT" });
+                Y.Date.formatDuration({ hours: 1, minutes: 40 }, { style: "HMS_SHORT" });
+                Y.Date.formatDuration({ hours: 1, minutes: 40, seconds: 5 }, { style: "HMS_LONG" });
+     */
+    formatDuration: function(oDuration, oConfig) {
+        oConfig = oConfig || {};
+        return new YDurationFormat(oConfig.style).format(oDuration);
     }
-    if(Y.Lang.isNumber(oDuration) || Y.Lang.isString(oDuration)) {
-        return (new YDurationFormat(oConfig.style)).format(oDuration);
-    } else if(oDuration.hours != null || oDuration.minutes != null || oDuration.seconds != null) {
-        if(oDuration.hours == null) { oDuration.hours = -1; }
-        if(oDuration.minutes == null) { oDuration.minutes= -1; }
-        if(oDuration.seconds == null) { oDuration.seconds = -1; }
-        return (new YDurationFormat(oConfig.style)).format(oDuration.hours || -1, oDuration.minutes || -1, oDuration.seconds || -1);
-    }
-    
-    throw new Format.IllegalArgumentsException("Unrecognized duration values");
-}
+}, true);
 
 
 }, '@VERSION@', {
     "lang": [
-        "af-NA",
         "af",
-        "af-ZA",
-        "am-ET",
         "am",
-        "ar-AE",
-        "ar-BH",
         "ar-DZ",
-        "ar-EG",
-        "ar-IQ",
         "ar-JO",
-        "ar-KW",
+        "ar",
         "ar-LB",
-        "ar-LY",
         "ar-MA",
-        "ar-OM",
-        "ar-QA",
-        "ar-SA",
-        "ar-SD",
         "ar-SY",
         "ar-TN",
-        "ar",
-        "ar-YE",
-        "as-IN",
         "as",
-        "az-AZ",
-        "az-Cyrl-AZ",
         "az-Cyrl",
-        "az-Latn-AZ",
-        "az-Latn",
         "az",
-        "be-BY",
         "be",
-        "bg-BG",
         "bg",
-        "bn-BD",
         "bn-IN",
         "bn",
-        "bo-CN",
-        "bo-IN",
         "bo",
-        "ca-ES",
         "ca",
-        "cs-CZ",
         "cs",
-        "cy-GB",
         "cy",
-        "da-DK",
         "da",
         "de-AT",
         "de-BE",
-        "de-CH",
-        "de-DE",
-        "de-LI",
-        "de-LU",
         "de",
-        "el-CY",
-        "el-GR",
         "el",
         "en-AU",
         "en-BE",
         "en-BW",
-        "en-BZ",
         "en-CA",
         "en-GB",
         "en-HK",
         "en-IE",
         "en-IN",
-        "en-JM",
         "en-JO",
-        "en-MH",
         "en-MT",
         "en-MY",
-        "en-NA",
         "en-NZ",
         "en-PH",
-        "en-PK",
         "en-RH",
         "en-SG",
-        "en-TT",
-        "en",
-        "en-US-POSIX",
         "en-US",
-        "en-VI",
+        "en-US-POSIX",
         "en-ZA",
         "en-ZW",
         "eo",
         "es-AR",
-        "es-BO",
         "es-CL",
         "es-CO",
-        "es-CR",
-        "es-DO",
         "es-EC",
-        "es-ES",
         "es-GT",
         "es-HN",
-        "es-MX",
-        "es-NI",
+        "es",
         "es-PA",
         "es-PE",
         "es-PR",
-        "es-PY",
-        "es-SV",
-        "es",
         "es-US",
-        "es-UY",
-        "es-VE",
-        "et-EE",
         "et",
-        "eu-ES",
         "eu",
         "fa-AF",
-        "fa-IR",
         "fa",
-        "fi-FI",
         "fi",
-        "fil-PH",
         "fil",
-        "fo-FO",
         "fo",
         "fr-BE",
         "fr-CA",
         "fr-CH",
-        "fr-FR",
-        "fr-LU",
-        "fr-MC",
-        "fr-SN",
         "fr",
-        "ga-IE",
         "ga",
-        "gl-ES",
         "gl",
-        "gsw-CH",
         "gsw",
-        "gu-IN",
         "gu",
-        "gv-GB",
         "gv",
-        "ha-GH",
-        "ha-Latn-GH",
-        "ha-Latn-NE",
-        "ha-Latn-NG",
-        "ha-Latn",
-        "ha-NE",
-        "ha-NG",
         "ha",
         "haw",
-        "haw-US",
-        "he-IL",
         "he",
-        "hi-IN",
         "hi",
-        "hr-HR",
         "hr",
-        "hu-HU",
         "hu",
-        "hy-AM-REVISED",
-        "hy-AM",
         "hy",
-        "id-ID",
         "id",
-        "ii-CN",
         "ii",
-        "in-ID",
         "in",
-        "is-IS",
         "is",
         "it-CH",
-        "it-IT",
         "it",
-        "iw-IL",
         "iw",
         "ja-JP-TRADITIONAL",
-        "ja-JP",
         "ja",
-        "ka-GE",
+        "",
         "ka",
-        "kk-Cyrl-KZ",
-        "kk-Cyrl",
-        "kk-KZ",
         "kk",
-        "kl-GL",
         "kl",
-        "km-KH",
         "km",
-        "kn-IN",
         "kn",
-        "kok-IN",
-        "kok",
-        "ko-KR",
         "ko",
-        "kw-GB",
+        "kok",
         "kw",
-        "lt-LT",
         "lt",
-        "lv-LV",
         "lv",
-        "mk-MK",
         "mk",
-        "ml-IN",
         "ml",
-        "mr-IN",
         "mr",
         "ms-BN",
-        "ms-MY",
         "ms",
-        "mt-MT",
         "mt",
-        "nb-NO",
         "nb",
         "ne-IN",
-        "ne-NP",
         "ne",
         "nl-BE",
-        "nl-NL",
         "nl",
-        "nn-NO",
         "nn",
-        "no-NO-NY",
-        "no-NO",
         "no",
-        "om-ET",
-        "om-KE",
+        "no-NO-NY",
         "om",
-        "or-IN",
         "or",
-        "pa-Arab-PK",
         "pa-Arab",
-        "pa-Guru-IN",
-        "pa-Guru",
-        "pa-IN",
-        "pa-PK",
         "pa",
-        "pl-PL",
+        "pa-PK",
         "pl",
-        "ps-AF",
         "ps",
-        "pt-BR",
-        "pt-PT",
         "pt",
-        "ro-MD",
-        "ro-RO",
+        "pt-PT",
         "ro",
-        "ru-RU",
         "ru",
         "ru-UA",
-        "sh-BA",
-        "sh-CS",
         "sh",
-        "sh-YU",
-        "si-LK",
         "si",
-        "sk-SK",
         "sk",
-        "sl-SI",
         "sl",
-        "so-DJ",
-        "so-ET",
-        "so-KE",
-        "so-SO",
         "so",
-        "sq-AL",
         "sq",
         "sr-BA",
-        "sr-CS",
         "sr-Cyrl-BA",
-        "sr-Cyrl-CS",
-        "sr-Cyrl-ME",
-        "sr-Cyrl-RS",
-        "sr-Cyrl",
-        "sr-Cyrl-YU",
-        "sr-Latn-BA",
-        "sr-Latn-CS",
-        "sr-Latn-ME",
-        "sr-Latn-RS",
-        "sr-Latn",
-        "sr-Latn-YU",
-        "sr-ME",
-        "sr-RS",
         "sr",
-        "sr-YU",
+        "sr-Latn",
+        "sr-Latn-ME",
+        "sr-ME",
         "sv-FI",
-        "sv-SE",
         "sv",
-        "sw-KE",
         "sw",
-        "sw-TZ",
-        "ta-IN",
         "ta",
-        "te-IN",
         "te",
-        "th-TH-TRADITIONAL",
-        "th-TH",
         "th",
         "ti-ER",
-        "ti-ET",
         "ti",
-        "tl-PH",
         "tl",
-        "tr-TR",
         "tr",
         "uk",
-        "uk-UA",
         "ur-IN",
-        "ur-PK",
         "ur",
-        "uz-AF",
-        "uz-Arab-AF",
-        "uz-Arab",
-        "uz-Cyrl",
-        "uz-Cyrl-UZ",
-        "uz-Latn",
-        "uz-Latn-UZ",
+        "ur-PK",
         "uz",
-        "uz-UZ",
+        "uz-Latn",
         "vi",
-        "vi-VN",
-        "zh-CN",
-        "zh-Hans-CN",
-        "zh-Hans-HK",
-        "zh-Hans-MO",
         "zh-Hans-SG",
-        "zh-Hans",
         "zh-Hant-HK",
-        "zh-Hant-MO",
-        "zh-Hant-TW",
         "zh-Hant",
+        "zh-Hant-MO",
         "zh-HK",
+        "zh",
         "zh-MO",
         "zh-SG",
         "zh-TW",
-        "zh",
-        "zu",
-        "zu-ZA"
+        "zu"
     ],
     "requires": [
         "datatype-date-timezone",
-        "datatype-date-format",
         "datatype-number-advanced-format"
     ]
 });

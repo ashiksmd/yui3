@@ -8,22 +8,23 @@
  * Formatter classes. For each group found in the pattern, will try to parse with all of these formatters.
  * If a formatter fails to parse, the next one in the list try to do so.
  */
-var formatters = [ StringFormatter, DateFormatter, TimeFormatter, NumberFormatter, ChoiceFormatter, PluralFormatter, SelectFormatter ];
+formatters = [ StringFormatter, DateFormatter, TimeFormatter, NumberFormatter, ChoiceFormatter, PluralFormatter, SelectFormatter ];
 
 Y.mix(Y.Intl, {
 
     /**
      * Format message that may contain date/time, numbers, etc. Choice, Select and Plural formatters are also available.
-     * @method
+     * @method formatMessage
      * @static
-     * @param pattern {String} string contains static text with embedded format elements that specify how to process and insert strings, numbers, and dates, as well as perform conditional processing.
-     * @param values {Object|Array} The data to be processed and inserted. 
+     * @param pattern {String} string contains static text with embedded format elements that specify
+              how to process and insert strings, numbers, and dates, as well as perform conditional processing.
+     * @param values {Object|Array} The data to be processed and inserted.
      * @param [config] {Object} Optional configuration parameters
      * @return {String} Formatted result
      * @example
             //String formatting. Key is replaced by value
             Y.Intl.formatMessage("{EMPLOYEE} reports to {MANAGER}", {
-                "EMPLOYEE": "Ashik", 
+                "EMPLOYEE": "Ashik",
                 "MANAGER": "Dharmesh"
             });
 
@@ -35,8 +36,8 @@ Y.mix(Y.Intl, {
 
             //Select formatting. Selects output depending on value
             Y.Intl.formatMessage("{NAME} est {GENDER, select, female {allée} other {allé}} à {CITY}.", {
-                "NAME": "Henri", 
-                "GENDER": "male", 
+                "NAME": "Henri",
+                "GENDER": "male",
                 "CITY": "Paris"
             });
 
@@ -52,10 +53,11 @@ Y.mix(Y.Intl, {
      */
     formatMessage: function(pattern, values, config) {
         config = config || {};
-        for(var i=0; i<formatters.length; i++) {
-            var formatter = formatters[i].createInstance(values);
+        var i, formatter;
+        for(i=0; i<formatters.length; i++) {
+            formatter = formatters[i].createInstance(values);
             pattern = formatter.format(pattern, config);
         }
         return pattern;
     }
-})
+});

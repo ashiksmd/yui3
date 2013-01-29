@@ -1,2995 +1,2995 @@
 var TimezoneData, TimezoneLinks, Timezone, AjxTimezone;
 
-Y.mix(Y.Date.Timezone, {
+Y.Date.Timezone = {
     __tzoneData: {
          TRANSITION_YEAR: 2011,
          TIMEZONE_RULES: [
 {
-    tzId: "Asia/Riyadh88", 
+    tzId: "Asia/Riyadh88",
     standard: {
         offset: 187
     }
 },
 {
-    tzId: "Asia/Kabul", 
+    tzId: "Asia/Kabul",
     standard: {
         offset: 270
     }
 },
 {
-    tzId: "Asia/Yerevan", 
+    tzId: "Asia/Yerevan",
     standard: {
         offset: 240
     }
 },
 {
-    tzId: "Asia/Baku", 
+    tzId: "Asia/Baku",
     standard: {
-        offset: 240, 
-        mon: 10, 
-        week: -1, 
-        wkday: 1, 
-        hour: 5, 
-        min: 0, 
+        offset: 240,
+        mon: 10,
+        week: -1,
+        wkday: 1,
+        hour: 5,
+        min: 0,
         sec: 0
     },
     daylight: {
-        offset: 300, 
-        mon: 3, 
-        week: -1, 
-        wkday: 1, 
-        hour: 4, 
-        min: 0, 
+        offset: 300,
+        mon: 3,
+        week: -1,
+        wkday: 1,
+        hour: 4,
+        min: 0,
         sec: 0
     }
 },
 {
-    tzId: "Asia/Bahrain", 
+    tzId: "Asia/Bahrain",
     standard: {
         offset: 180
     }
 },
 {
-    tzId: "Asia/Dhaka", 
+    tzId: "Asia/Dhaka",
     standard: {
         offset: 360
     }
 },
 {
-    tzId: "Asia/Thimphu", 
+    tzId: "Asia/Thimphu",
     standard: {
         offset: 360
     }
 },
 {
-    tzId: "Indian/Chagos", 
+    tzId: "Indian/Chagos",
     standard: {
         offset: 360
     }
 },
 {
-    tzId: "Asia/Brunei", 
+    tzId: "Asia/Brunei",
     standard: {
         offset: 480
     }
 },
 {
-    tzId: "Asia/Rangoon", 
+    tzId: "Asia/Rangoon",
     standard: {
         offset: 390
     }
 },
 {
-    tzId: "Asia/Phnom_Penh", 
+    tzId: "Asia/Phnom_Penh",
     standard: {
         offset: 420
     }
 },
 {
-    tzId: "Asia/Harbin", 
+    tzId: "Asia/Harbin",
     standard: {
         offset: 480
     }
 },
 {
-    tzId: "Asia/Shanghai", 
+    tzId: "Asia/Shanghai",
     standard: {
         offset: 480
     }
 },
 {
-    tzId: "Asia/Chongqing", 
+    tzId: "Asia/Chongqing",
     standard: {
         offset: 480
     }
 },
 {
-    tzId: "Asia/Urumqi", 
+    tzId: "Asia/Urumqi",
     standard: {
         offset: 480
     }
 },
 {
-    tzId: "Asia/Kashgar", 
+    tzId: "Asia/Kashgar",
     standard: {
         offset: 480
     }
 },
 {
-    tzId: "Asia/Hong_Kong", 
+    tzId: "Asia/Hong_Kong",
     standard: {
         offset: 480
     }
 },
 {
-    tzId: "Asia/Taipei", 
+    tzId: "Asia/Taipei",
     standard: {
         offset: 480
     }
 },
 {
-    tzId: "Asia/Macau", 
+    tzId: "Asia/Macau",
     standard: {
         offset: 480
     }
 },
 {
-    tzId: "Asia/Nicosia", 
+    tzId: "Asia/Nicosia",
     standard: {
         offset: 120
     }
 },
 {
-    tzId: "Asia/Tbilisi", 
+    tzId: "Asia/Tbilisi",
     standard: {
         offset: 240
     }
 },
 {
-    tzId: "Asia/Dili", 
+    tzId: "Asia/Dili",
     standard: {
         offset: 540
     }
 },
 {
-    tzId: "Asia/Kolkata", 
+    tzId: "Asia/Kolkata",
     standard: {
         offset: 330
     }
 },
 {
-    tzId: "Asia/Jakarta", 
+    tzId: "Asia/Jakarta",
     standard: {
         offset: 427
     }
 },
 {
-    tzId: "Asia/Pontianak", 
+    tzId: "Asia/Pontianak",
     standard: {
         offset: 540
     }
 },
 {
-    tzId: "Asia/Tehran", 
+    tzId: "Asia/Tehran",
     standard: {
         offset: 210
     }
 },
 {
-    tzId: "Asia/Baghdad", 
+    tzId: "Asia/Baghdad",
     standard: {
         offset: 180
     }
 },
 {
-    tzId: "Asia/Jerusalem", 
+    tzId: "Asia/Jerusalem",
     standard: {
         offset: 120
     }
 },
 {
-    tzId: "Asia/Tokyo", 
+    tzId: "Asia/Tokyo",
     standard: {
         offset: 540
     }
 },
 {
-    tzId: "Asia/Amman", 
+    tzId: "Asia/Amman",
     standard: {
         offset: 120
     }
 },
 {
-    tzId: "Asia/Almaty", 
+    tzId: "Asia/Almaty",
     standard: {
         offset: 360
     }
 },
 {
-    tzId: "Asia/Qyzylorda", 
+    tzId: "Asia/Qyzylorda",
     standard: {
         offset: 360
     }
 },
 {
-    tzId: "Asia/Aqtobe", 
+    tzId: "Asia/Aqtobe",
     standard: {
         offset: 300
     }
 },
 {
-    tzId: "Asia/Aqtau", 
+    tzId: "Asia/Aqtau",
     standard: {
         offset: 300
     }
 },
 {
-    tzId: "Asia/Oral", 
+    tzId: "Asia/Oral",
     standard: {
         offset: 300
     }
 },
 {
-    tzId: "Asia/Bishkek", 
+    tzId: "Asia/Bishkek",
     standard: {
         offset: 360
     }
 },
 {
-    tzId: "Asia/Seoul", 
+    tzId: "Asia/Seoul",
     standard: {
         offset: 540
     }
 },
 {
-    tzId: "Asia/Kuwait", 
+    tzId: "Asia/Kuwait",
     standard: {
         offset: 180
     }
 },
 {
-    tzId: "Asia/Vientiane", 
+    tzId: "Asia/Vientiane",
     standard: {
         offset: 420
     }
 },
 {
-    tzId: "Asia/Beirut", 
+    tzId: "Asia/Beirut",
     standard: {
         offset: 120
     }
 },
 {
-    tzId: "Asia/Kuala_Lumpur", 
+    tzId: "Asia/Kuala_Lumpur",
     standard: {
         offset: 480
     }
 },
 {
-    tzId: "Asia/Kuching", 
+    tzId: "Asia/Kuching",
     standard: {
         offset: 480
     }
 },
 {
-    tzId: "Indian/Maldives", 
+    tzId: "Indian/Maldives",
     standard: {
         offset: 300
     }
 },
 {
-    tzId: "Asia/Hovd", 
+    tzId: "Asia/Hovd",
     standard: {
         offset: 420
     }
 },
 {
-    tzId: "Asia/Ulaanbaatar", 
+    tzId: "Asia/Ulaanbaatar",
     standard: {
         offset: 480
     }
 },
 {
-    tzId: "Asia/Choibalsan", 
+    tzId: "Asia/Choibalsan",
     standard: {
         offset: 480
     }
 },
 {
-    tzId: "Asia/Kathmandu", 
+    tzId: "Asia/Kathmandu",
     standard: {
         offset: 345
     }
 },
 {
-    tzId: "Asia/Muscat", 
+    tzId: "Asia/Muscat",
     standard: {
         offset: 240
     }
 },
 {
-    tzId: "Asia/Karachi", 
+    tzId: "Asia/Karachi",
     standard: {
         offset: 300
     }
 },
 {
-    tzId: "Asia/Gaza", 
+    tzId: "Asia/Gaza",
     standard: {
         offset: 120
     }
 },
 {
-    tzId: "Asia/Hebron", 
+    tzId: "Asia/Hebron",
     standard: {
         offset: 120
     }
 },
 {
-    tzId: "Asia/Manila", 
+    tzId: "Asia/Manila",
     standard: {
         offset: 480
     }
 },
 {
-    tzId: "Asia/Qatar", 
+    tzId: "Asia/Qatar",
     standard: {
         offset: 180
     }
 },
 {
-    tzId: "Asia/Riyadh", 
+    tzId: "Asia/Riyadh",
     standard: {
         offset: 180
     }
 },
 {
-    tzId: "Asia/Singapore", 
+    tzId: "Asia/Singapore",
     standard: {
         offset: 480
     }
 },
 {
-    tzId: "Asia/Colombo", 
+    tzId: "Asia/Colombo",
     standard: {
         offset: 330
     }
 },
 {
-    tzId: "Asia/Damascus", 
+    tzId: "Asia/Damascus",
     standard: {
-        offset: 120, 
-        mon: 10, 
-        week: -1, 
-        wkday: 6, 
-        hour: 0, 
-        min: 0, 
+        offset: 120,
+        mon: 10,
+        week: -1,
+        wkday: 6,
+        hour: 0,
+        min: 0,
         sec: 0
     },
     daylight: {
-        offset: 180, 
-        mon: 3, 
-        week: -1, 
-        wkday: 6, 
-        hour: 0, 
-        min: 0, 
+        offset: 180,
+        mon: 3,
+        week: -1,
+        wkday: 6,
+        hour: 0,
+        min: 0,
         sec: 0
     }
 },
 {
-    tzId: "Asia/Dushanbe", 
+    tzId: "Asia/Dushanbe",
     standard: {
         offset: 300
     }
 },
 {
-    tzId: "Asia/Bangkok", 
+    tzId: "Asia/Bangkok",
     standard: {
         offset: 420
     }
 },
 {
-    tzId: "Asia/Ashgabat", 
+    tzId: "Asia/Ashgabat",
     standard: {
         offset: 300
     }
 },
 {
-    tzId: "Asia/Dubai", 
+    tzId: "Asia/Dubai",
     standard: {
         offset: 240
     }
 },
 {
-    tzId: "Asia/Samarkand", 
+    tzId: "Asia/Samarkand",
     standard: {
         offset: 300
     }
 },
 {
-    tzId: "Asia/Ho_Chi_Minh", 
+    tzId: "Asia/Ho_Chi_Minh",
     standard: {
         offset: 420
     }
 },
 {
-    tzId: "Asia/Aden", 
+    tzId: "Asia/Aden",
     standard: {
         offset: 180
     }
 },
 {
-    tzId: "Australia/Darwin", 
+    tzId: "Australia/Darwin",
     standard: {
         offset: 570
     }
 },
 {
-    tzId: "Australia/Perth", 
+    tzId: "Australia/Perth",
     standard: {
         offset: 525
     }
 },
 {
-    tzId: "Australia/Brisbane", 
+    tzId: "Australia/Brisbane",
     standard: {
         offset: 600
     }
 },
 {
-    tzId: "Australia/Adelaide", 
+    tzId: "Australia/Adelaide",
     standard: {
-        offset: 570, 
-        mon: 4, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: 570,
+        mon: 4,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     },
     daylight: {
-        offset: 630, 
-        mon: 10, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: 630,
+        mon: 10,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     }
 },
 {
-    tzId: "Australia/Hobart", 
+    tzId: "Australia/Hobart",
     standard: {
         offset: 600
     }
 },
 {
-    tzId: "Australia/Melbourne", 
+    tzId: "Australia/Melbourne",
     standard: {
-        offset: 600, 
-        mon: 4, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: 600,
+        mon: 4,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     },
     daylight: {
-        offset: 660, 
-        mon: 10, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: 660,
+        mon: 10,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     }
 },
 {
-    tzId: "Australia/Sydney", 
+    tzId: "Australia/Sydney",
     standard: {
-        offset: 570, 
-        mon: 4, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: 570,
+        mon: 4,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     },
     daylight: {
-        offset: 630, 
-        mon: 10, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: 630,
+        mon: 10,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     }
 },
 {
-    tzId: "Australia/Lord_Howe", 
+    tzId: "Australia/Lord_Howe",
     standard: {
-        offset: 630, 
-        mon: 4, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: 630,
+        mon: 4,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     },
     daylight: {
-        offset: 660, 
-        mon: 10, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: 660,
+        mon: 10,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     }
 },
 {
-    tzId: "Indian/Christmas", 
+    tzId: "Indian/Christmas",
     standard: {
         offset: 420
     }
 },
 {
-    tzId: "Pacific/Rarotonga", 
+    tzId: "Pacific/Rarotonga",
     standard: {
         offset: -600
     }
 },
 {
-    tzId: "Indian/Cocos", 
+    tzId: "Indian/Cocos",
     standard: {
         offset: 390
     }
 },
 {
-    tzId: "Pacific/Fiji", 
+    tzId: "Pacific/Fiji",
     standard: {
         offset: 720
     }
 },
 {
-    tzId: "Pacific/Gambier", 
+    tzId: "Pacific/Gambier",
     standard: {
         offset: -600
     }
 },
 {
-    tzId: "Pacific/Guam", 
+    tzId: "Pacific/Guam",
     standard: {
         offset: 600
     }
 },
 {
-    tzId: "Pacific/Tarawa", 
+    tzId: "Pacific/Tarawa",
     standard: {
         offset: 840
     }
 },
 {
-    tzId: "Pacific/Saipan", 
+    tzId: "Pacific/Saipan",
     standard: {
         offset: 600
     }
 },
 {
-    tzId: "Pacific/Majuro", 
+    tzId: "Pacific/Majuro",
     standard: {
         offset: 720
     }
 },
 {
-    tzId: "Pacific/Chuuk", 
+    tzId: "Pacific/Chuuk",
     standard: {
         offset: 660
     }
 },
 {
-    tzId: "Pacific/Nauru", 
+    tzId: "Pacific/Nauru",
     standard: {
         offset: 720
     }
 },
 {
-    tzId: "Pacific/Noumea", 
+    tzId: "Pacific/Noumea",
     standard: {
         offset: 660
     }
 },
 {
-    tzId: "Pacific/Auckland", 
+    tzId: "Pacific/Auckland",
     standard: {
         offset: 765
     }
 },
 {
-    tzId: "Pacific/Niue", 
+    tzId: "Pacific/Niue",
     standard: {
         offset: -660
     }
 },
 {
-    tzId: "Pacific/Norfolk", 
+    tzId: "Pacific/Norfolk",
     standard: {
         offset: 690
     }
 },
 {
-    tzId: "Pacific/Palau", 
+    tzId: "Pacific/Palau",
     standard: {
         offset: 540
     }
 },
 {
-    tzId: "Pacific/Port_Moresby", 
+    tzId: "Pacific/Port_Moresby",
     standard: {
         offset: 600
     }
 },
 {
-    tzId: "Pacific/Pitcairn", 
+    tzId: "Pacific/Pitcairn",
     standard: {
         offset: -480
     }
 },
 {
-    tzId: "Pacific/Pago_Pago", 
+    tzId: "Pacific/Pago_Pago",
     standard: {
         offset: -660
     }
 },
 {
-    tzId: "Pacific/Apia", 
+    tzId: "Pacific/Apia",
     standard: {
         offset: 780
     }
 },
 {
-    tzId: "Pacific/Guadalcanal", 
+    tzId: "Pacific/Guadalcanal",
     standard: {
         offset: 660
     }
 },
 {
-    tzId: "Pacific/Fakaofo", 
+    tzId: "Pacific/Fakaofo",
     standard: {
         offset: 840
     }
 },
 {
-    tzId: "Pacific/Tongatapu", 
+    tzId: "Pacific/Tongatapu",
     standard: {
         offset: 780
     }
 },
 {
-    tzId: "Pacific/Funafuti", 
+    tzId: "Pacific/Funafuti",
     standard: {
         offset: 720
     }
 },
 {
-    tzId: "Pacific/Johnston", 
+    tzId: "Pacific/Johnston",
     standard: {
         offset: -600
     }
 },
 {
-    tzId: "Pacific/Midway", 
+    tzId: "Pacific/Midway",
     standard: {
         offset: -660
     }
 },
 {
-    tzId: "Pacific/Wake", 
+    tzId: "Pacific/Wake",
     standard: {
         offset: 720
     }
 },
 {
-    tzId: "Pacific/Efate", 
+    tzId: "Pacific/Efate",
     standard: {
         offset: 660
     }
 },
 {
-    tzId: "Pacific/Wallis", 
+    tzId: "Pacific/Wallis",
     standard: {
         offset: 720
     }
 },
 {
-    tzId: "Etc/GMT", 
+    tzId: "Etc/GMT",
     standard: {
         offset: 0
     }
 },
 {
-    tzId: "Etc/GMT-14", 
+    tzId: "Etc/GMT-14",
     standard: {
         offset: 0
     }
 },
 {
-    tzId: "Asia/Riyadh87", 
+    tzId: "Asia/Riyadh87",
     standard: {
         offset: 187
     }
 },
 {
-    tzId: "America/Argentina/Buenos_Aires", 
+    tzId: "America/Argentina/Buenos_Aires",
     standard: {
         offset: -180
     }
 },
 {
-    tzId: "America/Argentina/Cordoba", 
+    tzId: "America/Argentina/Cordoba",
     standard: {
         offset: -180
     }
 },
 {
-    tzId: "America/Argentina/Salta", 
+    tzId: "America/Argentina/Salta",
     standard: {
         offset: -180
     }
 },
 {
-    tzId: "America/Argentina/Tucuman", 
+    tzId: "America/Argentina/Tucuman",
     standard: {
         offset: -180
     }
 },
 {
-    tzId: "America/Argentina/La_Rioja", 
+    tzId: "America/Argentina/La_Rioja",
     standard: {
         offset: -180
     }
 },
 {
-    tzId: "America/Argentina/San_Juan", 
+    tzId: "America/Argentina/San_Juan",
     standard: {
         offset: -180
     }
 },
 {
-    tzId: "America/Argentina/Jujuy", 
+    tzId: "America/Argentina/Jujuy",
     standard: {
         offset: -180
     }
 },
 {
-    tzId: "America/Argentina/Catamarca", 
+    tzId: "America/Argentina/Catamarca",
     standard: {
         offset: -180
     }
 },
 {
-    tzId: "America/Argentina/Mendoza", 
+    tzId: "America/Argentina/Mendoza",
     standard: {
         offset: -180
     }
 },
 {
-    tzId: "America/Argentina/San_Luis", 
+    tzId: "America/Argentina/San_Luis",
     standard: {
         offset: -240
     }
 },
 {
-    tzId: "America/Argentina/Rio_Gallegos", 
+    tzId: "America/Argentina/Rio_Gallegos",
     standard: {
         offset: -180
     }
 },
 {
-    tzId: "America/Argentina/Ushuaia", 
+    tzId: "America/Argentina/Ushuaia",
     standard: {
         offset: -180
     }
 },
 {
-    tzId: "America/Aruba", 
+    tzId: "America/Aruba",
     standard: {
         offset: -240
     }
 },
 {
-    tzId: "America/La_Paz", 
+    tzId: "America/La_Paz",
     standard: {
         offset: -240
     }
 },
 {
-    tzId: "America/Noronha", 
+    tzId: "America/Noronha",
     standard: {
         offset: -120
     }
 },
 {
-    tzId: "America/Belem", 
+    tzId: "America/Belem",
     standard: {
         offset: -180
     }
 },
 {
-    tzId: "America/Santarem", 
+    tzId: "America/Santarem",
     standard: {
         offset: -180
     }
 },
 {
-    tzId: "America/Fortaleza", 
+    tzId: "America/Fortaleza",
     standard: {
         offset: -180
     }
 },
 {
-    tzId: "America/Recife", 
+    tzId: "America/Recife",
     standard: {
         offset: -180
     }
 },
 {
-    tzId: "America/Araguaina", 
+    tzId: "America/Araguaina",
     standard: {
         offset: -180
     }
 },
 {
-    tzId: "America/Maceio", 
+    tzId: "America/Maceio",
     standard: {
         offset: -180
     }
 },
 {
-    tzId: "America/Bahia", 
+    tzId: "America/Bahia",
     standard: {
         offset: -180
     }
 },
 {
-    tzId: "America/Sao_Paulo", 
+    tzId: "America/Sao_Paulo",
     standard: {
         offset: -180
     }
 },
 {
-    tzId: "America/Campo_Grande", 
+    tzId: "America/Campo_Grande",
     standard: {
         offset: -240
     }
 },
 {
-    tzId: "America/Cuiaba", 
+    tzId: "America/Cuiaba",
     standard: {
         offset: -240
     }
 },
 {
-    tzId: "America/Porto_Velho", 
+    tzId: "America/Porto_Velho",
     standard: {
         offset: -240
     }
 },
 {
-    tzId: "America/Boa_Vista", 
+    tzId: "America/Boa_Vista",
     standard: {
         offset: -240
     }
 },
 {
-    tzId: "America/Manaus", 
+    tzId: "America/Manaus",
     standard: {
         offset: -240
     }
 },
 {
-    tzId: "America/Eirunepe", 
+    tzId: "America/Eirunepe",
     standard: {
         offset: -240
     }
 },
 {
-    tzId: "America/Rio_Branco", 
+    tzId: "America/Rio_Branco",
     standard: {
         offset: -240
     }
 },
 {
-    tzId: "America/Santiago", 
+    tzId: "America/Santiago",
     standard: {
         offset: -360
     }
 },
 {
-    tzId: "America/Bogota", 
+    tzId: "America/Bogota",
     standard: {
         offset: -300
     }
 },
 {
-    tzId: "America/Curacao", 
+    tzId: "America/Curacao",
     standard: {
         offset: -240
     }
 },
 {
-    tzId: "America/Guayaquil", 
+    tzId: "America/Guayaquil",
     standard: {
         offset: -360
     }
 },
 {
-    tzId: "Atlantic/Stanley", 
+    tzId: "Atlantic/Stanley",
     standard: {
         offset: -180
     }
 },
 {
-    tzId: "America/Cayenne", 
+    tzId: "America/Cayenne",
     standard: {
         offset: -180
     }
 },
 {
-    tzId: "America/Guyana", 
+    tzId: "America/Guyana",
     standard: {
         offset: -180
     }
 },
 {
-    tzId: "America/Asuncion", 
+    tzId: "America/Asuncion",
     standard: {
-        offset: -240, 
-        mon: 4, 
-        week: 2, 
-        wkday: 1, 
-        hour: 0, 
-        min: 0, 
+        offset: -240,
+        mon: 4,
+        week: 2,
+        wkday: 1,
+        hour: 0,
+        min: 0,
         sec: 0
     },
     daylight: {
-        offset: -180, 
-        mon: 10, 
-        week: 2, 
-        wkday: 1, 
-        hour: 0, 
-        min: 0, 
+        offset: -180,
+        mon: 10,
+        week: 2,
+        wkday: 1,
+        hour: 0,
+        min: 0,
         sec: 0
     }
 },
 {
-    tzId: "America/Lima", 
+    tzId: "America/Lima",
     standard: {
         offset: -300
     }
 },
 {
-    tzId: "Atlantic/South_Georgia", 
+    tzId: "Atlantic/South_Georgia",
     standard: {
         offset: -120
     }
 },
 {
-    tzId: "America/Paramaribo", 
+    tzId: "America/Paramaribo",
     standard: {
         offset: -180
     }
 },
 {
-    tzId: "America/Port_of_Spain", 
+    tzId: "America/Port_of_Spain",
     standard: {
         offset: -240
     }
 },
 {
-    tzId: "America/Montevideo", 
+    tzId: "America/Montevideo",
     standard: {
         offset: -180
     }
 },
 {
-    tzId: "America/Caracas", 
+    tzId: "America/Caracas",
     standard: {
         offset: -210
     }
 },
 {
-    tzId: "Antarctica/Casey", 
+    tzId: "Antarctica/Casey",
     standard: {
         offset: 480
     }
 },
 {
-    tzId: "Antarctica/Davis", 
+    tzId: "Antarctica/Davis",
     standard: {
         offset: 360
     }
 },
 {
-    tzId: "Antarctica/Macquarie", 
+    tzId: "Antarctica/Macquarie",
     standard: {
         offset: 660
     }
 },
 {
-    tzId: "Indian/Kerguelen", 
+    tzId: "Indian/Kerguelen",
     standard: {
         offset: 300
     }
 },
 {
-    tzId: "Antarctica/DumontDUrville", 
+    tzId: "Antarctica/DumontDUrville",
     standard: {
         offset: 600
     }
 },
 {
-    tzId: "Antarctica/Syowa", 
+    tzId: "Antarctica/Syowa",
     standard: {
         offset: 180
     }
 },
 {
-    tzId: "Antarctica/Vostok", 
+    tzId: "Antarctica/Vostok",
     standard: {
         offset: 360
     }
 },
 {
-    tzId: "Antarctica/Rothera", 
+    tzId: "Antarctica/Rothera",
     standard: {
         offset: -180
     }
 },
 {
-    tzId: "Antarctica/Palmer", 
+    tzId: "Antarctica/Palmer",
     standard: {
         offset: -240
     }
 },
 {
-    tzId: "Antarctica/McMurdo", 
+    tzId: "Antarctica/McMurdo",
     standard: {
         offset: 720
     }
 },
 {
-    tzId: "Asia/Riyadh89", 
+    tzId: "Asia/Riyadh89",
     standard: {
         offset: 187
     }
 },
 {
-    tzId: "Africa/Algiers", 
+    tzId: "Africa/Algiers",
     standard: {
         offset: 60
     }
 },
 {
-    tzId: "Africa/Luanda", 
+    tzId: "Africa/Luanda",
     standard: {
         offset: 60
     }
 },
 {
-    tzId: "Africa/Porto-Novo", 
+    tzId: "Africa/Porto-Novo",
     standard: {
         offset: 60
     }
 },
 {
-    tzId: "Africa/Gaborone", 
+    tzId: "Africa/Gaborone",
     standard: {
         offset: 120
     }
 },
 {
-    tzId: "Africa/Ouagadougou", 
+    tzId: "Africa/Ouagadougou",
     standard: {
         offset: 0
     }
 },
 {
-    tzId: "Africa/Bujumbura", 
+    tzId: "Africa/Bujumbura",
     standard: {
         offset: 120
     }
 },
 {
-    tzId: "Africa/Douala", 
+    tzId: "Africa/Douala",
     standard: {
         offset: 60
     }
 },
 {
-    tzId: "Atlantic/Cape_Verde", 
+    tzId: "Atlantic/Cape_Verde",
     standard: {
         offset: -60
     }
 },
 {
-    tzId: "Africa/Bangui", 
+    tzId: "Africa/Bangui",
     standard: {
         offset: 60
     }
 },
 {
-    tzId: "Africa/Ndjamena", 
+    tzId: "Africa/Ndjamena",
     standard: {
         offset: 60
     }
 },
 {
-    tzId: "Indian/Comoro", 
+    tzId: "Indian/Comoro",
     standard: {
         offset: 180
     }
 },
 {
-    tzId: "Africa/Kinshasa", 
+    tzId: "Africa/Kinshasa",
     standard: {
         offset: 120
     }
 },
 {
-    tzId: "Africa/Brazzaville", 
+    tzId: "Africa/Brazzaville",
     standard: {
         offset: 60
     }
 },
 {
-    tzId: "Africa/Abidjan", 
+    tzId: "Africa/Abidjan",
     standard: {
         offset: 0
     }
 },
 {
-    tzId: "Africa/Djibouti", 
+    tzId: "Africa/Djibouti",
     standard: {
         offset: 180
     }
 },
 {
-    tzId: "Africa/Cairo", 
+    tzId: "Africa/Cairo",
     standard: {
         offset: 120
     }
 },
 {
-    tzId: "Africa/Malabo", 
+    tzId: "Africa/Malabo",
     standard: {
         offset: 60
     }
 },
 {
-    tzId: "Africa/Asmara", 
+    tzId: "Africa/Asmara",
     standard: {
         offset: 180
     }
 },
 {
-    tzId: "Africa/Addis_Ababa", 
+    tzId: "Africa/Addis_Ababa",
     standard: {
         offset: 180
     }
 },
 {
-    tzId: "Africa/Libreville", 
+    tzId: "Africa/Libreville",
     standard: {
         offset: 60
     }
 },
 {
-    tzId: "Africa/Banjul", 
+    tzId: "Africa/Banjul",
     standard: {
         offset: 0
     }
 },
 {
-    tzId: "Africa/Accra", 
+    tzId: "Africa/Accra",
     standard: {
         offset: 0
     }
 },
 {
-    tzId: "Africa/Conakry", 
+    tzId: "Africa/Conakry",
     standard: {
         offset: 0
     }
 },
 {
-    tzId: "Africa/Bissau", 
+    tzId: "Africa/Bissau",
     standard: {
         offset: 0
     }
 },
 {
-    tzId: "Africa/Nairobi", 
+    tzId: "Africa/Nairobi",
     standard: {
         offset: 180
     }
 },
 {
-    tzId: "Africa/Maseru", 
+    tzId: "Africa/Maseru",
     standard: {
         offset: 120
     }
 },
 {
-    tzId: "Africa/Monrovia", 
+    tzId: "Africa/Monrovia",
     standard: {
         offset: 0
     }
 },
 {
-    tzId: "Africa/Tripoli", 
+    tzId: "Africa/Tripoli",
     standard: {
         offset: 60
     }
 },
 {
-    tzId: "Indian/Antananarivo", 
+    tzId: "Indian/Antananarivo",
     standard: {
         offset: 180
     }
 },
 {
-    tzId: "Africa/Blantyre", 
+    tzId: "Africa/Blantyre",
     standard: {
         offset: 120
     }
 },
 {
-    tzId: "Africa/Bamako", 
+    tzId: "Africa/Bamako",
     standard: {
         offset: 0
     }
 },
 {
-    tzId: "Africa/Nouakchott", 
+    tzId: "Africa/Nouakchott",
     standard: {
         offset: 0
     }
 },
 {
-    tzId: "Indian/Mauritius", 
+    tzId: "Indian/Mauritius",
     standard: {
         offset: 240
     }
 },
 {
-    tzId: "Indian/Mayotte", 
+    tzId: "Indian/Mayotte",
     standard: {
         offset: 180
     }
 },
 {
-    tzId: "Africa/Casablanca", 
+    tzId: "Africa/Casablanca",
     standard: {
-        offset: 0, 
-        mon: 9, 
-        week: -1, 
-        wkday: 1, 
-        hour: 3, 
-        min: 0, 
+        offset: 0,
+        mon: 9,
+        week: -1,
+        wkday: 1,
+        hour: 3,
+        min: 0,
         sec: 0
     },
     daylight: {
-        offset: 60, 
-        mon: 4, 
-        week: -1, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: 60,
+        mon: 4,
+        week: -1,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     }
 },
 {
-    tzId: "Africa/El_Aaiun", 
+    tzId: "Africa/El_Aaiun",
     standard: {
         offset: 0
     }
 },
 {
-    tzId: "Africa/Maputo", 
+    tzId: "Africa/Maputo",
     standard: {
         offset: 120
     }
 },
 {
-    tzId: "Africa/Windhoek", 
+    tzId: "Africa/Windhoek",
     standard: {
         offset: 60
     }
 },
 {
-    tzId: "Africa/Niamey", 
+    tzId: "Africa/Niamey",
     standard: {
         offset: 60
     }
 },
 {
-    tzId: "Africa/Lagos", 
+    tzId: "Africa/Lagos",
     standard: {
         offset: 60
     }
 },
 {
-    tzId: "Indian/Reunion", 
+    tzId: "Indian/Reunion",
     standard: {
         offset: 240
     }
 },
 {
-    tzId: "Africa/Kigali", 
+    tzId: "Africa/Kigali",
     standard: {
         offset: 120
     }
 },
 {
-    tzId: "Atlantic/St_Helena", 
+    tzId: "Atlantic/St_Helena",
     standard: {
         offset: 0
     }
 },
 {
-    tzId: "Africa/Sao_Tome", 
+    tzId: "Africa/Sao_Tome",
     standard: {
         offset: 0
     }
 },
 {
-    tzId: "Africa/Dakar", 
+    tzId: "Africa/Dakar",
     standard: {
         offset: 0
     }
 },
 {
-    tzId: "Indian/Mahe", 
+    tzId: "Indian/Mahe",
     standard: {
         offset: 240
     }
 },
 {
-    tzId: "Africa/Freetown", 
+    tzId: "Africa/Freetown",
     standard: {
         offset: 0
     }
 },
 {
-    tzId: "Africa/Mogadishu", 
+    tzId: "Africa/Mogadishu",
     standard: {
         offset: 180
     }
 },
 {
-    tzId: "Africa/Johannesburg", 
+    tzId: "Africa/Johannesburg",
     standard: {
         offset: 120
     }
 },
 {
-    tzId: "Africa/Khartoum", 
+    tzId: "Africa/Khartoum",
     standard: {
         offset: 180
     }
 },
 {
-    tzId: "Africa/Juba", 
+    tzId: "Africa/Juba",
     standard: {
         offset: 180
     }
 },
 {
-    tzId: "Africa/Mbabane", 
+    tzId: "Africa/Mbabane",
     standard: {
         offset: 120
     }
 },
 {
-    tzId: "Africa/Dar_es_Salaam", 
+    tzId: "Africa/Dar_es_Salaam",
     standard: {
         offset: 180
     }
 },
 {
-    tzId: "Africa/Lome", 
+    tzId: "Africa/Lome",
     standard: {
         offset: 0
     }
 },
 {
-    tzId: "Africa/Tunis", 
+    tzId: "Africa/Tunis",
     standard: {
         offset: 60
     }
 },
 {
-    tzId: "Africa/Kampala", 
+    tzId: "Africa/Kampala",
     standard: {
         offset: 180
     }
 },
 {
-    tzId: "Africa/Lusaka", 
+    tzId: "Africa/Lusaka",
     standard: {
         offset: 120
     }
 },
 {
-    tzId: "Africa/Harare", 
+    tzId: "Africa/Harare",
     standard: {
         offset: 120
     }
 },
 {
-    tzId: "Europe/London", 
+    tzId: "Europe/London",
     standard: {
         offset: 0
     }
 },
 {
-    tzId: "WET", 
+    tzId: "WET",
     standard: {
         offset: 0
     }
 },
 {
-    tzId: "Europe/Tirane", 
+    tzId: "Europe/Tirane",
     standard: {
         offset: 60
     }
 },
 {
-    tzId: "Europe/Andorra", 
+    tzId: "Europe/Andorra",
     standard: {
         offset: 60
     }
 },
 {
-    tzId: "Europe/Vienna", 
+    tzId: "Europe/Vienna",
     standard: {
         offset: 60
     }
 },
 {
-    tzId: "Europe/Minsk", 
+    tzId: "Europe/Minsk",
     standard: {
         offset: 180
     }
 },
 {
-    tzId: "Europe/Brussels", 
+    tzId: "Europe/Brussels",
     standard: {
         offset: 60
     }
 },
 {
-    tzId: "Europe/Sofia", 
+    tzId: "Europe/Sofia",
     standard: {
         offset: 120
     }
 },
 {
-    tzId: "Europe/Prague", 
+    tzId: "Europe/Prague",
     standard: {
         offset: 60
     }
 },
 {
-    tzId: "Europe/Copenhagen", 
+    tzId: "Europe/Copenhagen",
     standard: {
         offset: 0
     }
 },
 {
-    tzId: "America/Danmarkshavn", 
+    tzId: "America/Danmarkshavn",
     standard: {
-        offset: -240, 
-        mon: 11, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -240,
+        mon: 11,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     },
     daylight: {
-        offset: -180, 
-        mon: 3, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -180,
+        mon: 3,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     }
 },
 {
-    tzId: "Europe/Tallinn", 
+    tzId: "Europe/Tallinn",
     standard: {
         offset: 120
     }
 },
 {
-    tzId: "Europe/Helsinki", 
+    tzId: "Europe/Helsinki",
     standard: {
         offset: 120
     }
 },
 {
-    tzId: "Europe/Paris", 
+    tzId: "Europe/Paris",
     standard: {
         offset: 9
     }
 },
 {
-    tzId: "Europe/Berlin", 
+    tzId: "Europe/Berlin",
     standard: {
         offset: 60
     }
 },
 {
-    tzId: "Europe/Gibraltar", 
+    tzId: "Europe/Gibraltar",
     standard: {
         offset: 60
     }
 },
 {
-    tzId: "Europe/Athens", 
+    tzId: "Europe/Athens",
     standard: {
         offset: 120
     }
 },
 {
-    tzId: "Europe/Budapest", 
+    tzId: "Europe/Budapest",
     standard: {
         offset: 60
     }
 },
 {
-    tzId: "Atlantic/Reykjavik", 
+    tzId: "Atlantic/Reykjavik",
     standard: {
         offset: 0
     }
 },
 {
-    tzId: "Europe/Rome", 
+    tzId: "Europe/Rome",
     standard: {
         offset: 60
     }
 },
 {
-    tzId: "Europe/Riga", 
+    tzId: "Europe/Riga",
     standard: {
         offset: 120
     }
 },
 {
-    tzId: "Europe/Vaduz", 
+    tzId: "Europe/Vaduz",
     standard: {
         offset: 60
     }
 },
 {
-    tzId: "Europe/Vilnius", 
+    tzId: "Europe/Vilnius",
     standard: {
         offset: 120
     }
 },
 {
-    tzId: "Europe/Luxembourg", 
+    tzId: "Europe/Luxembourg",
     standard: {
         offset: 60
     }
 },
 {
-    tzId: "Europe/Malta", 
+    tzId: "Europe/Malta",
     standard: {
         offset: 60
     }
 },
 {
-    tzId: "Europe/Chisinau", 
+    tzId: "Europe/Chisinau",
     standard: {
         offset: 120
     }
 },
 {
-    tzId: "Europe/Monaco", 
+    tzId: "Europe/Monaco",
     standard: {
         offset: 60
     }
 },
 {
-    tzId: "Europe/Amsterdam", 
+    tzId: "Europe/Amsterdam",
     standard: {
         offset: 60
     }
 },
 {
-    tzId: "Europe/Oslo", 
+    tzId: "Europe/Oslo",
     standard: {
         offset: 60
     }
 },
 {
-    tzId: "Europe/Warsaw", 
+    tzId: "Europe/Warsaw",
     standard: {
         offset: 60
     }
 },
 {
-    tzId: "Europe/Lisbon", 
+    tzId: "Europe/Lisbon",
     standard: {
         offset: 0
     }
 },
 {
-    tzId: "Europe/Bucharest", 
+    tzId: "Europe/Bucharest",
     standard: {
         offset: 120
     }
 },
 {
-    tzId: "Europe/Kaliningrad", 
+    tzId: "Europe/Kaliningrad",
     standard: {
         offset: 180
     }
 },
 {
-    tzId: "Europe/Moscow", 
+    tzId: "Europe/Moscow",
     standard: {
         offset: 240
     }
 },
 {
-    tzId: "Europe/Volgograd", 
+    tzId: "Europe/Volgograd",
     standard: {
         offset: 240
     }
 },
 {
-    tzId: "Europe/Samara", 
+    tzId: "Europe/Samara",
     standard: {
         offset: 240
     }
 },
 {
-    tzId: "Asia/Yekaterinburg", 
+    tzId: "Asia/Yekaterinburg",
     standard: {
         offset: 360
     }
 },
 {
-    tzId: "Asia/Omsk", 
+    tzId: "Asia/Omsk",
     standard: {
         offset: 420
     }
 },
 {
-    tzId: "Asia/Novosibirsk", 
+    tzId: "Asia/Novosibirsk",
     standard: {
         offset: 420
     }
 },
 {
-    tzId: "Asia/Novokuznetsk", 
+    tzId: "Asia/Novokuznetsk",
     standard: {
         offset: 420
     }
 },
 {
-    tzId: "Asia/Krasnoyarsk", 
+    tzId: "Asia/Krasnoyarsk",
     standard: {
         offset: 480
     }
 },
 {
-    tzId: "Asia/Irkutsk", 
+    tzId: "Asia/Irkutsk",
     standard: {
         offset: 540
     }
 },
 {
-    tzId: "Asia/Yakutsk", 
+    tzId: "Asia/Yakutsk",
     standard: {
         offset: 600
     }
 },
 {
-    tzId: "Asia/Vladivostok", 
+    tzId: "Asia/Vladivostok",
     standard: {
         offset: 660
     }
 },
 {
-    tzId: "Asia/Sakhalin", 
+    tzId: "Asia/Sakhalin",
     standard: {
         offset: 660
     }
 },
 {
-    tzId: "Asia/Magadan", 
+    tzId: "Asia/Magadan",
     standard: {
         offset: 720
     }
 },
 {
-    tzId: "Asia/Kamchatka", 
+    tzId: "Asia/Kamchatka",
     standard: {
         offset: 720
     }
 },
 {
-    tzId: "Asia/Anadyr", 
+    tzId: "Asia/Anadyr",
     standard: {
         offset: 720
     }
 },
 {
-    tzId: "Europe/Belgrade", 
+    tzId: "Europe/Belgrade",
     standard: {
         offset: 60
     }
 },
 {
-    tzId: "Europe/Madrid", 
+    tzId: "Europe/Madrid",
     standard: {
         offset: 0
     }
 },
 {
-    tzId: "Europe/Stockholm", 
+    tzId: "Europe/Stockholm",
     standard: {
         offset: 60
     }
 },
 {
-    tzId: "Europe/Zurich", 
+    tzId: "Europe/Zurich",
     standard: {
         offset: 60
     }
 },
 {
-    tzId: "Europe/Istanbul", 
+    tzId: "Europe/Istanbul",
     standard: {
         offset: 0
     }
 },
 {
-    tzId: "Europe/Kiev", 
+    tzId: "Europe/Kiev",
     standard: {
         offset: 120
     }
 },
 {
-    tzId: "Europe/Uzhgorod", 
+    tzId: "Europe/Uzhgorod",
     standard: {
         offset: 120
     }
 },
 {
-    tzId: "Europe/Zaporozhye", 
+    tzId: "Europe/Zaporozhye",
     standard: {
         offset: 120
     }
 },
 {
-    tzId: "Europe/Simferopol", 
+    tzId: "Europe/Simferopol",
     standard: {
         offset: 120
     }
 },
 {
-    tzId: "EST", 
+    tzId: "EST",
     standard: {
         offset: 0
     }
 },
 {
-    tzId: "America/New_York", 
+    tzId: "America/New_York",
     standard: {
-        offset: -300, 
-        mon: 11, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -300,
+        mon: 11,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     },
     daylight: {
-        offset: -240, 
-        mon: 3, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -240,
+        mon: 3,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     }
 },
 {
-    tzId: "America/Chicago", 
+    tzId: "America/Chicago",
     standard: {
-        offset: -360, 
-        mon: 11, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -360,
+        mon: 11,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     },
     daylight: {
-        offset: -300, 
-        mon: 3, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -300,
+        mon: 3,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     }
 },
 {
-    tzId: "America/North_Dakota/Center", 
+    tzId: "America/North_Dakota/Center",
     standard: {
-        offset: -360, 
-        mon: 11, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -360,
+        mon: 11,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     },
     daylight: {
-        offset: -300, 
-        mon: 3, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -300,
+        mon: 3,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     }
 },
 {
-    tzId: "America/North_Dakota/New_Salem", 
+    tzId: "America/North_Dakota/New_Salem",
     standard: {
-        offset: -360, 
-        mon: 11, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -360,
+        mon: 11,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     },
     daylight: {
-        offset: -300, 
-        mon: 3, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -300,
+        mon: 3,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     }
 },
 {
-    tzId: "America/North_Dakota/Beulah", 
+    tzId: "America/North_Dakota/Beulah",
     standard: {
-        offset: -360, 
-        mon: 11, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -360,
+        mon: 11,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     },
     daylight: {
-        offset: -300, 
-        mon: 3, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -300,
+        mon: 3,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     }
 },
 {
-    tzId: "America/Denver", 
+    tzId: "America/Denver",
     standard: {
-        offset: -420, 
-        mon: 11, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -420,
+        mon: 11,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     },
     daylight: {
-        offset: -360, 
-        mon: 3, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -360,
+        mon: 3,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     }
 },
 {
-    tzId: "America/Los_Angeles", 
+    tzId: "America/Los_Angeles",
     standard: {
-        offset: -480, 
-        mon: 11, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -480,
+        mon: 11,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     },
     daylight: {
-        offset: -420, 
-        mon: 3, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -420,
+        mon: 3,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     }
 },
 {
-    tzId: "America/Juneau", 
+    tzId: "America/Juneau",
     standard: {
-        offset: -600, 
-        mon: 11, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -600,
+        mon: 11,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     },
     daylight: {
-        offset: -540, 
-        mon: 3, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -540,
+        mon: 3,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     }
 },
 {
-    tzId: "Pacific/Honolulu", 
+    tzId: "Pacific/Honolulu",
     standard: {
         offset: -600
     }
 },
 {
-    tzId: "America/Phoenix", 
+    tzId: "America/Phoenix",
     standard: {
         offset: -420
     }
 },
 {
-    tzId: "America/Boise", 
+    tzId: "America/Boise",
     standard: {
-        offset: -420, 
-        mon: 11, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -420,
+        mon: 11,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     },
     daylight: {
-        offset: -360, 
-        mon: 3, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -360,
+        mon: 3,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     }
 },
 {
-    tzId: "America/Indiana/Indianapolis", 
+    tzId: "America/Indiana/Indianapolis",
     standard: {
-        offset: -300, 
-        mon: 11, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -300,
+        mon: 11,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     },
     daylight: {
-        offset: -240, 
-        mon: 3, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -240,
+        mon: 3,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     }
 },
 {
-    tzId: "America/Indiana/Marengo", 
+    tzId: "America/Indiana/Marengo",
     standard: {
-        offset: -300, 
-        mon: 11, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -300,
+        mon: 11,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     },
     daylight: {
-        offset: -240, 
-        mon: 3, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -240,
+        mon: 3,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     }
 },
 {
-    tzId: "America/Indiana/Vincennes", 
+    tzId: "America/Indiana/Vincennes",
     standard: {
-        offset: -300, 
-        mon: 11, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -300,
+        mon: 11,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     },
     daylight: {
-        offset: -240, 
-        mon: 3, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -240,
+        mon: 3,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     }
 },
 {
-    tzId: "America/Indiana/Tell_City", 
+    tzId: "America/Indiana/Tell_City",
     standard: {
-        offset: -360, 
-        mon: 11, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -360,
+        mon: 11,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     },
     daylight: {
-        offset: -300, 
-        mon: 3, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -300,
+        mon: 3,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     }
 },
 {
-    tzId: "America/Indiana/Petersburg", 
+    tzId: "America/Indiana/Petersburg",
     standard: {
-        offset: -300, 
-        mon: 11, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -300,
+        mon: 11,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     },
     daylight: {
-        offset: -240, 
-        mon: 3, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -240,
+        mon: 3,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     }
 },
 {
-    tzId: "America/Indiana/Knox", 
+    tzId: "America/Indiana/Knox",
     standard: {
-        offset: -360, 
-        mon: 11, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -360,
+        mon: 11,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     },
     daylight: {
-        offset: -300, 
-        mon: 3, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -300,
+        mon: 3,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     }
 },
 {
-    tzId: "America/Indiana/Winamac", 
+    tzId: "America/Indiana/Winamac",
     standard: {
-        offset: -300, 
-        mon: 11, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -300,
+        mon: 11,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     },
     daylight: {
-        offset: -240, 
-        mon: 3, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -240,
+        mon: 3,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     }
 },
 {
-    tzId: "America/Indiana/Vevay", 
+    tzId: "America/Indiana/Vevay",
     standard: {
-        offset: -300, 
-        mon: 11, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -300,
+        mon: 11,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     },
     daylight: {
-        offset: -240, 
-        mon: 3, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -240,
+        mon: 3,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     }
 },
 {
-    tzId: "America/Kentucky/Louisville", 
+    tzId: "America/Kentucky/Louisville",
     standard: {
-        offset: -300, 
-        mon: 11, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -300,
+        mon: 11,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     },
     daylight: {
-        offset: -240, 
-        mon: 3, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -240,
+        mon: 3,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     }
 },
 {
-    tzId: "America/Kentucky/Monticello", 
+    tzId: "America/Kentucky/Monticello",
     standard: {
-        offset: -300, 
-        mon: 11, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -300,
+        mon: 11,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     },
     daylight: {
-        offset: -240, 
-        mon: 3, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -240,
+        mon: 3,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     }
 },
 {
-    tzId: "America/Detroit", 
+    tzId: "America/Detroit",
     standard: {
-        offset: -300, 
-        mon: 11, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -300,
+        mon: 11,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     },
     daylight: {
-        offset: -240, 
-        mon: 3, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -240,
+        mon: 3,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     }
 },
 {
-    tzId: "America/Menominee", 
+    tzId: "America/Menominee",
     standard: {
-        offset: -360, 
-        mon: 11, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -360,
+        mon: 11,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     },
     daylight: {
-        offset: -300, 
-        mon: 3, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -300,
+        mon: 3,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     }
 },
 {
-    tzId: "America/St_Johns", 
+    tzId: "America/St_Johns",
     standard: {
-        offset: -150, 
-        mon: 11, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -150,
+        mon: 11,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     },
     daylight: {
-        offset: -90, 
-        mon: 3, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -90,
+        mon: 3,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     }
 },
 {
-    tzId: "America/Goose_Bay", 
+    tzId: "America/Goose_Bay",
     standard: {
-        offset: -240, 
-        mon: 11, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -240,
+        mon: 11,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     },
     daylight: {
-        offset: -180, 
-        mon: 3, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -180,
+        mon: 3,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     }
 },
 {
-    tzId: "America/Halifax", 
+    tzId: "America/Halifax",
     standard: {
-        offset: -240, 
-        mon: 11, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -240,
+        mon: 11,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     },
     daylight: {
-        offset: -180, 
-        mon: 3, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -180,
+        mon: 3,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     }
 },
 {
-    tzId: "America/Moncton", 
+    tzId: "America/Moncton",
     standard: {
-        offset: -240, 
-        mon: 11, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -240,
+        mon: 11,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     },
     daylight: {
-        offset: -180, 
-        mon: 3, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -180,
+        mon: 3,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     }
 },
 {
-    tzId: "America/Blanc-Sablon", 
+    tzId: "America/Blanc-Sablon",
     standard: {
-        offset: -300, 
-        mon: 11, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -300,
+        mon: 11,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     },
     daylight: {
-        offset: -240, 
-        mon: 3, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -240,
+        mon: 3,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     }
 },
 {
-    tzId: "America/Toronto", 
+    tzId: "America/Toronto",
     standard: {
         offset: -300
     }
 },
 {
-    tzId: "America/Winnipeg", 
+    tzId: "America/Winnipeg",
     standard: {
-        offset: -360, 
-        mon: 11, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -360,
+        mon: 11,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     },
     daylight: {
-        offset: -300, 
-        mon: 3, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -300,
+        mon: 3,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     }
 },
 {
-    tzId: "America/Regina", 
+    tzId: "America/Regina",
     standard: {
         offset: -360
     }
 },
 {
-    tzId: "America/Edmonton", 
+    tzId: "America/Edmonton",
     standard: {
-        offset: -420, 
-        mon: 11, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -420,
+        mon: 11,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     },
     daylight: {
-        offset: -360, 
-        mon: 3, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -360,
+        mon: 3,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     }
 },
 {
-    tzId: "America/Vancouver", 
+    tzId: "America/Vancouver",
     standard: {
         offset: -420
     }
 },
 {
-    tzId: "America/Pangnirtung", 
+    tzId: "America/Pangnirtung",
     standard: {
-        offset: -300, 
-        mon: 11, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -300,
+        mon: 11,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     },
     daylight: {
-        offset: -240, 
-        mon: 3, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -240,
+        mon: 3,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     }
 },
 {
-    tzId: "America/Iqaluit", 
+    tzId: "America/Iqaluit",
     standard: {
-        offset: -300, 
-        mon: 11, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -300,
+        mon: 11,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     },
     daylight: {
-        offset: -240, 
-        mon: 3, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -240,
+        mon: 3,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     }
 },
 {
-    tzId: "America/Resolute", 
+    tzId: "America/Resolute",
     standard: {
-        offset: -360, 
-        mon: 11, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -360,
+        mon: 11,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     },
     daylight: {
-        offset: -300, 
-        mon: 3, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -300,
+        mon: 3,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     }
 },
 {
-    tzId: "America/Rankin_Inlet", 
+    tzId: "America/Rankin_Inlet",
     standard: {
-        offset: -360, 
-        mon: 11, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -360,
+        mon: 11,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     },
     daylight: {
-        offset: -300, 
-        mon: 3, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -300,
+        mon: 3,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     }
 },
 {
-    tzId: "America/Cambridge_Bay", 
+    tzId: "America/Cambridge_Bay",
     standard: {
-        offset: -480, 
-        mon: 11, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -480,
+        mon: 11,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     },
     daylight: {
-        offset: -420, 
-        mon: 3, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -420,
+        mon: 3,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     }
 },
 {
-    tzId: "America/Cancun", 
+    tzId: "America/Cancun",
     standard: {
-        offset: -360, 
-        mon: 10, 
-        week: -1, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -360,
+        mon: 10,
+        week: -1,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     },
     daylight: {
-        offset: -300, 
-        mon: 4, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -300,
+        mon: 4,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     }
 },
 {
-    tzId: "America/Merida", 
+    tzId: "America/Merida",
     standard: {
-        offset: -360, 
-        mon: 10, 
-        week: -1, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -360,
+        mon: 10,
+        week: -1,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     },
     daylight: {
-        offset: -300, 
-        mon: 4, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -300,
+        mon: 4,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     }
 },
 {
-    tzId: "America/Matamoros", 
+    tzId: "America/Matamoros",
     standard: {
-        offset: -360, 
-        mon: 11, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -360,
+        mon: 11,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     },
     daylight: {
-        offset: -300, 
-        mon: 3, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -300,
+        mon: 3,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     }
 },
 {
-    tzId: "America/Monterrey", 
+    tzId: "America/Monterrey",
     standard: {
-        offset: -360, 
-        mon: 10, 
-        week: -1, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -360,
+        mon: 10,
+        week: -1,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     },
     daylight: {
-        offset: -300, 
-        mon: 4, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -300,
+        mon: 4,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     }
 },
 {
-    tzId: "America/Mexico_City", 
+    tzId: "America/Mexico_City",
     standard: {
-        offset: -360, 
-        mon: 10, 
-        week: -1, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -360,
+        mon: 10,
+        week: -1,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     },
     daylight: {
-        offset: -300, 
-        mon: 4, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -300,
+        mon: 4,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     }
 },
 {
-    tzId: "America/Ojinaga", 
+    tzId: "America/Ojinaga",
     standard: {
-        offset: -420, 
-        mon: 11, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -420,
+        mon: 11,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     },
     daylight: {
-        offset: -360, 
-        mon: 3, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -360,
+        mon: 3,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     }
 },
 {
-    tzId: "America/Chihuahua", 
+    tzId: "America/Chihuahua",
     standard: {
-        offset: -420, 
-        mon: 10, 
-        week: -1, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -420,
+        mon: 10,
+        week: -1,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     },
     daylight: {
-        offset: -360, 
-        mon: 4, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -360,
+        mon: 4,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     }
 },
 {
-    tzId: "America/Hermosillo", 
+    tzId: "America/Hermosillo",
     standard: {
         offset: -420
     }
 },
 {
-    tzId: "America/Mazatlan", 
+    tzId: "America/Mazatlan",
     standard: {
-        offset: -420, 
-        mon: 10, 
-        week: -1, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -420,
+        mon: 10,
+        week: -1,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     },
     daylight: {
-        offset: -360, 
-        mon: 4, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -360,
+        mon: 4,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     }
 },
 {
-    tzId: "America/Bahia_Banderas", 
+    tzId: "America/Bahia_Banderas",
     standard: {
-        offset: -360, 
-        mon: 10, 
-        week: -1, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -360,
+        mon: 10,
+        week: -1,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     },
     daylight: {
-        offset: -300, 
-        mon: 4, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -300,
+        mon: 4,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     }
 },
 {
-    tzId: "America/Tijuana", 
+    tzId: "America/Tijuana",
     standard: {
-        offset: -480, 
-        mon: 11, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -480,
+        mon: 11,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     },
     daylight: {
-        offset: -420, 
-        mon: 3, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -420,
+        mon: 3,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     }
 },
 {
-    tzId: "America/Santa_Isabel", 
+    tzId: "America/Santa_Isabel",
     standard: {
-        offset: -480, 
-        mon: 10, 
-        week: -1, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -480,
+        mon: 10,
+        week: -1,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     },
     daylight: {
-        offset: -420, 
-        mon: 4, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -420,
+        mon: 4,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     }
 },
 {
-    tzId: "America/Anguilla", 
+    tzId: "America/Anguilla",
     standard: {
         offset: -240
     }
 },
 {
-    tzId: "America/Antigua", 
+    tzId: "America/Antigua",
     standard: {
         offset: -240
     }
 },
 {
-    tzId: "America/Nassau", 
+    tzId: "America/Nassau",
     standard: {
-        offset: -300, 
-        mon: 11, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -300,
+        mon: 11,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     },
     daylight: {
-        offset: -240, 
-        mon: 3, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -240,
+        mon: 3,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     }
 },
 {
-    tzId: "America/Barbados", 
+    tzId: "America/Barbados",
     standard: {
         offset: -240
     }
 },
 {
-    tzId: "America/Belize", 
+    tzId: "America/Belize",
     standard: {
         offset: -360
     }
 },
 {
-    tzId: "Atlantic/Bermuda", 
+    tzId: "Atlantic/Bermuda",
     standard: {
-        offset: -240, 
-        mon: 11, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -240,
+        mon: 11,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     },
     daylight: {
-        offset: -180, 
-        mon: 3, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -180,
+        mon: 3,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     }
 },
 {
-    tzId: "America/Cayman", 
+    tzId: "America/Cayman",
     standard: {
         offset: -300
     }
 },
 {
-    tzId: "America/Costa_Rica", 
+    tzId: "America/Costa_Rica",
     standard: {
         offset: -360
     }
 },
 {
-    tzId: "America/Havana", 
+    tzId: "America/Havana",
     standard: {
         offset: -300
     }
 },
 {
-    tzId: "America/Dominica", 
+    tzId: "America/Dominica",
     standard: {
         offset: -240
     }
 },
 {
-    tzId: "America/Santo_Domingo", 
+    tzId: "America/Santo_Domingo",
     standard: {
         offset: -240
     }
 },
 {
-    tzId: "America/El_Salvador", 
+    tzId: "America/El_Salvador",
     standard: {
         offset: -360
     }
 },
 {
-    tzId: "America/Grenada", 
+    tzId: "America/Grenada",
     standard: {
         offset: -240
     }
 },
 {
-    tzId: "America/Guadeloupe", 
+    tzId: "America/Guadeloupe",
     standard: {
         offset: -240
     }
 },
 {
-    tzId: "America/Guatemala", 
+    tzId: "America/Guatemala",
     standard: {
         offset: -360
     }
 },
 {
-    tzId: "America/Port-au-Prince", 
+    tzId: "America/Port-au-Prince",
     standard: {
         offset: -300
     }
 },
 {
-    tzId: "America/Tegucigalpa", 
+    tzId: "America/Tegucigalpa",
     standard: {
         offset: -360
     }
 },
 {
-    tzId: "America/Jamaica", 
+    tzId: "America/Jamaica",
     standard: {
         offset: -300
     }
 },
 {
-    tzId: "America/Martinique", 
+    tzId: "America/Martinique",
     standard: {
         offset: -240
     }
 },
 {
-    tzId: "America/Montserrat", 
+    tzId: "America/Montserrat",
     standard: {
         offset: -240
     }
 },
 {
-    tzId: "America/Managua", 
+    tzId: "America/Managua",
     standard: {
         offset: -360
     }
 },
 {
-    tzId: "America/Panama", 
+    tzId: "America/Panama",
     standard: {
         offset: -300
     }
 },
 {
-    tzId: "America/Puerto_Rico", 
+    tzId: "America/Puerto_Rico",
     standard: {
         offset: -240
     }
 },
 {
-    tzId: "America/St_Kitts", 
+    tzId: "America/St_Kitts",
     standard: {
         offset: -240
     }
 },
 {
-    tzId: "America/St_Lucia", 
+    tzId: "America/St_Lucia",
     standard: {
         offset: -240
     }
 },
 {
-    tzId: "America/Miquelon", 
+    tzId: "America/Miquelon",
     standard: {
-        offset: -180, 
-        mon: 11, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -180,
+        mon: 11,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     },
     daylight: {
-        offset: -120, 
-        mon: 3, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -120,
+        mon: 3,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     }
 },
 {
-    tzId: "America/St_Vincent", 
+    tzId: "America/St_Vincent",
     standard: {
         offset: -240
     }
 },
 {
-    tzId: "America/Grand_Turk", 
+    tzId: "America/Grand_Turk",
     standard: {
-        offset: -300, 
-        mon: 11, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -300,
+        mon: 11,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     },
     daylight: {
-        offset: -240, 
-        mon: 3, 
-        week: 2, 
-        wkday: 1, 
-        hour: 2, 
-        min: 0, 
+        offset: -240,
+        mon: 3,
+        week: 2,
+        wkday: 1,
+        hour: 2,
+        min: 0,
         sec: 0
     }
 },
 {
-    tzId: "America/Tortola", 
+    tzId: "America/Tortola",
     standard: {
         offset: -240
     }
 },
 {
-    tzId: "America/St_Thomas", 
+    tzId: "America/St_Thomas",
     standard: {
         offset: -240
     }
 }
 ]
-}});
+}};
 
 TimezoneData = Y.Date.Timezone.__tzoneData;
