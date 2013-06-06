@@ -5,6 +5,26 @@
             "jsfiles": [
                 "Intl.js"
             ]
+        },
+        "intl-common": {
+            "jsfiles": [
+                "js/intl-common.js"
+            ]
+        },
+        "intl-message-format": {
+            "jsfiles": [
+                "js/message/base.js",
+		"js/message/string.js",
+		"js/message/date.js",
+		"js/message/time.js",
+		"js/message/number.js",
+		"js/message/select.js",
+                "js/message/plural-rules.js",
+		"js/message/plural.js",
+		"js/message/choice.js",
+                "js/message/list.js",
+                "js/message/format-message.js"
+            ]
         }
     }
 }

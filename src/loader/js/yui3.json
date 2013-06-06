@@ -1027,12 +1027,45 @@
             "zh-Hant-TW"
         ]
     },
+    "datatype-date-format-advanced": {
+        "lang": [
+            "en-US",
+            "th"
+        ],
+        "requires": [
+            "datatype-date-format",
+            "datatype-date-timezone"
+        ]
+    },
+    "datatype-date-format-ecma": {
+        "condition": {
+            "name": "datatype-date-format-ecma",
+            "test": "ecma.js",
+            "trigger": "datatype-date-format-advanced"
+        },
+        "requires": [
+            "datatype-date-format-advanced"
+        ]
+    },
     "datatype-date-math": {
         "requires": [
             "yui-base"
         ]
     },
     "datatype-date-parse": {},
+    "datatype-date-timezone": {
+        "requires": [
+            "intl-common"
+        ]
+    },
+    "datatype-list-format": {
+        "lang": [
+            "en-GB"
+        ],
+        "requires": [
+            "yui-base"
+        ]
+    },
     "datatype-number": {
         "use": [
             "datatype-number-parse",
@@ -1040,6 +1073,28 @@
         ]
     },
     "datatype-number-format": {},
+    "datatype-number-format-advanced": {
+        "lang": [
+            "en-US",
+            "ru"
+        ],
+        "requires": [
+            "intl-common",
+            "datatype-number-format",
+            "datatype-number-parse"
+        ]
+    },
+    "datatype-number-format-ecma": {
+        "condition": {
+            "name": "datatype-number-format-ecma",
+            "test": "ecma.js",
+            "trigger": "datatype-number-format-advanced",
+            "when": "after"
+        },
+        "requires": [
+            "intl"
+        ]
+    },
     "datatype-number-parse": {},
     "datatype-xml": {
         "use": [
@@ -1642,6 +1697,20 @@
     "intl-base": {
         "requires": [
             "yui-base"
+        ]
+    },
+    "intl-common": {
+        "requires": [
+            "intl"
+        ]
+    },
+    "intl-message-format": {
+        "lang": [
+            "en",
+            "ru"
+        ],
+        "requires": [
+            "intl"
         ]
     },
     "io": {

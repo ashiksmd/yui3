@@ -15,6 +15,19 @@
             "jsfiles": [
                 "date-format.js"
             ]
+        },
+        "datatype-date-format-advanced": {
+            "jsfiles": [
+                "js/advanced/format-date-internal.js",
+                "js/advanced/format-relative.js",
+                "js/advanced/format-duration.js",
+                "js/advanced/format-date.js"
+            ]
+        },
+        "datatype-date-format-ecma": {
+            "jsfiles": [
+                "js/advanced/format-date-ecma.js"
+            ]
         }
     }
 }

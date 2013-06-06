@@ -4,5 +4,16 @@
 	        "intl-base",
             "event-custom"
        ]
+    },
+    "intl-common": {
+       "requires": [
+            "intl"
+        ]
+    },
+    "intl-message-format": {
+        "lang": ["en", "ru"],
+        "requires": [
+            "intl"
+        ]
     }
 }

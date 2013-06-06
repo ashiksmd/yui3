@@ -1,0 +1,14 @@
+{
+    "name": "datatype-date-timezone",
+    "builds": {
+        "datatype-date-timezone": {
+            "jsfiles": [
+                "js/license.js",
+                "js/stdOffsets.js",
+		"js/timezoneData.js",
+		"js/timezoneLinks.js",
+                "js/timezone.js"
+            ]
+        }
+    }
+}

@@ -27,5 +27,16 @@
     },
     "datatype-date-math": {
         "requires": [ "yui-base" ]
+    },
+    "datatype-date-format-advanced": {
+        "lang": ["en-US", "th"],
+        "requires": [ "datatype-date-format", "datatype-date-timezone" ]
+    },
+    "datatype-date-format-ecma": {
+        "condition": {
+	          "trigger": "datatype-date-format-advanced",
+	          "test": "ecma.js"
+	    },
+	    "requires": [ "datatype-date-format-advanced" ]
     }
 }

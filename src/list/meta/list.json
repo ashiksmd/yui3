@@ -1,0 +1,6 @@
+{
+    "datatype-list-format": {
+        "lang": ["en-GB"],
+        "requires": ["yui-base"]
+    }
+}

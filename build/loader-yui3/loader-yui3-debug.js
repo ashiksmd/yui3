@@ -1061,12 +1061,45 @@ Y.mix(YUI.Env[Y.version].modules, {
             "zh-Hant-TW"
         ]
     },
+    "datatype-date-format-advanced": {
+        "lang": [
+            "en-US",
+            "th"
+        ],
+        "requires": [
+            "datatype-date-format",
+            "datatype-date-timezone"
+        ]
+    },
+    "datatype-date-format-ecma": {
+        "condition": {
+            "name": "datatype-date-format-ecma",
+            "test": function() { return window.Intl !== undefined; },
+            "trigger": "datatype-date-format-advanced"
+        },
+        "requires": [
+            "datatype-date-format-advanced"
+        ]
+    },
     "datatype-date-math": {
         "requires": [
             "yui-base"
         ]
     },
     "datatype-date-parse": {},
+    "datatype-date-timezone": {
+        "requires": [
+            "intl-common"
+        ]
+    },
+    "datatype-list-format": {
+        "lang": [
+            "en-GB"
+        ],
+        "requires": [
+            "yui-base"
+        ]
+    },
     "datatype-number": {
         "use": [
             "datatype-number-parse",
@@ -1074,6 +1107,30 @@ Y.mix(YUI.Env[Y.version].modules, {
         ]
     },
     "datatype-number-format": {},
+    "datatype-number-format-advanced": {
+        "lang": [
+            "en-US",
+            "ru"
+        ],
+        "requires": [
+            "intl-common",
+            "datatype-number-format",
+            "datatype-number-parse"
+        ]
+    },
+    "datatype-number-format-ecma": {
+        "condition": {
+            "name": "datatype-number-format-ecma",
+            "test": function (Y) {
+	return (window.Intl !== undefined);
+},
+            "trigger": "datatype-number-format-advanced",
+            "when": "after"
+        },
+        "requires": [
+            "intl"
+        ]
+    },
     "datatype-number-parse": {},
     "datatype-xml": {
         "use": [
@@ -1743,6 +1800,20 @@ Y.mix(YUI.Env[Y.version].modules, {
     "intl-base": {
         "requires": [
             "yui-base"
+        ]
+    },
+    "intl-common": {
+        "requires": [
+            "intl"
+        ]
+    },
+    "intl-message-format": {
+        "lang": [
+            "en",
+            "ru"
+        ],
+        "requires": [
+            "intl"
         ]
     },
     "io": {
@@ -2937,7 +3008,7 @@ Y.mix(YUI.Env[Y.version].modules, {
         ]
     }
 });
-YUI.Env[Y.version].md5 = '0ef57f597d6d83db16c9127b46f6150b';
+YUI.Env[Y.version].md5 = '7cba7a6dbd733408fd65e95e10e691b0';
 
 
 }, '@VERSION@', {"requires": ["loader-base"]});

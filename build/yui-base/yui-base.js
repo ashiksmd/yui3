@@ -5085,14 +5085,29 @@ add('load', '1', {
 },
     "trigger": "autocomplete-list"
 });
-// dd-gestures
+// datatype-date-format-ecma
 add('load', '2', {
+    "name": "datatype-date-format-ecma",
+    "test": function() { return window.Intl !== undefined; },
+    "trigger": "datatype-date-format-advanced"
+});
+// datatype-number-format-ecma
+add('load', '3', {
+    "name": "datatype-number-format-ecma",
+    "test": function (Y) {
+	return (window.Intl !== undefined);
+},
+    "trigger": "datatype-number-format-advanced",
+    "when": "after"
+});
+// dd-gestures
+add('load', '4', {
     "name": "dd-gestures",
     "trigger": "dd-drag",
     "ua": "touchEnabled"
 });
 // dom-style-ie
-add('load', '3', {
+add('load', '5', {
     "name": "dom-style-ie",
     "test": function (Y) {
 
@@ -5123,14 +5138,14 @@ add('load', '3', {
     "trigger": "dom-style"
 });
 // editor-para-ie
-add('load', '4', {
+add('load', '6', {
     "name": "editor-para-ie",
     "trigger": "editor-para",
     "ua": "ie",
     "when": "instead"
 });
 // event-base-ie
-add('load', '5', {
+add('load', '7', {
     "name": "event-base-ie",
     "test": function(Y) {
     var imp = Y.config.doc && Y.config.doc.implementation;
@@ -5139,7 +5154,7 @@ add('load', '5', {
     "trigger": "node-base"
 });
 // graphics-canvas
-add('load', '6', {
+add('load', '8', {
     "name": "graphics-canvas",
     "test": function(Y) {
     var DOCUMENT = Y.config.doc,
@@ -5151,7 +5166,7 @@ add('load', '6', {
     "trigger": "graphics"
 });
 // graphics-canvas-default
-add('load', '7', {
+add('load', '9', {
     "name": "graphics-canvas-default",
     "test": function(Y) {
     var DOCUMENT = Y.config.doc,
@@ -5163,7 +5178,7 @@ add('load', '7', {
     "trigger": "graphics"
 });
 // graphics-svg
-add('load', '8', {
+add('load', '10', {
     "name": "graphics-svg",
     "test": function(Y) {
     var DOCUMENT = Y.config.doc,
@@ -5176,7 +5191,7 @@ add('load', '8', {
     "trigger": "graphics"
 });
 // graphics-svg-default
-add('load', '9', {
+add('load', '11', {
     "name": "graphics-svg-default",
     "test": function(Y) {
     var DOCUMENT = Y.config.doc,
@@ -5189,7 +5204,7 @@ add('load', '9', {
     "trigger": "graphics"
 });
 // graphics-vml
-add('load', '10', {
+add('load', '12', {
     "name": "graphics-vml",
     "test": function(Y) {
     var DOCUMENT = Y.config.doc,
@@ -5199,7 +5214,7 @@ add('load', '10', {
     "trigger": "graphics"
 });
 // graphics-vml-default
-add('load', '11', {
+add('load', '13', {
     "name": "graphics-vml-default",
     "test": function(Y) {
     var DOCUMENT = Y.config.doc,
@@ -5209,7 +5224,7 @@ add('load', '11', {
     "trigger": "graphics"
 });
 // history-hash-ie
-add('load', '12', {
+add('load', '14', {
     "name": "history-hash-ie",
     "test": function (Y) {
     var docMode = Y.config.doc && Y.config.doc.documentMode;
@@ -5220,13 +5235,13 @@ add('load', '12', {
     "trigger": "history-hash"
 });
 // io-nodejs
-add('load', '13', {
+add('load', '15', {
     "name": "io-nodejs",
     "trigger": "io-base",
     "ua": "nodejs"
 });
 // json-parse-shim
-add('load', '14', {
+add('load', '16', {
     "name": "json-parse-shim",
     "test": function (Y) {
     var _JSON = Y.config.global.JSON,
@@ -5253,7 +5268,7 @@ add('load', '14', {
     "trigger": "json-parse"
 });
 // json-stringify-shim
-add('load', '15', {
+add('load', '17', {
     "name": "json-stringify-shim",
     "test": function (Y) {
     var _JSON = Y.config.global.JSON,
@@ -5276,13 +5291,13 @@ add('load', '15', {
     "trigger": "json-stringify"
 });
 // scrollview-base-ie
-add('load', '16', {
+add('load', '18', {
     "name": "scrollview-base-ie",
     "trigger": "scrollview-base",
     "ua": "ie"
 });
 // selector-css2
-add('load', '17', {
+add('load', '19', {
     "name": "selector-css2",
     "test": function (Y) {
     var DOCUMENT = Y.config.doc,
@@ -5293,7 +5308,7 @@ add('load', '17', {
     "trigger": "selector"
 });
 // transition-timer
-add('load', '18', {
+add('load', '20', {
     "name": "transition-timer",
     "test": function (Y) {
     var DOCUMENT = Y.config.doc,
@@ -5309,13 +5324,13 @@ add('load', '18', {
     "trigger": "transition"
 });
 // widget-base-ie
-add('load', '19', {
+add('load', '21', {
     "name": "widget-base-ie",
     "trigger": "widget-base",
     "ua": "ie"
 });
 // yql-jsonp
-add('load', '20', {
+add('load', '22', {
     "name": "yql-jsonp",
     "test": function (Y) {
     /* Only load the JSONP module when not in nodejs or winjs
@@ -5327,14 +5342,14 @@ add('load', '20', {
     "when": "after"
 });
 // yql-nodejs
-add('load', '21', {
+add('load', '23', {
     "name": "yql-nodejs",
     "trigger": "yql",
     "ua": "nodejs",
     "when": "after"
 });
 // yql-winjs
-add('load', '22', {
+add('load', '24', {
     "name": "yql-winjs",
     "trigger": "yql",
     "ua": "winjs",
