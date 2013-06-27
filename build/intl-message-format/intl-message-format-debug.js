@@ -1115,4 +1115,38 @@ Y.mix(Y.Intl, {
 });
 
 
-}, '@VERSION@', {"lang": ["en", "ru"], "requires": ["intl"]});
+}, '@VERSION@', {
+    "lang": [
+        "am",
+        "ar",
+        "be",
+        "cs",
+        "cy",
+        "en",
+        "fil",
+        "fr",
+        "ga",
+        "gv",
+        "he",
+        "hi",
+        "hr",
+        "kw",
+        "lt",
+        "lv",
+        "mk",
+        "mt",
+        "pl",
+        "ro",
+        "ru",
+        "sh",
+        "sk",
+        "sl",
+        "sr",
+        "ti",
+        "tl",
+        "uk"
+    ],
+    "requires": [
+        "intl"
+    ]
+});

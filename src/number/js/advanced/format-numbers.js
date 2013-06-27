@@ -1,6 +1,6 @@
 Y.mix( Y.Number, {
-     _oldFormat: Y.Number.format,
-     _oldParse:  Y.Number.parse
+     _nonStandardFormat: Y.Number.format,
+     _nonStandardParse:  Y.Number.parse
 });
 
 Y.mix( Y.Number, {
@@ -36,7 +36,7 @@ Y.mix( Y.Number, {
     
          if(config.prefix !== undefined || config.decimalPlaces !== undefined || config.decimalSeparator !== undefined
                || config.thousandsSeparator !== undefined || config.suffix !== undefined) {
-             return Y.Number._oldFormat(data, config);
+             return Y.Number._nonStandardFormat(data, config);
          }
 
          if(Y.Lang.isString(config.style)) {
@@ -73,6 +73,10 @@ Y.mix( Y.Number, {
       * @return {Number} Number represented by data
       */
      parse: function(data, config) {
+         config = config || {};
+         if(config.style === undefined) {
+             return Y.Number._nonStandardParse(data);
+         }
          var formatter = new YNumberFormat(config.style);
          return formatter.parse(data, config.parsePosition);
      }

@@ -185,6 +185,6 @@ YUI.add('module-tests', function(Y) {
 
 },'', { requires: [ 'test', 'intl-message-format', 'datatype-list-format', 'datatype-date-format-advanced', 'datatype-number-format-advanced',
 'lang/datatype-number-format-advanced_ru', 'lang/datatype-number-format-advanced_en-US',
-'lang/intl-message-format_ru', 'lang/intl-message-format_en',
+'lang/intl-message-format_ru',
 'lang/datatype-list-format_en-GB',
 'lang/datatype-date-format-advanced_en-US' ] });

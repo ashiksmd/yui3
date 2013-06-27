@@ -419,3 +419,202 @@ on UTF-8 and with additional heredoc support.</p>
         A “\” immediately preceding the end of the file is illegal.</li>
     <li>Only the characters horizontal tab, U+0009, and space, U+0020, are considered whitespace.</li>
 </ul>
+
+<h2 id="message-format">Using Message Format</h2>
+
+<p>
+   <code>Y.Intl.formatMessage()</code> enables the construction of localizable messages that combine static strings with
+   information that only becomes available at runtime. It relies on three pieces of information:
+</p>
+
+<ul>
+   <li>
+       The <b>pattern</b> string contains static text with embedded format elements that specify how to process and insert
+       strings, numbers, and dates, as well as perform conditional processing.
+   </li>
+   <li>
+       The <b>arguments</b> array provides the data to be processed and inserted.
+   </li>
+   <li>
+       The <b>locale</b> specifies which rules to use when formatting numbers and dates.
+   </li>
+</ul>
+
+
+```
+YUI({ lang: 'en-IN' }).use("intl-message-format", "datatype-date-format-advanced", "datatype-number-format-advanced", "datatype-list-format", function(Y) {
+    //Message format with date, time and number
+    Y.log(
+           Y.Intl.formatMessage(
+                 "At {1,time} on {1,date}, there was {2} on planet{0,number,integer}.",
+                 [7, new Date(), "a disturbance in the force"]
+           )
+    );
+
+    //Select formatter
+    Y.log(
+           Y.Intl.formatMessage(
+                 "{NAME} est {GENDER, select, female {allée} other {allé}} à {CITY}.",
+                 {
+                    "NAME": "Henri", 
+                    "GENDER": "male", 
+                    "CITY": "Paris"
+                 }
+           )
+    );
+
+    //Plural formatter
+    Y.log(
+           Y.Intl.formatMessage(
+                 "{COMPANY_COUNT, plural, one {One company} other {# companies}} published new books.",
+                 {
+                    "COMPANY_COUNT": 1
+                 }
+           )
+    );
+
+    //Choice formatter
+    Y.log(
+           Y.Intl.formatMessage(
+                 "There {FILE_COUNT, choice, 0#are no files|1#is one file|1<are {FILE_COUNT, number, integer} files} on disk.",
+                 {
+                    "FILE_COUNT": 0
+                 }
+           )
+    );
+
+    //List formatter
+    Y.log(
+           Y.Intl.formatMessage(
+                 "{COUNTRIES, list}",
+                 {
+                    "COUNTRIES": ["US", "UK", "Canada"]
+                 }
+           )
+    );
+});
+
+```
+
+<p>
+   The second parameter to <code>formatMessage()</code> can be an array (unnamed parameters),
+   or an object (named parameters). Both types are shown in the above examples.
+</p>
+
+<h4 id="placeholders">Placeholders for data</h4>
+
+<p>
+   The placeholders for the data are of the form {param, type, style}. <code>param</code> is an index in
+   case of unnamed parameters, or the name of the parameter in case of named parameters. <code>type</code>
+   and <code>style</code> vary according to the required type of formatting.
+</p>
+
+<h4 id="string-formatting">Format Type <code>string</code></h4>
+
+<p>
+   The format type string is assumed when no other format type is specified.
+   The string is simply inserted into the output string in place of the format element.
+   <br/>eg: <code>{EMPLOYEE} reports to {MANAGER}.</code>
+</p>
+
+<h4 id="date-time-formatting">Format Types <code>date</code> and <code>time</code></h4>
+<p>
+   The format types <code>date</code> and <code>time</code> are used to format date and time values
+   in a locale-sensitive way. The format style can be used to specify <code>short</code>, <code>medium</code>,
+   <code>long</code> or <code>full</code>. If no format style is specified, the medium style is used.
+   The format style is used to format the date and the resulting string is inserted into the message.
+   In order to show both date and time, the same argument can be used in both a <code>date</code>
+   and a <code>time</code> type format.
+   <br/>eg: <code>It is now {TIME, time, medium} on {TIME, date, medium}.</code>
+</p>
+
+<h4 id="number-formatting">Format Type <code>number</code></h4>
+
+<p>
+   The format type <code>number</code> is used to format numbers in a locale-sensitive way. The format <code>style</code>
+   can be used to specify <code>integer</code>, <code>percent</code> or <code>currency</code>. If no format style is specified,
+   <code>integer</code> is assumed.
+   The format style is used to format the number and the resulting string is inserted into the message.
+   <br/>eg: <code>There are {POPULATION, number, integer} people in the city.</code>
+</p>
+
+<h4 id="list-formatting">Format Type <code>list</code></h4>
+
+<p>
+   The format type <code>list</code> is used to format lists in a locale-sensitive way.
+   Example: Input data ["Alice", "Bob", "Charlie", "Delta"] will be formatted as "Alice, Bob, Charlie and Delta" in English.
+</p>
+
+<h4 id="plural-formatting">Format Type <code>plural</code></h4>
+
+<p>
+  The format type <code>plural</code> is used to describe agreement of other sentence parts with an inserted number.
+  The format element must include a pattern that's a sequence of <code>keyword {subpattern}</code> strings.
+  The keywords are defined by the markup language of the Common Locale Data Repository; they currently include
+  <code>zero</code>, <code>one</code>, <code>two</code>, <code>few</code>, <code>many</code>, and <code>other</code>.
+  <code>other</code> is a fallback that can occur with any language and must be defined in any plural format;
+  the other keywords depend on the language. Within a plural format, the character # can be used as a shorthand for
+  <code>{argument, number}</code> using the same argument as for the plural format itself.
+  The argument is mapped to a keyword (<code>zero</code>, <code>one</code>, <code>few</code>, etc.) using information
+  about the plural rules for the language of its locale. MessageFormat then selects the subpattern for the resulting keyword
+  if it is provided, or it defaults to <code>other</code>, interprets the subpattern recursively as a MessageFormat pattern,
+  and inserts the resulting string into the message.
+  <br/>eg: <code>{COMPANY_COUNT, plural, one {One company} other {# companies}} published new books.</code>
+</p>
+
+<h4 id="select-formatting">Format Type <code>select</code></h4>
+
+<p>
+   The format type <code>select</code> is used to select a subpattern based on a keyword. The format element must include a
+   pattern that's a sequence of <code>keyword {subpattern}</code> strings. The keywords are defined by the application and must match the
+   regular expression <i>[a-zA-Z][a-zA-Z0-9_-]*</i>; <code>other</code> is a fallback that must be defined in any select format.
+   MessageFormat selects the subpattern for the given keyword if it is provided or for <code>other</code> otherwise,
+   interprets the subpattern recursively as a MessageFormat pattern, and inserts the resulting string into the message.
+</p>
+
+<p>
+   The main use case for the <code>select</code> format is gender based inflection. When names or nouns are inserted into sentences,
+   their gender can affect pronouns, verb forms, articles, and adjectives. Special care needs to be taken when the gender cannot be
+   determined. The user has to provide information about the gender associated with a noun or name to MessageFormat.
+   Two main cases can be distinguished:
+<p>
+
+<ul>
+   <li>
+      For people, natural gender information should be maintained for each person.
+      The keywords <code>male</code>, <code>female</code>, <code>mixed</code> (for groups of people) and <code>unknown</code> are used.
+   </li>
+   <li>
+      For nouns, grammatical gender information should be maintained for each noun and per language, e.g., in resource bundles.
+      The keywords <code>masculine</code>, <code>feminine</code>, and <code>neuter</code> are commonly used,
+      but some languages may require other keywords. 
+   </li>
+</ul>
+
+<h4 id="choice-formatting">Format Type <code>choice</code></h4>
+
+<p>
+   The format type <code>choice</code> is used to choose a subpattern based on a number. It uses a pattern that defines
+   a series of interval bounds in ascending order and corresponding subpattern strings, separated by the <code>|</code> character.
+   Each interval bound is defined by a limit value and a relation: <code>#</code> or <code>≤</code> for an inclusive limit value,
+   <code>&lt;</code> for an exclusive limit value.
+   MessageFormat determines the interval in which the argument value falls, selects the subpattern for its lower bound,
+   interprets the subpattern recursively as a MessageFormat pattern, and inserts the resulting string into the message.
+   <br/>eg: <code>There {FILE_COUNT, choice, 0#are no files|1#is one file|1<are {FILE_COUNT, number, integer} files} on disk {DISK_NAME}.</code>
+</p>
+
+<h4 id="module-dependency">Module Dependencies</h4>
+
+<p>
+   It should be noted that the relevant submodules should also be included if the functionality is required.
+   For example, if the user needs message formatter to be able to only format numbers and lists, but not dates, then
+   he/she can include the following modules: <code>intl-message-format</code>, <code>datatype-number-format-advanced</code>
+   and <code>datatype-list-format</code>, while avoiding inclusion of <code>datatypr-date-format-advanced</code> and
+   <code>datatype-list-format</code>. Formatting of types string, select, choice and plural are always available
+   without any submodules.
+</p>
+<p>
+   The dependent modules are not automatically included to avoid loading unnecessary modules to memory, as some of these
+   modules and their relevant locale data files are quite large. This way, the user can load just the required modules,
+   with the required functionality.
+</p>
