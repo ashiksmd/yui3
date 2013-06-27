@@ -6,6 +6,11 @@ Drag and Drop Change History
 
 * No changes.
 
+3.10.3
+------
+
+* No changes.
+
 3.10.2
 ------
 

@@ -1740,5 +1740,9 @@ Y.mix(Y.Date, {
         "zh-TW",
         "zh",
         "zu"
+    ],
+    "requires": [
+        "datatype-date-format",
+        "datatype-date-timezone"
     ]
 });

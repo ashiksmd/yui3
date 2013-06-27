@@ -4,7 +4,12 @@ IO Utility Change History
 @VERSION@
 ------
 
-* No changes.
+* Restore form attributes after successful upload in io-upload-iframe. [Ticket #2533186] [ipeychev]
+
+3.10.3
+------
+
+* [security] Hardened SWF file by filtering all data passed through ExternalInterface to fix XSS vulnerability.
 
 3.10.2
 ------

@@ -9,6 +9,11 @@ ArraySort Change History
   'foo2' is sorted before 'foo10', whereas a standard ASCII sort would sort
   'foo10' first. [Ryan Grove]
 
+3.10.3
+------
+
+* No changes.
+
 3.10.2
 ------
 
